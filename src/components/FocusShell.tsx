@@ -45,7 +45,7 @@ export function FocusShell({
     <div className="fixed inset-0 z-40 overflow-y-auto">
       <div
         onClick={() => void close()}
-        className="bg-sand-950/40 motion-fade fixed inset-0 backdrop-blur-sm"
+        className="bg-paper-950/35 motion-fade fixed inset-0 backdrop-blur-md"
         aria-hidden
       />
 

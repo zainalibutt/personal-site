@@ -1,30 +1,30 @@
 @import "tailwindcss";
 
 /* ---------------------------------------------------------------------------
-   Raw palette. Warm throughout — see docs/BRIEF.md §5.
-   Sand replaces grey; ember is the single accent.
+   Raw palette. White paper, Word blue ink.
+   `word-600` (#2b579a) is the Microsoft Word chrome blue Zain asked for.
    --------------------------------------------------------------------------- */
 @theme {
   --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 
-  --color-sand-50: #fdfbf7;
-  --color-sand-100: #f7f2ea;
-  --color-sand-200: #ede4d6;
-  --color-sand-300: #ddd0bc;
-  --color-sand-400: #b8a791;
-  --color-sand-500: #8c7b67;
-  --color-sand-600: #6b5b4a;
-  --color-sand-700: #4e4237;
-  --color-sand-800: #332c25;
-  --color-sand-900: #1f1a15;
-  --color-sand-950: #14100d;
+  --color-paper-50: #ffffff;
+  --color-paper-100: #f6f9fd;
+  --color-paper-200: #e9f0fa;
+  --color-paper-300: #dbe4f2;
+  --color-paper-400: #b6c7e2;
+  --color-paper-500: #8ea6cc;
+  --color-paper-600: #5f7ba6;
+  --color-paper-700: #3d5c8a;
+  --color-paper-800: #24406b;
+  --color-paper-900: #16294a;
+  --color-paper-950: #0d1830;
 
-  --color-ember-300: #f0a077;
-  --color-ember-400: #e8814a;
-  --color-ember-500: #d96a2e;
-  --color-ember-600: #b85218;
-  --color-ember-700: #93400f;
+  --color-word-300: #7ea6e0;
+  --color-word-400: #4a80c8;
+  --color-word-500: #3568b0;
+  --color-word-600: #2b579a;
+  --color-word-700: #1f4076;
 
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out-soft: cubic-bezier(0.65, 0, 0.35, 1);
@@ -42,32 +42,25 @@
 }
 
 :root {
-  --bg: #fdfbf7;
-  --surface: #f7f2ea;
-  --ink: #1f1a15;
-  --muted: #6b5b4a;
-  --line: #ede4d6;
-  --accent: #b85218;
+  --bg: #ffffff;
+  --surface: #f6f9fd;
+  --ink: #1f4076;
+  --muted: #5f7ba6;
+  --line: #dbe4f2;
+  --accent: #2b579a;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #14100d;
-    --surface: #1f1a15;
-    --ink: #f7f2ea;
-    --muted: #b8a791;
-    --line: #332c25;
-    --accent: #e8814a;
-  }
-}
-
+/* White is the design, not a light-mode variant — the page does NOT follow
+   `prefers-color-scheme`. The dark tokens below apply only when something
+   explicitly sets `data-theme="dark"`, which nothing does yet; they exist so a
+   deliberate toggle can be added later without redefining the palette. */
 :root[data-theme="dark"] {
-  --bg: #14100d;
-  --surface: #1f1a15;
-  --ink: #f7f2ea;
-  --muted: #b8a791;
-  --line: #332c25;
-  --accent: #e8814a;
+  --bg: #0d1830;
+  --surface: #16294a;
+  --ink: #dbe4f2;
+  --muted: #8ea6cc;
+  --line: #24406b;
+  --accent: #7ea6e0;
 }
 
 @layer base {

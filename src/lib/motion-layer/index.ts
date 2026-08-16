@@ -12,6 +12,8 @@
 export {
   registerView,
   unregisterView,
+  registerField,
+  getField,
   getView,
   getViewRect,
   setFocus,
@@ -28,6 +30,8 @@ export {
   reducedMotionRenderer,
   prefersReducedMotion,
   selectRenderer,
+  cameraPush,
+  resetCamera,
 } from "./renderers";
 
 export type {

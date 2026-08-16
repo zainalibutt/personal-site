@@ -21,6 +21,12 @@ const previewSchema = z.object({
   poster: z.string().optional(),
   alt: z.string().optional(),
   /**
+   * `cover` crops to fill — right for landscape app screenshots. `contain`
+   * letterboxes onto the dominant colour — right for portrait phone captures
+   * like IOU, which cropping would destroy.
+   */
+  fit: z.enum(["cover", "contain"]).default("cover"),
+  /**
    * Reserved before any media loads. The requirement is absolute: no layout
    * shift, no blank interval, no grey rectangles. See docs/ARCHITECTURE.md §2.7.
    */

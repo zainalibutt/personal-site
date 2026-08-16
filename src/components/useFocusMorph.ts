@@ -3,10 +3,14 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
+  cameraPush,
+  getField,
   getViewRect,
   previewViewId,
+  resetCamera,
   selectRenderer,
   setFocusState,
+  type Rect,
 } from "@/lib/motion-layer";
 
 function cancelAnimations(element: HTMLElement): void {
@@ -28,14 +32,22 @@ function withTimeout(promise: Promise<unknown>, ms: number): Promise<unknown> {
 }
 
 /**
- * Drives the open and close morph for a focused project.
+ * Drives the open and close of a focused project.
  *
- * React's only involvement is starting and finishing the animation. No frame of
- * the morph passes through state or props, and the case-study body is never
- * measured — only the hero preview element moves (docs/ARCHITECTURE.md §2.5).
+ * Two things move, both imperatively: the hero preview does a FLIP from the
+ * card's rect, and the whole field pushes toward that card so the zoom reads as
+ * entering that sector rather than the card walking to the middle. React starts
+ * and finishes them; no frame passes through state, and the case-study body is
+ * never measured (docs/ARCHITECTURE.md §2.5).
  */
 export function useFocusMorph(slug: string) {
   const heroRef = useRef<HTMLDivElement>(null);
+  /**
+   * The card's rect at rest, captured on open. Reused on close rather than
+   * re-measured, because by then the card is being viewed through the pushed
+   * field transform and would measure a few pixels further out each cycle.
+   */
+  const originRef = useRef<Rect | null>(null);
   const router = useRouter();
   const closing = useRef(false);
 
@@ -43,22 +55,27 @@ export function useFocusMorph(slug: string) {
     const element = heroRef.current;
     if (!element) return;
 
-    // Any in-flight morph holds a `fill: both` transform, which would make the
-    // measurement below return the *animated* rect instead of the layout one
-    // and collapse the next morph to an identity. Strict Mode double-invokes
-    // this effect in dev, and a fast reopen does the same in production.
     cancelAnimations(element);
 
+    const field = getField();
+    // Return the field to rest before measuring, so the card rect below is its
+    // true layout position rather than one seen through a live transform.
+    if (field) resetCamera(field);
+
     const from = getViewRect(previewViewId(slug));
+    originRef.current = from;
+
     if (!from) {
       // Cold visit, or the card was never mounted. Nothing to morph from — the
-      // page simply renders. This is the correct behaviour, not a failure.
+      // view simply renders. Correct behaviour, not a failure.
       setFocusState("focused");
       return;
     }
 
     const to = element.getBoundingClientRect();
     setFocusState("opening");
+
+    if (field) cameraPush(field, from, "in");
 
     let cancelled = false;
     element.style.willChange = "transform";
@@ -75,17 +92,25 @@ export function useFocusMorph(slug: string) {
       cancelled = true;
       cancelAnimations(element);
       element.style.willChange = "";
+      // Unmounted without going through close() — browser back, or a Strict
+      // Mode remount. Put the camera back or the field stays pushed forever.
+      if (!closing.current) {
+        const current = getField();
+        if (current) resetCamera(current);
+      }
     };
   }, [slug]);
 
   const close = useCallback(async () => {
     if (closing.current) return;
     closing.current = true;
+    setFocusState("closing");
 
     const element = heroRef.current;
-    const from = getViewRect(previewViewId(slug));
+    const from = originRef.current;
+    const field = getField();
 
-    setFocusState("closing");
+    if (field) cameraPush(field, from ?? { x: 0, y: 0, width: 0, height: 0 }, "out");
 
     if (element && from) {
       cancelAnimations(element);
@@ -99,7 +124,7 @@ export function useFocusMorph(slug: string) {
 
     setFocusState("idle");
     router.back();
-  }, [slug, router]);
+  }, [router]);
 
   return { heroRef, close };
 }

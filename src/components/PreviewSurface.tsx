@@ -17,11 +17,14 @@ import type { ProjectSummary } from "@/lib/content";
 export function PreviewSurface({
   project,
   register = false,
+  priority = false,
   className = "",
 }: {
   project: ProjectSummary;
   /** Only the card registers. The focused view reads the card's rect. */
   register?: boolean;
+  /** Flagships sit above the fold, so they load eagerly for LCP. */
+  priority?: boolean;
   className?: string;
 }) {
   const { preview, slug, title } = project;
@@ -61,8 +64,9 @@ export function PreviewSurface({
           src={preview.poster}
           alt={preview.alt ?? ""}
           fill
-          className="object-cover"
-          sizes="(min-width: 640px) 50vw, 100vw"
+          className={preview.fit === "contain" ? "object-contain" : "object-cover"}
+          sizes="(min-width: 1024px) 34vw, (min-width: 640px) 50vw, 100vw"
+          priority={priority}
         />
       )}
 

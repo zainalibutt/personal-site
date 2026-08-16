@@ -12,6 +12,24 @@ import type { FocusState, Rect, ViewId } from "./types";
 
 const views = new Map<ViewId, HTMLElement>();
 
+/**
+ * The project field itself. Registered so focusing a card can push the whole
+ * field toward that card — the "zoom into that sector" rather than a card
+ * politely sliding to the middle.
+ */
+let fieldElement: HTMLElement | null = null;
+
+export function registerField(element: HTMLElement): () => void {
+  fieldElement = element;
+  return () => {
+    if (fieldElement === element) fieldElement = null;
+  };
+}
+
+export function getField(): HTMLElement | null {
+  return fieldElement;
+}
+
 type FocusListener = (slug: string | null, progress: number) => void;
 type StateListener = (state: FocusState) => void;
 
@@ -82,6 +100,7 @@ export function subscribeFocusState(listener: StateListener): () => void {
 /** Test seam. Not called in application code. */
 export function resetMotionLayer(): void {
   views.clear();
+  fieldElement = null;
   focusListeners.clear();
   stateListeners.clear();
   currentState = "idle";
