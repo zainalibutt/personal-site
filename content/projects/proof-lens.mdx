@@ -1,0 +1,45 @@
+---
+title: Proof-Lens
+tagline: Media provenance you can verify without trusting the person who sent it.
+year: 2026
+role: Design and engineering
+stack: [TypeScript, WebCrypto, RFC 3161, Node]
+flagship: true
+order: 1
+repo: https://github.com/zainalibutt/Proof-Lens
+preview:
+  type: demo
+  alt: A photograph being captured, signed, and then verified offline
+draft: false
+---
+
+{/* DRAFT COPY — written from the repo description, needs Zain's review. */}
+
+## The problem
+
+A photograph proves nothing on its own. Any image can be edited, re-encoded, or
+generated outright, and the metadata that might tell you so is trivially
+rewritten. The usual answer is to trust the platform that hosts it — which just
+moves the question rather than answering it.
+
+## The approach
+
+Proof-Lens binds a capture to the device that made it and to the moment it
+happened, then packages both into evidence that survives leaving the app.
+
+- **Device signatures.** The capture is signed at source using hardware-backed
+  keys, so the signature attests to the device rather than to a server.
+- **RFC 3161 timestamping.** An independent timestamping authority countersigns
+  the hash, establishing that the content existed no later than a given moment.
+- **Offline-verifiable bundles.** Everything needed to check the claim travels
+  with the file. Verification needs no network call and no account.
+
+## What was hard
+
+The interesting constraint is that verification has to work for someone who does
+not trust you, does not have your app, and may be offline. That rules out any
+design where the proof is a lookup against a service you control.
+
+## What I'd change
+
+{/* TODO(zain): the honest retrospective — matters more than the feature list. */}

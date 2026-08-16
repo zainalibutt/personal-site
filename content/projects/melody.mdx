@@ -1,0 +1,43 @@
+---
+title: Melody
+tagline: A command-first research terminal for public companies.
+year: 2026
+role: Design and engineering
+stack: [TypeScript, SEC EDGAR, Node, Playwright]
+flagship: true
+order: 2
+repo: https://github.com/zainalibutt/Melody
+preview:
+  type: demo
+  alt: A command being typed, with filing data streaming into the results pane
+draft: false
+---
+
+{/* DRAFT COPY — written from the repo description, needs Zain's review. */}
+
+## The problem
+
+Research tools for public companies are built around dashboards. Dashboards are
+good at showing you what someone else decided was important, and bad at
+answering a specific question quickly. If you already know what you want, a
+dashboard is in your way.
+
+## The approach
+
+Melody inverts it. You type what you want and the answer streams back.
+
+- **Primary sources.** SEC filings direct from EDGAR, not a summarised feed.
+- **Delayed market data**, clearly labelled as delayed — the honest presentation
+  matters more than the freshness.
+- **Command-first.** Keyboard is the primary interface; the UI exists to display
+  results, not to be navigated.
+
+## What was hard
+
+Filing data is messy in ways that resist generic parsing — the same concept is
+tagged differently across filers and across years. Most of the work is in the
+normalisation layer that sits between EDGAR and anything a user sees.
+
+## What I'd change
+
+{/* TODO(zain): the honest retrospective. */}

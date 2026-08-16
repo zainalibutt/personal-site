@@ -1,0 +1,41 @@
+---
+title: Age Group Detection
+tagline: Three approaches to the same classification problem, measured honestly.
+year: 2025
+role: Research and implementation
+stack: [Python, PyTorch, scikit-learn, ResNet18]
+flagship: false
+order: 12
+repo: https://github.com/zainalibutt/age-group-detection
+preview:
+  type: video
+  alt: An image going in, class probabilities coming out
+draft: false
+---
+
+{/* DRAFT COPY — written from the repo description, needs Zain's review. */}
+
+## The problem
+
+Four-class age-group classification, which is less a modelling problem than a
+comparison problem: the interesting question is not whether a deep model beats a
+classical one, but by how much, at what cost, and on which failure cases.
+
+## The approach
+
+Three pipelines built to be compared like for like.
+
+- **HOG + SVM** — the classical baseline.
+- **MLP** — a shallow learned representation.
+- **ResNet18** — transfer learning from a pretrained backbone.
+
+Identical splits, identical preprocessing, identical metrics.
+
+## What was hard
+
+Class imbalance across the age bands, and resisting the temptation to report the
+accuracy figure that flattered the model I'd spent the most time on.
+
+## What I'd change
+
+{/* TODO(zain): the honest retrospective. */}

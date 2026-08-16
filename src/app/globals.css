@@ -1,0 +1,116 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   Raw palette. Warm throughout — see docs/BRIEF.md §5.
+   Sand replaces grey; ember is the single accent.
+   --------------------------------------------------------------------------- */
+@theme {
+  --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --color-sand-50: #fdfbf7;
+  --color-sand-100: #f7f2ea;
+  --color-sand-200: #ede4d6;
+  --color-sand-300: #ddd0bc;
+  --color-sand-400: #b8a791;
+  --color-sand-500: #8c7b67;
+  --color-sand-600: #6b5b4a;
+  --color-sand-700: #4e4237;
+  --color-sand-800: #332c25;
+  --color-sand-900: #1f1a15;
+  --color-sand-950: #14100d;
+
+  --color-ember-300: #f0a077;
+  --color-ember-400: #e8814a;
+  --color-ember-500: #d96a2e;
+  --color-ember-600: #b85218;
+  --color-ember-700: #93400f;
+
+  --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out-soft: cubic-bezier(0.65, 0, 0.35, 1);
+}
+
+/* Semantic tokens. `inline` keeps the var reference live so the theme can flip
+   at runtime rather than being baked in at build. */
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-accent: var(--accent);
+}
+
+:root {
+  --bg: #fdfbf7;
+  --surface: #f7f2ea;
+  --ink: #1f1a15;
+  --muted: #6b5b4a;
+  --line: #ede4d6;
+  --accent: #b85218;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #14100d;
+    --surface: #1f1a15;
+    --ink: #f7f2ea;
+    --muted: #b8a791;
+    --line: #332c25;
+    --accent: #e8814a;
+  }
+}
+
+:root[data-theme="dark"] {
+  --bg: #14100d;
+  --surface: #1f1a15;
+  --ink: #f7f2ea;
+  --muted: #b8a791;
+  --line: #332c25;
+  --accent: #e8814a;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-sans);
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    letter-spacing: -0.02em;
+  }
+
+  ::selection {
+    background-color: var(--accent);
+    color: var(--bg);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+}
+
+/* Non-negotiable — see docs/BRIEF.md §5. Every animation must survive this. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

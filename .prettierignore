@@ -1,0 +1,9 @@
+# Prettier's markdown formatter mangles MDX expression comments — it reads the
+# asterisks in {/* … */} as emphasis and rewrites them to {/_ … _/}, which is
+# not a parseable expression. Content is prose; leave it alone.
+content/
+
+.next/
+node_modules/
+public/
+package-lock.json
