@@ -37,3 +37,6 @@ npm-debug.log*
 .vscode/*
 !.vscode/extensions.json
 
+# raw source assets (large originals; optimised derivatives go to public/)
+assets/raw/
+
