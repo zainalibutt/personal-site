@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getProject, getProjectSlugs } from "@/lib/content";
 import { ProjectBody } from "@/components/ProjectBody";
+import { PreviewSurface } from "@/components/PreviewSurface";
 
 /**
  * The full page for a project — what a COLD visit renders.
@@ -41,6 +42,8 @@ export default async function ProjectPage({
   const project = getProject(slug);
   if (!project || project.draft) notFound();
 
+  const { body, ...summary } = project;
+
   return (
     <main id="main" className="mx-auto w-[min(64rem,calc(100%-3rem))] pb-32">
       <Link
@@ -51,7 +54,10 @@ export default async function ProjectPage({
       </Link>
 
       <header className="py-12">
-        <div className="bg-sand-200 dark:bg-sand-800 mb-10 aspect-[21/9] w-full rounded-2xl" />
+        <PreviewSurface
+          project={summary}
+          className="mb-10 w-full rounded-2xl"
+        />
         <h1 className="text-ink text-4xl text-balance sm:text-5xl">
           {project.title}
         </h1>
@@ -96,7 +102,7 @@ export default async function ProjectPage({
         )}
       </header>
 
-      <ProjectBody source={project.body} />
+      <ProjectBody source={body} />
     </main>
   );
 }

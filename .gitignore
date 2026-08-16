@@ -16,6 +16,9 @@ out/
 .output/
 .wrangler/
 
+# typescript incremental
+*.tsbuildinfo
+
 # env
 .env
 .env.*

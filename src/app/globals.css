@@ -103,6 +103,37 @@
   }
 }
 
+/* Focused-view chrome. The hero preview is animated imperatively by
+   lib/motion-layer; these cover only the surrounding surfaces, which are cheap
+   and never measured. */
+@keyframes motion-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes motion-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.motion-fade {
+  animation: motion-fade-in 260ms var(--ease-out-soft) both;
+}
+
+.motion-rise {
+  animation: motion-rise-in 380ms var(--ease-out-soft) both;
+}
+
 /* Non-negotiable — see docs/BRIEF.md §5. Every animation must survive this. */
 @media (prefers-reduced-motion: reduce) {
   *,

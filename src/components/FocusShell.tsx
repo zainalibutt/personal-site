@@ -1,98 +1,89 @@
 "use client";
 
 import { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { motion } from "motion/react";
+import { PreviewSurface } from "./PreviewSurface";
+import { useFocusMorph } from "./useFocusMorph";
+import type { ProjectSummary } from "@/lib/content";
 
 /**
  * The focused state of a project — the "ghost redirect".
  *
- * This is not a page. The project field beneath it stays mounted; the route
- * changes so the URL is real and shareable, but nothing unmounts. The shared
- * `layoutId`s (see <ProjectCard />) carry the card into this shell, so the
- * content reads as having always been there, just too small to resolve.
+ * Structure matters here. The **shell** (hero preview, title, tagline) is the
+ * only part that animates. The **body** below it is prepared in advance and
+ * never enters a measured animation, which is the specific failure both
+ * the reason it was dropped: a single FLIP whose correctness depends on the size
+ * and timing of MDX content.
  *
- * Exit must always be obvious — Esc, backdrop, and a visible close control.
- * Navigation legibility outranks everything (docs/BRIEF.md §6).
+ * Exit stays unambiguous — Escape, backdrop, and a visible close control.
+ * Navigation legibility outranks everything.
  */
 export function FocusShell({
-  slug,
-  title,
-  tagline,
+  project,
   children,
 }: {
-  slug: string;
-  title: string;
-  tagline: string;
+  project: ProjectSummary;
   children: React.ReactNode;
 }) {
-  const router = useRouter();
+  const { heroRef, close } = useFocusMorph(project.slug);
 
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") router.back();
+    const onKey = (event: KeyboardEvent) => {
+      if (event.key === "Escape") void close();
     };
     document.addEventListener("keydown", onKey);
 
-    const { overflow } = document.body.style;
+    const previous = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
     return () => {
       document.removeEventListener("keydown", onKey);
-      document.body.style.overflow = overflow;
+      document.body.style.overflow = previous;
     };
-  }, [router]);
+  }, [close]);
 
   return (
     <div className="fixed inset-0 z-40 overflow-y-auto">
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={() => router.back()}
-        className="bg-sand-950/40 fixed inset-0 backdrop-blur-sm"
+      <div
+        onClick={() => void close()}
+        className="bg-sand-950/40 motion-fade fixed inset-0 backdrop-blur-sm"
         aria-hidden
       />
 
-      <motion.div
-        layoutId={`card-${slug}`}
+      <div
         role="dialog"
         aria-modal="true"
-        aria-labelledby={`focus-title-${slug}`}
-        className="border-line bg-bg relative mx-auto my-8 w-[min(64rem,calc(100%-2rem))] overflow-hidden rounded-2xl border"
+        aria-labelledby={`focus-title-${project.slug}`}
+        className="border-line bg-bg motion-rise relative mx-auto my-8 w-[min(64rem,calc(100%-2rem))] overflow-hidden rounded-2xl border"
       >
-        {/* this is the zoom. The card's preview should expand into
-            the hero of the case study, not cross-fade into it. */}
-        <motion.div
-          layoutId={`preview-${slug}`}
-          className="bg-sand-200 dark:bg-sand-800 aspect-[21/9] w-full"
-        />
+        {/* this is the zoom. The preview travels from the card into
+            this hero. Camera path, easing language and how the content resolves
+            out of it are yours — the mechanism is in lib/motion-layer. */}
+        <div ref={heroRef}>
+          <PreviewSurface project={project} className="w-full" />
+        </div>
 
         <button
-          onClick={() => router.back()}
+          onClick={() => void close()}
           className="bg-bg/80 text-ink absolute top-4 right-4 rounded-full px-4 py-2 text-sm backdrop-blur"
         >
           Close <kbd className="text-muted ml-1">Esc</kbd>
         </button>
 
+        {/* Static from here down. Never measured, never transformed. */}
         <div className="px-6 py-8 sm:px-10 sm:py-12">
-          <motion.h1
-            layoutId={`title-${slug}`}
-            id={`focus-title-${slug}`}
+          <h1
+            id={`focus-title-${project.slug}`}
             className="text-ink text-4xl sm:text-5xl"
           >
-            {title}
-          </motion.h1>
-          <motion.p
-            layoutId={`tagline-${slug}`}
-            className="text-muted mt-3 max-w-2xl text-lg text-pretty"
-          >
-            {tagline}
-          </motion.p>
+            {project.title}
+          </h1>
+          <p className="text-muted mt-3 max-w-2xl text-lg text-pretty">
+            {project.tagline}
+          </p>
 
           <div className="mt-10">{children}</div>
         </div>
-      </motion.div>
+      </div>
     </div>
   );
 }

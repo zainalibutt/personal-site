@@ -16,10 +16,23 @@ const CONTENT_DIR = path.join(process.cwd(), "content", "projects");
 
 const previewSchema = z.object({
   /** `video` is the baseline; `demo` is reserved for the two flagships. */
-  type: z.enum(["video", "image", "demo"]),
+  type: z.enum(["video", "image", "demo"]).default("image"),
   src: z.string().optional(),
   poster: z.string().optional(),
   alt: z.string().optional(),
+  /**
+   * Reserved before any media loads. The requirement is absolute: no layout
+   * shift, no blank interval, no grey rectangles. See docs/ARCHITECTURE.md §2.7.
+   */
+  aspectRatio: z
+    .string()
+    .regex(/^\d+\s*\/\s*\d+$/, "expected a CSS ratio like '16 / 10'")
+    .default("16 / 10"),
+  /** Warm placeholder shown until media is ready. Never grey. */
+  dominantColour: z
+    .string()
+    .regex(/^#[0-9a-fA-F]{6}$/, "expected a six-digit hex colour")
+    .default("#ddd0bc"),
 });
 
 export const frontmatterSchema = z.object({
@@ -34,7 +47,12 @@ export const frontmatterSchema = z.object({
   order: z.number().int().default(100),
   repo: z.string().optional(),
   live: z.string().optional(),
-  preview: previewSchema.optional(),
+  /**
+   * Always present after parsing, so cards never lack loading primitives.
+   * `prefault` (not `default`) so the inner field defaults are applied — zod
+   * types `default` against the parsed output, which would demand every key.
+   */
+  preview: previewSchema.prefault({}),
   draft: z.boolean().default(false),
 });
 

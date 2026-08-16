@@ -26,6 +26,15 @@ describe("project content", () => {
     }
   });
 
+  // docs/ARCHITECTURE.md §2.7 — no card may ship without reserved dimensions
+  // and a designed placeholder colour.
+  it("gives every project loading primitives", () => {
+    for (const project of projects) {
+      expect(project.preview.aspectRatio).toMatch(/^\d+\s*\/\s*\d+$/);
+      expect(project.preview.dominantColour).toMatch(/^#[0-9a-fA-F]{6}$/);
+    }
+  });
+
   it("sorts flagships first", () => {
     const firstNonFlagship = projects.findIndex((p) => !p.flagship);
     if (firstNonFlagship === -1) return;
