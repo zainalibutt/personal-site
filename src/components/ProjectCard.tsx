@@ -198,7 +198,11 @@ export function ProjectCard({
         href={`/projects/${project.slug}`}
         scroll={false}
         prefetch
-        className="mt-5 block px-1 transition-opacity duration-300 focus-visible:outline-none"
+        /* The caption is the artefact's tab stop and its accessible name, so it
+           must show focus. It previously set `focus-visible:outline-none`,
+           which left the five primary navigation targets on the page with no
+           keyboard indicator at all while every secondary link had one. */
+        className="mt-5 block rounded-lg px-1 transition-opacity duration-300"
         // Inline rather than a utility class: the artefact's own animations put
         // competing opacity rules on this subtree, and this must always win.
         style={{
