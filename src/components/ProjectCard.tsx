@@ -51,8 +51,11 @@ export function ProjectCard({
 
       {/* The slot holds the artefact's footprint via its own aspect-ratio, so
           promoting the box out of flow never reflows the field. */}
+      {/* `data-well` marks this artefact as a mass in the field. The value
+          switches to "focused" so the lattice deepens around the open one. */}
       <div
         ref={slotRef}
+        data-well={focused ? "focused" : "rest"}
         className="relative"
         style={{ aspectRatio: project.preview.aspectRatio }}
       >

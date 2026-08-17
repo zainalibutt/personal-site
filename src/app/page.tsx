@@ -4,6 +4,7 @@ import { About } from "@/components/About";
 import { EdgeFade } from "@/components/EdgeFade";
 import { ProjectBody } from "@/components/ProjectBody";
 import { ProjectField, type FieldItem } from "@/components/ProjectField";
+import { SpacetimeField } from "@/components/SpacetimeField";
 
 export default function Home() {
   // Case studies are rendered here, on the server, and handed to the cards.
@@ -16,7 +17,10 @@ export default function Home() {
 
   return (
     <>
-      {/* Outside the plane on purpose — see EdgeFade. */}
+      {/* Both sit outside the plane: they are fixed to the viewport, and
+          `position: fixed` inside a transformed ancestor resolves against that
+          ancestor instead. */}
+      <SpacetimeField />
       <EdgeFade />
 
       {/* `data-plane` marks the surface the camera moves. Focusing an artefact
