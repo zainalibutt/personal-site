@@ -50,7 +50,12 @@ async function main() {
   const browser = await chromium.launch();
   const page = await browser.newPage({
     viewport: { width: WIDTH, height: HEIGHT },
-    deviceScaleFactor: 2,
+    // 1, not 2. These are read on screen, and cost scales with pixel
+    // count: a 2880x1800 frame is ~6,900 tokens to look at, and every frame
+    // already in the conversation is re-sent on every later turn. At 1x the
+    // same frame is ~1,700 and is no harder to judge a layout from.
+    // Pass --retina if a frame is ever needed for print or presentation.
+    deviceScaleFactor: process.argv.includes("--retina") ? 2 : 1,
   });
 
   const errors: string[] = [];

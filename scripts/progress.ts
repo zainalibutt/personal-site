@@ -170,7 +170,9 @@ async function captureMilestone(m: Milestone, port: number): Promise<boolean> {
     const browser = await chromium.launch();
     const page = await browser.newPage({
       viewport: { width: WIDTH, height: HEIGHT },
-      deviceScaleFactor: 2,
+      // 1x — see the note in shoot.ts. Halves the committed archive and cuts
+      // the cost of reading one of these frames by four.
+      deviceScaleFactor: 1,
     });
 
     // Warm the dev server first. On a cold Turbopack compile the first paint
