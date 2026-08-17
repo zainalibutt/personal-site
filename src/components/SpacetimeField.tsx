@@ -24,7 +24,21 @@ import { subscribeFocusState, prefersReducedMotion } from "@/lib/motion-layer";
  */
 
 const SPACING = 66; // px between lattice lines
-const STEP = 11; // sampling along each line — smaller is smoother, costlier
+const STEP = 9; // sampling along each line — smaller is smoother, costlier
+
+/**
+ * Hard ceiling on how far a vertex may travel toward a mass, as a fraction of
+ * its distance to it.
+ *
+ * Without this the pull near a strong well exceeds the distance, vertices
+ * overshoot past the centre and out the other side, and neighbouring lines
+ * cross — which is what produced the spikes and folded shapes near an open
+ * artefact. Capping below 0.5 guarantees ordering is preserved, so the sheet
+ * can compress but never fold through itself.
+ */
+const MAX_TRAVEL = 0.4;
+
+const STAR_COUNT = 220;
 const CURSOR_RADIUS = 190;
 const CURSOR_PULL = 26;
 const REST_RADIUS = 260;
@@ -57,11 +71,44 @@ function displace(x: number, y: number, masses: Mass[]): [number, number] {
     const distanceSq = vx * vx + vy * vy;
     const distance = Math.sqrt(distanceSq) || 1;
     const falloff = 1 / (1 + distanceSq / (m.radius * m.radius));
-    const amount = (m.pull * falloff) / distance;
+    // Clamped so a vertex can never reach, let alone pass, the mass centre.
+    const travel = Math.min(m.pull * falloff, distance * MAX_TRAVEL);
+    const amount = travel / distance;
     dx += vx * amount;
     dy += vy * amount;
   }
   return [dx, dy];
+}
+
+interface Star {
+  nx: number;
+  ny: number;
+  r: number;
+  a: number;
+  phase: number;
+}
+
+/** Deterministic, so the sky is the same on every resize and every reload. */
+function makeStars(count: number): Star[] {
+  let seed = 0x9e3779b9;
+  const random = () => {
+    seed ^= seed << 13;
+    seed ^= seed >>> 17;
+    seed ^= seed << 5;
+    return ((seed >>> 0) % 100000) / 100000;
+  };
+  return Array.from({ length: count }, () => {
+    const bright = random();
+    return {
+      nx: random(),
+      ny: random(),
+      // Mostly faint pinpricks, a few brighter ones — an even spread reads as
+      // noise rather than a sky.
+      r: bright > 0.97 ? 1.6 : bright > 0.85 ? 1.1 : 0.7,
+      a: 0.22 + bright * 0.5,
+      phase: random() * Math.PI * 2,
+    };
+  });
 }
 
 export function SpacetimeField() {
@@ -85,6 +132,45 @@ export function SpacetimeField() {
     let focusWeight = 0;
     let focusTarget = 0;
 
+    const stars = makeStars(STAR_COUNT);
+
+    /**
+     * Nebulae are painted once into an offscreen canvas rather than every
+     * frame. Large radial gradients are the single most expensive thing here
+     * and they never change.
+     */
+    let nebula: HTMLCanvasElement | null = null;
+
+    const paintNebula = () => {
+      const off = document.createElement("canvas");
+      const dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR);
+      off.width = Math.floor(width * dpr);
+      off.height = Math.floor(height * dpr);
+      const octx = off.getContext("2d");
+      if (!octx) return;
+      octx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      const clouds = [
+        { nx: 0.16, ny: 0.28, r: 0.62, c: "63, 110, 208" },
+        { nx: 0.84, ny: 0.66, r: 0.58, c: "91, 138, 232" },
+        { nx: 0.52, ny: 0.05, r: 0.46, c: "58, 78, 168" },
+        { nx: 0.72, ny: 1.02, r: 0.5, c: "42, 96, 150" },
+      ];
+
+      for (const cloud of clouds) {
+        const cx = cloud.nx * width;
+        const cy = cloud.ny * height;
+        const radius = cloud.r * Math.max(width, height);
+        const g = octx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+        g.addColorStop(0, `rgba(${cloud.c}, 0.16)`);
+        g.addColorStop(0.45, `rgba(${cloud.c}, 0.06)`);
+        g.addColorStop(1, `rgba(${cloud.c}, 0)`);
+        octx.fillStyle = g;
+        octx.fillRect(0, 0, width, height);
+      }
+      nebula = off;
+    };
+
     const resize = () => {
       const dpr = Math.min(window.devicePixelRatio || 1, MAX_DPR);
       width = window.innerWidth;
@@ -94,6 +180,7 @@ export function SpacetimeField() {
       canvas.style.width = `${width}px`;
       canvas.style.height = `${height}px`;
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      paintNebula();
       wake();
     };
 
@@ -128,15 +215,34 @@ export function SpacetimeField() {
 
     const draw = () => {
       const masses = readMasses();
+      const now = performance.now();
       ctx.clearRect(0, 0, width, height);
+
+      if (nebula) {
+        ctx.drawImage(nebula, 0, 0, width, height);
+      }
+
+      // Stars sit in the sheet, so they are displaced by the same masses as the
+      // lattice. Without this they float on top and the depth falls apart.
+      for (const star of stars) {
+        const x = star.nx * width;
+        const y = star.ny * height;
+        const [dx, dy] = displace(x, y, masses);
+        const twinkle = 0.78 + 0.22 * Math.sin(now / 1400 + star.phase);
+        ctx.beginPath();
+        ctx.fillStyle = `rgba(214, 230, 255, ${star.a * twinkle})`;
+        ctx.arc(x + dx, y + dy, star.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
       ctx.lineWidth = 1;
 
-      // At rest the lattice has to sit *under* the reading, not compete with
-      // it — body copy crosses these lines. It earns weight only as a well
-      // deepens, so the bend reads as depth rather than as noise.
+      // The lattice sits *under* the reading — body copy crosses these lines.
+      // It earns weight only as a well deepens, so the bend reads as depth
+      // rather than as noise.
       const intensity = Math.min(1, focusWeight * 0.9 + cursor.weight * 0.1);
-      const alpha = 0.26 + intensity * 0.4;
-      ctx.strokeStyle = `rgba(158, 184, 222, ${alpha})`;
+      const alpha = 0.13 + intensity * 0.24;
+      ctx.strokeStyle = `rgba(129, 166, 235, ${alpha})`;
 
       const left = -SPACING;
       const top = -SPACING;

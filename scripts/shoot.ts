@@ -84,6 +84,41 @@ async function main() {
   await page.goto(`${BASE}/projects/proof-lens`, { waitUntil: "networkidle" });
   await shoot(page, "05-cold-visit", true);
 
+  // Interaction checks. Screenshots cannot show whether a thing is clickable or
+  // whether the page still scrolls under the pointer, and both have regressed
+  // here before.
+  console.log("\ninteraction:");
+  await page.goto(BASE, { waitUntil: "networkidle" });
+  const artefact = page.locator("[data-well]").first();
+  const box = await artefact.boundingBox();
+
+  if (!box) {
+    console.log("  ! could not locate an artefact");
+  } else {
+    const cx = box.x + box.width / 2;
+    const cy = box.y + box.height / 2;
+
+    await page.mouse.move(cx, cy);
+    const before = await page.evaluate(() => window.scrollY);
+    await page.mouse.wheel(0, 600);
+    await page.waitForTimeout(400);
+    const after = await page.evaluate(() => window.scrollY);
+    console.log(
+      `  scroll over artefact: ${before} -> ${after} ${after > before ? "OK" : "BLOCKED"}`,
+    );
+
+    await page.goto(BASE, { waitUntil: "networkidle" });
+    const box2 = await artefact.boundingBox();
+    if (box2) {
+      await page.mouse.click(box2.x + box2.width / 2, box2.y + box2.height / 2);
+      await page.waitForTimeout(1600);
+      const path = new URL(page.url()).pathname;
+      console.log(
+        `  click artefact image: ${path} ${path.startsWith("/projects/") ? "OK" : "DEAD"}`,
+      );
+    }
+  }
+
   await browser.close();
 
   if (errors.length) {

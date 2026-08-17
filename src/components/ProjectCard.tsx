@@ -73,7 +73,7 @@ export function ProjectCard({
             "motion-reduce:transform-none motion-reduce:transition-none",
           ].join(" ")}
         >
-          <div className="expand-scroll overscroll-contain">
+          <div className="expand-scroll">
             <div className="expand-layout">
               <div className="expand-hero-col">
                 <div ref={heroRef} className="expand-hero">

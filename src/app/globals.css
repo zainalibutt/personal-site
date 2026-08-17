@@ -1,30 +1,34 @@
 @import "tailwindcss";
 
 /* ---------------------------------------------------------------------------
-   Raw palette. White paper, Word blue ink.
-   `word-600` (#2b579a) is the Microsoft Word chrome blue Zain asked for.
+   Raw palette. Deep space blue ground, light blue ink.
+
+   `paper-*` runs light to dark and is now used from the dark end: the page
+   ground is `paper-975`, not `paper-50`. Kept as one continuous ramp rather
+   than inverted in place so the mid tones stay usable for borders and chips.
    --------------------------------------------------------------------------- */
 @theme {
   --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
 
-  --color-paper-50: #ffffff;
-  --color-paper-100: #f6f9fd;
-  --color-paper-200: #e9f0fa;
-  --color-paper-300: #dbe4f2;
-  --color-paper-400: #b6c7e2;
-  --color-paper-500: #8ea6cc;
-  --color-paper-600: #5f7ba6;
-  --color-paper-700: #3d5c8a;
-  --color-paper-800: #24406b;
-  --color-paper-900: #16294a;
-  --color-paper-950: #0d1830;
+  --color-paper-50: #f2f6fd;
+  --color-paper-100: #e2eaf9;
+  --color-paper-200: #c7d6f0;
+  --color-paper-300: #a6bce4;
+  --color-paper-400: #8299cd;
+  --color-paper-500: #6376ad;
+  --color-paper-600: #4b5b8b;
+  --color-paper-700: #35426a;
+  --color-paper-800: #222d4c;
+  --color-paper-900: #141d36;
+  --color-paper-950: #0b1226;
+  --color-paper-975: #060a16;
 
-  --color-word-300: #7ea6e0;
-  --color-word-400: #4a80c8;
-  --color-word-500: #3568b0;
-  --color-word-600: #2b579a;
-  --color-word-700: #1f4076;
+  --color-word-300: #a9c6fb;
+  --color-word-400: #7fa9f5;
+  --color-word-500: #5b8ae8;
+  --color-word-600: #3f6ed0;
+  --color-word-700: #2b4fa0;
 
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out-soft: cubic-bezier(0.65, 0, 0.35, 1);
@@ -41,26 +45,26 @@
   --color-accent: var(--accent);
 }
 
+/* Deep space is the design, not a dark-mode variant — the page does NOT follow
+   `prefers-color-scheme`, in either direction. Every visitor gets this. */
 :root {
+  --bg: #060a16;
+  --surface: #0e1830;
+  --ink: #e2eaf9;
+  --muted: #8fa6ce;
+  --line: #1e2a48;
+  --accent: #7fa9f5;
+}
+
+/* Kept so a deliberate light toggle could be added later without redefining
+   the palette. Nothing sets this today. */
+:root[data-theme="light"] {
   --bg: #ffffff;
   --surface: #f6f9fd;
   --ink: #1f4076;
   --muted: #5f7ba6;
   --line: #dbe4f2;
   --accent: #2b579a;
-}
-
-/* White is the design, not a light-mode variant — the page does NOT follow
-   `prefers-color-scheme`. The dark tokens below apply only when something
-   explicitly sets `data-theme="dark"`, which nothing does yet; they exist so a
-   deliberate toggle can be added later without redefining the palette. */
-:root[data-theme="dark"] {
-  --bg: #0d1830;
-  --surface: #16294a;
-  --ink: #dbe4f2;
-  --muted: #8ea6cc;
-  --line: #24406b;
-  --accent: #7ea6e0;
 }
 
 @layer base {
@@ -137,7 +141,11 @@
    --------------------------------------------------------------------------- */
 .expand-scroll {
   height: 100%;
-  overflow: hidden;
+  /* `clip`, not `hidden`. `hidden` makes this a scroll container even though
+     nothing overflows, and a scroll container swallows wheel events instead of
+     chaining them to the page — which meant the page would not scroll while the
+     pointer was over an artefact. `clip` clips without creating one. */
+  overflow: clip;
 }
 
 .expand-layout {
@@ -157,6 +165,9 @@
 
 [data-expanded="true"] .expand-scroll {
   overflow-y: auto;
+  /* Only contained once it is genuinely scrollable, so the page still scrolls
+     under the pointer at rest. */
+  overscroll-behavior: contain;
   scrollbar-width: thin;
 }
 
