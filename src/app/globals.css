@@ -30,8 +30,13 @@
   --color-word-600: #3f6ed0;
   --color-word-700: #2b4fa0;
 
+  /* Motion language. Mirrors src/lib/motion.ts — keep the two in sync. */
   --ease-out-soft: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out-soft: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-open: 660ms;
+  --dur-close: 440ms;
+  --dur-reveal: 420ms;
+  --dur-micro: 260ms;
 }
 
 /* Semantic tokens. `inline` keeps the var reference live so the theme can flip
@@ -124,7 +129,36 @@
 }
 
 .motion-fade {
-  animation: motion-fade-in 260ms var(--ease-out-soft) both;
+  animation: motion-fade-in var(--dur-micro) var(--ease-out-soft) both;
+}
+
+/* ---------------------------------------------------------------------------
+   Staggered reveal inside an opened artefact.
+
+   The clip opening and the content arriving used to happen flat, at the same
+   instant, which read as a panel appearing rather than as focus resolving. The
+   content now settles in sequence just behind the opening edge.
+
+   Deliberately small: the premise is that this content was always there, so a
+   large entrance would contradict it. This is depth of field pulling into
+   focus, not elements flying in.
+   --------------------------------------------------------------------------- */
+@keyframes expand-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+[data-expanded="true"] .expand-reveal {
+  animation: expand-reveal var(--dur-reveal) var(--ease-out-soft) both;
+  /* Starts after the clip has begun opening, so content resolves into a window
+     that already exists rather than arriving with it. */
+  animation-delay: calc(160ms + var(--reveal-index, 0) * 70ms);
 }
 
 /* ---------------------------------------------------------------------------
@@ -238,11 +272,11 @@
   background:
     linear-gradient(to right, var(--bg) 0%, transparent 7%, transparent 93%, var(--bg) 100%),
     linear-gradient(to bottom, var(--bg) 0%, transparent 6%, transparent 94%, var(--bg) 100%);
-  animation: motion-fade-in 420ms var(--ease-out-soft) both;
+  animation: motion-fade-in var(--dur-reveal) var(--ease-out-soft) both;
 }
 
 .motion-rise {
-  animation: motion-rise-in 380ms var(--ease-out-soft) both;
+  animation: motion-rise-in var(--dur-reveal) var(--ease-out-soft) both;
 }
 
 /* Non-negotiable — see docs/BRIEF.md §5. Every animation must survive this. */

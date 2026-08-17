@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { prefersReducedMotion, setFocusState } from "@/lib/motion-layer";
+import { DURATION, EASE } from "@/lib/motion";
 
 /**
  * Zooms the page into an artefact.
@@ -46,10 +47,10 @@ const SPINE_GAP = 28;
 /** Below this the plane does not move; the artefact just opens near-fullscreen. */
 const DESKTOP_MIN = 1024;
 
-const OPEN_MS = 660;
-const CLOSE_MS = 440;
-const OPEN_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
-const CLOSE_EASE = "cubic-bezier(0.65, 0, 0.35, 1)";
+const OPEN_MS = DURATION.open;
+const CLOSE_MS = DURATION.close;
+const OPEN_EASE = EASE.out;
+const CLOSE_EASE = EASE.inOut;
 const RADIUS = 16;
 
 /** The transform currently holding the plane. Only one artefact opens at a time. */

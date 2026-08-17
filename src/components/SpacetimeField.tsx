@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from "react";
 import { subscribeFocusState, prefersReducedMotion } from "@/lib/motion-layer";
+import { LERP } from "@/lib/motion";
 
 /**
  * The field — a coordinate lattice the page's contents deform.
@@ -43,6 +44,9 @@ const CURSOR_RADIUS = 190;
 const CURSOR_PULL = 26;
 const REST_RADIUS = 260;
 const REST_PULL = 14;
+/** Hovering an artefact deepens its own well — the field previews the open. */
+const HOVER_RADIUS = 340;
+const HOVER_PULL = 34;
 const FOCUS_RADIUS = 520;
 const FOCUS_PULL = 118;
 const MAX_DPR = 2;
@@ -131,6 +135,15 @@ export function SpacetimeField() {
     const cursor = { x: -9999, y: -9999, tx: -9999, ty: -9999, weight: 0, tw: 0 };
     let focusWeight = 0;
     let focusTarget = 0;
+    /**
+     * First-load sequence, in place of a loading screen.
+     *
+     * The brief allows a loader but does not ask for one, and on a static site
+     * that renders this fast a loader would be theatre. Instead the lattice
+     * arrives flat and the artefacts settle into it — the page assembling
+     * itself, using the signature rather than covering it.
+     */
+    let entrance = reduced ? 1 : 0;
 
     const stars = makeStars(STAR_COUNT);
 
@@ -194,12 +207,25 @@ export function SpacetimeField() {
         // Off-screen artefacts still bend the edge of the field, so the lattice
         // stays continuous rather than flattening at the viewport boundary.
         if (r.bottom < -400 || r.top > height + 400) continue;
-        const isFocused = well.dataset.well === "focused";
+
+        const state = well.dataset.well;
+        let radius = REST_RADIUS;
+        let pull = REST_PULL;
+        if (state === "focused") {
+          radius = FOCUS_RADIUS;
+          pull = REST_PULL + FOCUS_PULL * focusWeight;
+        } else if (state === "hover") {
+          radius = HOVER_RADIUS;
+          pull = HOVER_PULL;
+        }
+
         masses.push({
           x: r.left + r.width / 2,
           y: r.top + r.height / 2,
-          radius: isFocused ? FOCUS_RADIUS : REST_RADIUS,
-          pull: isFocused ? REST_PULL + FOCUS_PULL * focusWeight : REST_PULL,
+          radius,
+          // The whole field fades up on first load, so the lattice starts flat
+          // and the page's structure settles into it.
+          pull: pull * entrance,
         });
       }
       if (cursor.weight > 0.01) {
@@ -276,18 +302,32 @@ export function SpacetimeField() {
     };
 
     const tick = () => {
-      const before = [cursor.x, cursor.y, cursor.weight, focusWeight].join();
+      const before = [
+        cursor.x,
+        cursor.y,
+        cursor.weight,
+        focusWeight,
+        entrance,
+      ].join();
 
-      cursor.x += (cursor.tx - cursor.x) * 0.14;
-      cursor.y += (cursor.ty - cursor.y) * 0.14;
-      cursor.weight += (cursor.tw - cursor.weight) * 0.09;
-      focusWeight += (focusTarget - focusWeight) * 0.075;
+      cursor.x += (cursor.tx - cursor.x) * LERP.cursor;
+      cursor.y += (cursor.ty - cursor.y) * LERP.cursor;
+      cursor.weight += (cursor.tw - cursor.weight) * LERP.cursorWeight;
+      focusWeight += (focusTarget - focusWeight) * LERP.focus;
+      entrance += (1 - entrance) * LERP.entrance;
+      if (entrance > 0.999) entrance = 1;
 
       draw();
 
       // Stop the loop once nothing is moving. An ambient background must not
       // hold a rAF open for the life of the page.
-      const after = [cursor.x, cursor.y, cursor.weight, focusWeight].join();
+      const after = [
+        cursor.x,
+        cursor.y,
+        cursor.weight,
+        focusWeight,
+        entrance,
+      ].join();
       idleFrames = before === after ? idleFrames + 1 : 0;
       if (idleFrames > 20) {
         raf = 0;

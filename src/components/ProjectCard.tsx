@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { PreviewSurface } from "./PreviewSurface";
@@ -25,6 +25,7 @@ export function ProjectCard({
   const pathname = usePathname();
   const router = useRouter();
   const focused = pathname === `/projects/${project.slug}`;
+  const [hovered, setHovered] = useState(false);
   const { slotRef, boxRef, heroRef } = useBoxExpand(focused, project.slug);
 
   useEffect(() => {
@@ -45,17 +46,22 @@ export function ProjectCard({
   }, [focused, router]);
 
   return (
-    <article className="group">
+    <article
+      className="group"
+      onPointerEnter={() => setHovered(true)}
+      onPointerLeave={() => setHovered(false)}
+    >
       {/* No backdrop. The point of the camera move is that the rest of the page
           stays visible beside the focused artefact, in its real position. */}
 
       {/* The slot holds the artefact's footprint via its own aspect-ratio, so
           promoting the box out of flow never reflows the field. */}
-      {/* `data-well` marks this artefact as a mass in the field. The value
-          switches to "focused" so the lattice deepens around the open one. */}
+      {/* `data-well` marks this artefact as a mass in the field. Hovering
+          deepens its well so the field previews the open before you commit to
+          it; focusing deepens it fully. */}
       <div
         ref={slotRef}
-        data-well={focused ? "focused" : "rest"}
+        data-well={focused ? "focused" : hovered ? "hover" : "rest"}
         className="relative"
         style={{ aspectRatio: project.preview.aspectRatio }}
       >
@@ -85,7 +91,10 @@ export function ProjectCard({
                 </div>
 
                 {/* Fills what was dead space beneath the hero. */}
-                <dl className="expand-meta">
+                <dl
+                  className="expand-meta expand-reveal"
+                  style={{ "--reveal-index": 1 } as React.CSSProperties}
+                >
                   <div>
                     <dt>Year</dt>
                     <dd className="tabular-nums">{project.year}</dd>
@@ -129,14 +138,28 @@ export function ProjectCard({
 
               {/* Revealed by the opening clip. Inert at rest so five case
                   studies are not sitting in the accessibility tree. */}
+              {/* Resolves in sequence behind the opening edge — hero, then
+                  metadata, then the writing. See the reveal block in
+                  globals.css. */}
               <div className="expand-detail" inert={!focused}>
-                <h2 className="text-ink text-4xl leading-[1.1] text-balance">
+                <h2
+                  className="expand-reveal text-ink text-4xl leading-[1.1] text-balance"
+                  style={{ "--reveal-index": 0 } as React.CSSProperties}
+                >
                   {project.title}
                 </h2>
-                <p className="text-muted mt-3 max-w-[46ch] text-xl leading-snug text-pretty">
+                <p
+                  className="expand-reveal text-muted mt-3 max-w-[46ch] text-xl leading-snug text-pretty"
+                  style={{ "--reveal-index": 1 } as React.CSSProperties}
+                >
                   {project.tagline}
                 </p>
-                <div className="mt-10">{body}</div>
+                <div
+                  className="expand-reveal mt-10"
+                  style={{ "--reveal-index": 2 } as React.CSSProperties}
+                >
+                  {body}
+                </div>
               </div>
             </div>
           </div>
