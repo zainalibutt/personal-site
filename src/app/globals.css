@@ -123,6 +123,48 @@
   animation: motion-fade-in 260ms var(--ease-out-soft) both;
 }
 
+/* ---------------------------------------------------------------------------
+   The expanding artefact. One box, two layouts.
+
+   At rest the hero fills the box exactly and everything below it is clipped
+   away. Expanded, the box is near-fullscreen and the hero takes a column
+   beside the case study.
+
+   The hero's ASPECT RATIO is identical in both states — it comes from
+   frontmatter either way — so the scale between them is always uniform and the
+   screenshot never distorts in transit. Do not give the expanded hero its own
+   aspect ratio; that reintroduces the stretch this avoids.
+   --------------------------------------------------------------------------- */
+.expand-scroll {
+  height: 100%;
+  overflow: hidden;
+}
+
+.expand-layout {
+  display: grid;
+  gap: 0;
+}
+
+.expand-hero {
+  width: 100%;
+}
+
+[data-expanded="true"] .expand-scroll {
+  overflow-y: auto;
+}
+
+[data-expanded="true"] .expand-layout {
+  padding: clamp(1.25rem, 2.5vw, 2.5rem);
+  gap: clamp(1.5rem, 3vw, 2.75rem);
+}
+
+@media (min-width: 1024px) {
+  [data-expanded="true"] .expand-layout {
+    grid-template-columns: minmax(0, 46%) minmax(0, 1fr);
+    align-items: start;
+  }
+}
+
 .motion-rise {
   animation: motion-rise-in 380ms var(--ease-out-soft) both;
 }

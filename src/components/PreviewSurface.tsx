@@ -1,51 +1,35 @@
 "use client";
 
-import { useCallback } from "react";
 import Image from "next/image";
-import { previewViewId, registerView } from "@/lib/motion-layer";
 import type { ProjectSummary } from "@/lib/content";
 
 /**
- * The preview surface — shared by the card and the focused view, and the single
- * element the morph animates.
+ * The artefact's visible surface, in both the resting and expanded states.
  *
- * Dimensions are reserved from frontmatter before any media exists, and the
- * placeholder is the project's own warm colour rather than a grey box. Both
- * The requirement is absolute (docs/ARCHITECTURE.md §2.7): no layout
- * shift, no blank interval, no spinner.
+ * The aspect ratio comes from frontmatter and is identical in both — that is
+ * what keeps the expansion's scale uniform, so the screenshot never stretches
+ * in transit. Dimensions are reserved before any media exists and the
+ * placeholder is the project's own colour, never a grey box: no layout shift,
+ * no blank interval, no spinner (docs/ARCHITECTURE.md §2.7).
  */
 export function PreviewSurface({
   project,
-  register = false,
   priority = false,
   className = "",
 }: {
   project: ProjectSummary;
-  /** Only the card registers. The focused view reads the card's rect. */
-  register?: boolean;
   /** Flagships sit above the fold, so they load eagerly for LCP. */
   priority?: boolean;
   className?: string;
 }) {
-  const { preview, slug, title } = project;
-
-  const ref = useCallback(
-    (element: HTMLDivElement | null) => {
-      if (!element || !register) return;
-      return registerView(previewViewId(slug), element);
-    },
-    [slug, register],
-  );
+  const { preview, title } = project;
 
   return (
     <div
-      ref={ref}
       className={`relative overflow-hidden ${className}`}
       style={{
         aspectRatio: preview.aspectRatio,
         backgroundColor: preview.dominantColour,
-        // The FLIP inversion in renderers.ts assumes a top-left origin.
-        transformOrigin: "0 0",
       }}
     >
       {/* Warm depth on the placeholder so an assetless card still reads as

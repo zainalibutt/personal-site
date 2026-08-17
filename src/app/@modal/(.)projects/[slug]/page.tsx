@@ -1,15 +1,16 @@
 import { notFound } from "next/navigation";
 import { getProject } from "@/lib/content";
-import { FocusShell } from "@/components/FocusShell";
-import { ProjectBody } from "@/components/ProjectBody";
 
 /**
- * The intercepted project view — the "ghost redirect".
+ * Intercepts an in-session navigation to /projects/[slug] and renders nothing.
  *
- * `(.)` intercepts a same-level navigation to /projects/[slug]. The home page
- * stays mounted underneath, so the card's preview rect is still measurable and
- * the morph has somewhere to travel from. A cold visit bypasses this entirely
- * and renders app/projects/[slug]/page.tsx as a normal page.
+ * That is the whole job. The interception keeps the home page mounted so the
+ * URL can change without unmounting the field — and the artefact itself, which
+ * is already in the field, reads the route and expands in place. There is no
+ * second element to render; that was the old shared-element approach and it is
+ * exactly what "not a new artefact" ruled out.
+ *
+ * A cold visit bypasses this and renders app/projects/[slug]/page.tsx normally.
  */
 export default async function InterceptedProject({
   params,
@@ -20,11 +21,7 @@ export default async function InterceptedProject({
   const project = getProject(slug);
   if (!project || project.draft) notFound();
 
-  const { body, ...summary } = project;
-
-  return (
-    <FocusShell project={summary}>
-      <ProjectBody source={body} />
-    </FocusShell>
-  );
+  // Renders an inert marker rather than `null`: an empty slot makes the router
+  // drop the intercepted branch and unmount the field underneath it.
+  return <div data-intercepted={slug} hidden />;
 }
