@@ -46,13 +46,8 @@ export function ProjectCard({
 
   return (
     <article className="group">
-      {focused && (
-        <div
-          onClick={() => router.back()}
-          className="bg-paper-950/35 motion-fade fixed inset-0 z-40 backdrop-blur-md"
-          aria-hidden
-        />
-      )}
+      {/* No backdrop. The point of the camera move is that the rest of the page
+          stays visible beside the focused artefact, in its real position. */}
 
       {/* The slot holds the artefact's footprint via its own aspect-ratio, so
           promoting the box out of flow never reflows the field. */}

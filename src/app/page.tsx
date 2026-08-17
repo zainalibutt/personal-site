@@ -14,7 +14,14 @@ export default function Home() {
   });
 
   return (
-    <main id="main" className="mx-auto w-[min(96rem,calc(100%-3rem))] pb-40">
+    // `data-plane` marks the surface the camera moves. Focusing an artefact
+    // translates and scales this whole element, so every other item keeps its
+    // spatial relationship instead of being covered over.
+    <main
+      id="main"
+      data-plane
+      className="mx-auto w-[min(96rem,calc(100%-3rem))] origin-top-left pb-40 will-change-transform"
+    >
       {/* the entry. Name and links centred, per the wireframe. */}
       <header className="flex flex-col items-center py-24 text-center sm:py-32">
         <h1 className="text-ink text-5xl text-balance sm:text-7xl">

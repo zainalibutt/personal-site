@@ -4,78 +4,87 @@ import { useEffect, useRef } from "react";
 import { prefersReducedMotion, setFocusState } from "@/lib/motion-layer";
 
 /**
- * Expands an artefact in place.
+ * Zooms the page into an artefact.
  *
- * This is NOT a shared-element morph. There is one box. Focusing it promotes it
- * to `position: fixed` at its final near-fullscreen geometry, then opens a
- * `clip-path` window that starts exactly on its resting rect — so its four
- * corners travel outward, and content that was always inside is revealed rather
- * than introduced.
+ * The page is one plane. Focusing an artefact does two things at once:
  *
- * Why clip-path and not transform: a transform would scale the case-study text
- * up from card size, which is both blurry in transit and the exact failure both
- * this avoids. Clipping leaves every glyph at its final size from the
- * first frame.
+ * 1. The artefact grows **in plane coordinates**, around its own centre, so its
+ *    four corners travel outward. It is absolutely positioned inside a slot
+ *    that keeps its footprint, so nothing else reflows.
+ * 2. The plane itself translates and scales so that artefact fills the frame.
  *
- * The hero is the one thing that does scale — it is an image, so it survives it,
- * and the expanded layout keeps its aspect ratio identical to the card's so the
- * scale is always uniform and never distorts.
+ * The second part is what makes this a camera move rather than a panel opening
+ * on top of the page. Everything else — About, the other artefacts — keeps its
+ * exact spatial relationship and simply moves and grows with the plane. About
+ * is still to the right of Proof-Lens when Proof-Lens is open; it is just off
+ * the edge of the frame.
+ *
+ * This is also why there is no backdrop. Dimming the surroundings would defeat
+ * the whole idea.
  */
 
-const GUTTER = 24;
-const OPEN_MS = 620;
-const CLOSE_MS = 420;
+/**
+ * How much the plane scales when focused. Kept modest and constant: the
+ * artefact's own growth supplies most of the sense of arrival, and text inside
+ * it renders at this scale, so a large value would blow the typography up.
+ * Everything visible grows by exactly this much.
+ */
+const ZOOM = 1.35;
+
+/**
+ * Fraction of the viewport the focused artefact occupies once framed.
+ *
+ * Deliberately not close to 1. The artefact has to leave room for its
+ * neighbours to stay visible beside it — that is the entire point of moving the
+ * camera rather than opening a panel. At 0.66 the About column keeps roughly
+ * four fifths of itself in frame while Proof-Lens is open.
+ *
+ * Text inside the artefact renders at ZOOM, so ~21px body copy. That reads as
+ * deliberate for a case study; if it ever needs to be exactly 1x, the fix is a
+ * counter-scale of 1/ZOOM on the content wrapper, not a smaller ZOOM.
+ */
+const FRAME_W = 0.66;
+const FRAME_H = 0.8;
+
+/** Below this the plane does not move; the artefact just opens near-fullscreen. */
+const DESKTOP_MIN = 1024;
+
+const OPEN_MS = 660;
+const CLOSE_MS = 440;
 const OPEN_EASE = "cubic-bezier(0.22, 1, 0.36, 1)";
 const CLOSE_EASE = "cubic-bezier(0.65, 0, 0.35, 1)";
 const RADIUS = 16;
 
-interface Box {
-  left: number;
-  top: number;
-  width: number;
-  height: number;
-}
-
-function finalGeometry(): Box {
-  const gutter = Math.min(GUTTER, window.innerWidth * 0.04);
-  return {
-    left: gutter,
-    top: gutter,
-    width: window.innerWidth - gutter * 2,
-    height: window.innerHeight - gutter * 2,
-  };
-}
-
-/** The clip that makes `outer` show exactly the region covered by `inner`. */
-function clipTo(outer: Box, inner: DOMRect): string {
-  const top = Math.max(0, inner.top - outer.top);
-  const right = Math.max(0, outer.left + outer.width - (inner.left + inner.width));
-  const bottom = Math.max(0, outer.top + outer.height - (inner.top + inner.height));
-  const left = Math.max(0, inner.left - outer.left);
-  return `inset(${top}px ${right}px ${bottom}px ${left}px round ${RADIUS}px)`;
-}
-
-function promote(box: HTMLElement, geometry: Box): void {
-  box.style.position = "fixed";
-  box.style.left = `${geometry.left}px`;
-  box.style.top = `${geometry.top}px`;
-  box.style.width = `${geometry.width}px`;
-  box.style.height = `${geometry.height}px`;
-  box.style.zIndex = "50";
-}
-
-function demote(box: HTMLElement): void {
-  box.style.position = "";
-  box.style.left = "";
-  box.style.top = "";
-  box.style.width = "";
-  box.style.height = "";
-  box.style.zIndex = "";
-  box.style.clipPath = "";
-}
+/** The transform currently holding the plane. Only one artefact opens at a time. */
+let activePlaneTransform: string | null = null;
 
 function cancel(element: HTMLElement): void {
   for (const animation of element.getAnimations()) animation.cancel();
+}
+
+function getPlane(): HTMLElement | null {
+  return document.querySelector<HTMLElement>("[data-plane]");
+}
+
+/** Returns the plane to identity so it can be measured untransformed. */
+function resetPlane(plane: HTMLElement): void {
+  cancel(plane);
+  plane.style.transform = "";
+  activePlaneTransform = null;
+}
+
+function targetSize(desktop: boolean) {
+  if (!desktop) {
+    return {
+      width: window.innerWidth - 32,
+      height: window.innerHeight * 0.88,
+    };
+  }
+  // Divided by ZOOM because the plane will scale it back up when framing.
+  return {
+    width: (window.innerWidth * FRAME_W) / ZOOM,
+    height: (window.innerHeight * FRAME_H) / ZOOM,
+  };
 }
 
 export function useBoxExpand(focused: boolean, slug: string) {
@@ -91,41 +100,89 @@ export function useBoxExpand(focused: boolean, slug: string) {
     if (!slot || !box || !hero) return;
 
     const reduced = prefersReducedMotion();
+    const plane = getPlane();
+    const desktop = window.innerWidth >= DESKTOP_MIN;
 
     if (focused && !isExpanded.current) {
       isExpanded.current = true;
       cancel(box);
       cancel(hero);
+      if (plane) resetPlane(plane);
 
-      // The slot keeps the artefact's footprint in the field via its own
-      // aspect-ratio, so promoting the box out of flow reflows nothing.
-      const rest = slot.getBoundingClientRect();
-      const geometry = finalGeometry();
+      const restWidth = slot.offsetWidth;
+      const restHeight = slot.offsetHeight;
+      const target = targetSize(desktop);
+
+      // Grow around the slot's centre, so every corner moves outward.
+      const spreadX = Math.max(0, (target.width - restWidth) / 2);
+      const spreadY = Math.max(0, (target.height - restHeight) / 2);
 
       box.dataset.expanded = "true";
-      promote(box, geometry);
+      box.style.position = "absolute";
+      box.style.left = `${-spreadX}px`;
+      box.style.top = `${-spreadY}px`;
+      box.style.width = `${target.width}px`;
+      box.style.height = `${target.height}px`;
+      box.style.zIndex = "50";
       setFocusState("opening", slug);
 
       if (reduced) {
-        box.style.clipPath = "";
+        if (plane) resetPlane(plane);
         setFocusState("focused", slug);
         return;
       }
 
-      // Forced layout: the hero must be measured in its expanded position
-      // before the inverse transform can be worked out.
+      // Forced layout: both the hero and the plane framing depend on the
+      // artefact's post-growth geometry.
       const heroFinal = hero.getBoundingClientRect();
 
       const opening = box.animate(
         [
-          { clipPath: clipTo(geometry, rest) },
+          {
+            clipPath: `inset(${spreadY}px ${spreadX}px ${spreadY}px ${spreadX}px round ${RADIUS}px)`,
+          },
           { clipPath: `inset(0px 0px 0px 0px round ${RADIUS}px)` },
         ],
         { duration: OPEN_MS, easing: OPEN_EASE, fill: "both" },
       );
-      // Cancelling drops the fill, which leaves the element in its natural
-      // expanded state — so this both finishes the transition and repairs it if
-      // the timeline froze (backgrounded tab) and never advanced past frame 0.
+
+      if (heroFinal.width > 0) {
+        // The hero's aspect ratio is identical in both states, so this scale is
+        // always uniform and the screenshot never stretches.
+        const scale = restWidth / heroFinal.width;
+        const restRect = slot.getBoundingClientRect();
+        hero.style.transformOrigin = "0 0";
+        hero.animate(
+          [
+            {
+              transform: `translate(${restRect.left - heroFinal.left}px, ${restRect.top - heroFinal.top}px) scale(${scale})`,
+            },
+            { transform: "none" },
+          ],
+          { duration: OPEN_MS, easing: OPEN_EASE, fill: "both" },
+        );
+      }
+
+      if (desktop && plane) {
+        const planeRect = plane.getBoundingClientRect();
+        const boxRect = box.getBoundingClientRect();
+        // Centre of the grown artefact, in the plane's own untransformed space.
+        const centreX = boxRect.left - planeRect.left + boxRect.width / 2;
+        const centreY = boxRect.top - planeRect.top + boxRect.height / 2;
+        // Solve for the translate that lands that centre on the viewport centre
+        // once the plane is scaled about its top-left corner.
+        const tx = window.innerWidth / 2 - planeRect.left - ZOOM * centreX;
+        const ty = window.innerHeight / 2 - planeRect.top - ZOOM * centreY;
+        const transform = `translate(${tx}px, ${ty}px) scale(${ZOOM})`;
+        activePlaneTransform = transform;
+
+        plane.animate([{ transform: "none" }, { transform }], {
+          duration: OPEN_MS,
+          easing: OPEN_EASE,
+          fill: "forwards",
+        });
+      }
+
       let openSettled = false;
       const settleOpen = () => {
         if (openSettled) return;
@@ -135,24 +192,18 @@ export function useBoxExpand(focused: boolean, slug: string) {
         cancel(hero);
         box.style.clipPath = "";
         hero.style.transform = "";
+        // The plane keeps its transform via an inline style rather than a
+        // filling animation, so nothing is left holding a frame.
+        if (desktop && plane && activePlaneTransform) {
+          cancel(plane);
+          plane.style.transform = activePlaneTransform;
+        }
         setFocusState("focused", slug);
       };
+      // A frozen document timeline (backgrounded tab) never settles `finished`
+      // and would strand the artefact mid-open with the page scroll locked.
       const openGuard = setTimeout(settleOpen, OPEN_MS + 80);
       void opening.finished.then(settleOpen).catch(settleOpen);
-
-      if (heroFinal.width > 0) {
-        const scale = rest.width / heroFinal.width;
-        hero.style.transformOrigin = "0 0";
-        hero.animate(
-          [
-            {
-              transform: `translate(${rest.left - heroFinal.left}px, ${rest.top - heroFinal.top}px) scale(${scale})`,
-            },
-            { transform: "none" },
-          ],
-          { duration: OPEN_MS, easing: OPEN_EASE, fill: "both" },
-        );
-      }
       return;
     }
 
@@ -162,36 +213,63 @@ export function useBoxExpand(focused: boolean, slug: string) {
       cancel(hero);
       setFocusState("closing", slug);
 
-      if (reduced) {
+      const restore = () => {
         box.dataset.expanded = "false";
-        demote(box);
+        box.style.position = "";
+        box.style.left = "";
+        box.style.top = "";
+        box.style.width = "";
+        box.style.height = "";
+        box.style.zIndex = "";
+        box.style.clipPath = "";
+        hero.style.transform = "";
+        if (plane) resetPlane(plane);
         setFocusState("idle");
+      };
+
+      if (reduced) {
+        restore();
         return;
       }
 
-      const rest = slot.getBoundingClientRect();
-      const geometry = finalGeometry();
+      const restWidth = slot.offsetWidth;
+      const restHeight = slot.offsetHeight;
+      const spreadX = Math.max(0, (box.offsetWidth - restWidth) / 2);
+      const spreadY = Math.max(0, (box.offsetHeight - restHeight) / 2);
       const heroFinal = hero.getBoundingClientRect();
+      const restRect = slot.getBoundingClientRect();
 
       const closing = box.animate(
         [
           { clipPath: `inset(0px 0px 0px 0px round ${RADIUS}px)` },
-          { clipPath: clipTo(geometry, rest) },
+          {
+            clipPath: `inset(${spreadY}px ${spreadX}px ${spreadY}px ${spreadX}px round ${RADIUS}px)`,
+          },
         ],
         { duration: CLOSE_MS, easing: CLOSE_EASE, fill: "both" },
       );
 
       if (heroFinal.width > 0) {
-        const scale = rest.width / heroFinal.width;
+        const scale = restWidth / heroFinal.width;
         hero.animate(
           [
             { transform: "none" },
             {
-              transform: `translate(${rest.left - heroFinal.left}px, ${rest.top - heroFinal.top}px) scale(${scale})`,
+              transform: `translate(${restRect.left - heroFinal.left}px, ${restRect.top - heroFinal.top}px) scale(${scale})`,
             },
           ],
           { duration: CLOSE_MS, easing: CLOSE_EASE, fill: "both" },
         );
+      }
+
+      if (plane && activePlaneTransform) {
+        const from = activePlaneTransform;
+        plane.style.transform = "";
+        plane.animate([{ transform: from }, { transform: "none" }], {
+          duration: CLOSE_MS,
+          easing: CLOSE_EASE,
+          fill: "both",
+        });
       }
 
       let settled = false;
@@ -201,14 +279,8 @@ export function useBoxExpand(focused: boolean, slug: string) {
         clearTimeout(guard);
         cancel(box);
         cancel(hero);
-        box.dataset.expanded = "false";
-        demote(box);
-        hero.style.transform = "";
-        setFocusState("idle");
+        restore();
       };
-
-      // `finished` never settles while the document timeline is frozen (a
-      // backgrounded tab), which would strand the artefact mid-collapse.
       const guard = setTimeout(settle, CLOSE_MS + 140);
       void closing.finished.then(settle).catch(settle);
     }
