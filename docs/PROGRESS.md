@@ -79,3 +79,15 @@ Ground inverted to deep space blue with a starfield and nebulae. The dark app sc
 ![Deep space — melody open](progress/06-deep-space-focused.png)
 
 ---
+
+## Choreography
+
+`3e03731`
+
+Every duration and curve moved into one motion language. The case study resolves in sequence behind the opening edge rather than arriving flat with it, hovering an artefact deepens its own well so the field forecasts the open, and the first load assembles the lattice instead of showing a loader.
+
+![Choreography — home](progress/07-choreography-home.png)
+
+![Choreography — proof-lens open](progress/07-choreography-focused.png)
+
+---

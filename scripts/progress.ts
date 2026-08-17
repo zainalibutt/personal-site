@@ -81,6 +81,13 @@ const MILESTONES: Milestone[] = [
     note: "Ground inverted to deep space blue with a starfield and nebulae. The dark app screenshots stopped fighting the page. The lattice no longer folds through itself.",
     focus: "melody",
   },
+  {
+    sha: "3e03731",
+    slug: "07-choreography",
+    title: "Choreography",
+    note: "Every duration and curve moved into one motion language. The case study resolves in sequence behind the opening edge rather than arriving flat with it, hovering an artefact deepens its own well so the field forecasts the open, and the first load assembles the lattice instead of showing a loader.",
+    focus: "proof-lens",
+  },
 ];
 
 const WIDTH = 1440;
