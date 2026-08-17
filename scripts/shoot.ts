@@ -112,6 +112,29 @@ async function main() {
       `  scroll over artefact: ${before} -> ${after} ${after > before ? "OK" : "BLOCKED"}`,
     );
 
+    // Reading order on a phone. The flanks are two DOM containers, so stacking
+    // them gives left-flank / spine / right-flank unless something forces the
+    // sequence back — which once put Melody, a flagship, below About and two
+    // lesser projects. Asserted rather than eyeballed: it regresses invisibly,
+    // because at desktop width the layout looks perfect either way.
+    if (WIDTH < 1024) {
+      await page.goto(BASE, { waitUntil: "networkidle" });
+      const spine = await page.locator("[data-spine]").boundingBox();
+      const flagships = await page
+        .locator("article")
+        .filter({ hasText: /Proof-Lens|Melody/ })
+        .all();
+      const tops = await Promise.all(
+        flagships.map(async (f) => (await f.boundingBox())?.y ?? Infinity),
+      );
+      const lowest = Math.max(...tops);
+      console.log(
+        `  flagships above About: ${flagships.length} found, ${
+          spine && lowest < spine.y ? "OK" : "BURIED"
+        }`,
+      );
+    }
+
     await page.goto(BASE, { waitUntil: "networkidle" });
     const box2 = await artefact.boundingBox();
     if (box2) {

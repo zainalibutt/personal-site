@@ -101,10 +101,17 @@ const WIDTH = 1440;
 const HEIGHT = 900;
 
 function sh(command: string, cwd = ROOT): string {
-  return execSync(command, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] }).trim();
+  return execSync(command, {
+    cwd,
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+  }).trim();
 }
 
-async function waitForServer(url: string, timeoutMs = 90_000): Promise<boolean> {
+async function waitForServer(
+  url: string,
+  timeoutMs = 90_000,
+): Promise<boolean> {
   const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     try {

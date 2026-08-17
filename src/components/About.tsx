@@ -49,9 +49,14 @@ export function About() {
         </p>
       </div>
 
+      {/* The published CV is a redacted copy — the phone number on the original
+          is removed from the content stream, not covered over, so it does not
+          survive copy-paste or a parser. The original lives in
+          `assets/raw/documents/`, which is gitignored and stays that way. */}
       <ul className="text-sm">
         {[
           { label: "Email", href: `mailto:${site.links.email}` },
+          { label: "CV", href: "/ZainButt-CV.pdf" },
           { label: "GitHub", href: site.links.github },
           { label: "LinkedIn", href: site.links.linkedin },
         ].map((link) => (
