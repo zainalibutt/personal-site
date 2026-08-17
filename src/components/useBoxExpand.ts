@@ -120,6 +120,60 @@ function frame(slot: HTMLElement, desktop: boolean) {
   return { width, height, zoom, restWidth, restHeight };
 }
 
+/**
+ * Writes the expanded geometry onto the artefact and works out where the camera
+ * has to sit. Shared by the opening transition and the resize handler, so the
+ * framing can never drift out of step with the viewport.
+ */
+function layoutExpanded(
+  slot: HTMLElement,
+  box: HTMLElement,
+  plane: HTMLElement | null,
+  desktop: boolean,
+) {
+  const target = frame(slot, desktop);
+  const spreadX = Math.max(0, (target.width - target.restWidth) / 2);
+  const spreadY = Math.max(0, (target.height - target.restHeight) / 2);
+
+  box.style.left = `${-spreadX}px`;
+  box.style.top = `${-spreadY}px`;
+  box.style.width = `${target.width}px`;
+  box.style.height = `${target.height}px`;
+
+  const scroll = box.querySelector<HTMLElement>(".expand-scroll");
+  if (scroll) {
+    scroll.style.width = `${target.width * target.zoom}px`;
+    scroll.style.height = `${target.height * target.zoom}px`;
+    scroll.style.transformOrigin = "0 0";
+    scroll.style.transform = `scale(${1 / target.zoom})`;
+  }
+
+  // The close control sits outside the scroll container so it can pin to the
+  // artefact's corner, which means it misses that counter-scale and the camera
+  // magnifies it alone. Without this it renders at `zoom` and covers the tagline.
+  const close = box.querySelector<HTMLElement>("[data-close]");
+  if (close) {
+    close.style.transformOrigin = "100% 0";
+    close.style.transform = `scale(${1 / target.zoom})`;
+  }
+
+  let planeTransform: string | null = null;
+  if (desktop && plane) {
+    // Measure with the plane at rest, or the centre is read through the very
+    // transform being replaced and drifts further out each time.
+    plane.style.transform = "";
+    const planeRect = plane.getBoundingClientRect();
+    const boxRect = box.getBoundingClientRect();
+    const centreX = boxRect.left - planeRect.left + boxRect.width / 2;
+    const centreY = boxRect.top - planeRect.top + boxRect.height / 2;
+    const tx = window.innerWidth / 2 - planeRect.left - target.zoom * centreX;
+    const ty = window.innerHeight / 2 - planeRect.top - target.zoom * centreY;
+    planeTransform = `translate(${tx}px, ${ty}px) scale(${target.zoom})`;
+  }
+
+  return { spreadX, spreadY, planeTransform, target };
+}
+
 export function useBoxExpand(focused: boolean, slug: string) {
   const slotRef = useRef<HTMLDivElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
@@ -142,31 +196,20 @@ export function useBoxExpand(focused: boolean, slug: string) {
       cancel(hero);
       if (plane) resetPlane(plane);
 
-      const target = frame(slot, desktop);
-      const { restWidth, restHeight, zoom } = target;
-
-      // Grow around the slot's centre, so every corner moves outward.
-      const spreadX = Math.max(0, (target.width - restWidth) / 2);
-      const spreadY = Math.max(0, (target.height - restHeight) / 2);
-
       box.dataset.expanded = "true";
       box.style.position = "absolute";
-      box.style.left = `${-spreadX}px`;
-      box.style.top = `${-spreadY}px`;
-      box.style.width = `${target.width}px`;
-      box.style.height = `${target.height}px`;
       box.style.zIndex = "50";
 
-      // Counter-scale: the content is laid out at the size it will occupy on
-      // screen, then shrunk by 1/zoom so it fits the artefact's small plane
-      // footprint. The camera scales it back up, landing typography at 1x.
-      const scroll = box.querySelector<HTMLElement>(".expand-scroll");
-      if (scroll) {
-        scroll.style.width = `${target.width * zoom}px`;
-        scroll.style.height = `${target.height * zoom}px`;
-        scroll.style.transformOrigin = "0 0";
-        scroll.style.transform = `scale(${1 / zoom})`;
-      }
+      // Counter-scale lives in here: content is laid out at the size it will
+      // occupy on screen, then shrunk by 1/zoom to fit the artefact's small
+      // plane footprint. The camera scales it back up, landing type at 1x.
+      const { spreadX, spreadY, planeTransform, target } = layoutExpanded(
+        slot,
+        box,
+        plane,
+        desktop,
+      );
+      const { restWidth } = target;
       setFocusState("opening", slug);
 
       if (reduced) {
@@ -206,20 +249,9 @@ export function useBoxExpand(focused: boolean, slug: string) {
         );
       }
 
-      if (desktop && plane) {
-        const planeRect = plane.getBoundingClientRect();
-        const boxRect = box.getBoundingClientRect();
-        // Centre of the grown artefact, in the plane's own untransformed space.
-        const centreX = boxRect.left - planeRect.left + boxRect.width / 2;
-        const centreY = boxRect.top - planeRect.top + boxRect.height / 2;
-        // Solve for the translate that lands that centre on the viewport centre
-        // once the plane is scaled about its top-left corner.
-        const tx = window.innerWidth / 2 - planeRect.left - zoom * centreX;
-        const ty = window.innerHeight / 2 - planeRect.top - zoom * centreY;
-        const transform = `translate(${tx}px, ${ty}px) scale(${zoom})`;
-        activePlaneTransform = transform;
-
-        plane.animate([{ transform: "none" }, { transform }], {
+      if (plane && planeTransform) {
+        activePlaneTransform = planeTransform;
+        plane.animate([{ transform: "none" }, { transform: planeTransform }], {
           duration: OPEN_MS,
           easing: OPEN_EASE,
           fill: "forwards",
@@ -272,6 +304,11 @@ export function useBoxExpand(focused: boolean, slug: string) {
           scroll.style.height = "";
           scroll.style.transform = "";
           scroll.style.transformOrigin = "";
+        }
+        const close = box.querySelector<HTMLElement>("[data-close]");
+        if (close) {
+          close.style.transform = "";
+          close.style.transformOrigin = "";
         }
         if (plane) resetPlane(plane);
         setFocusState("idle");
@@ -335,6 +372,42 @@ export function useBoxExpand(focused: boolean, slug: string) {
       void closing.finished.then(settle).catch(settle);
     }
   }, [focused, slug]);
+
+  /**
+   * Reframe on resize.
+   *
+   * The geometry and the camera are both derived from viewport size, and they
+   * are computed once at open. Without this, resizing while an artefact is open
+   * leaves the box sized for the old viewport and the plane scaled for it —
+   * which overflows the screen and clips the case study.
+   */
+  useEffect(() => {
+    if (!focused) return;
+    const slot = slotRef.current;
+    const box = boxRef.current;
+    if (!slot || !box) return;
+
+    let frameId = 0;
+    const onResize = () => {
+      cancelAnimationFrame(frameId);
+      frameId = requestAnimationFrame(() => {
+        const plane = getPlane();
+        const desktop = window.innerWidth >= DESKTOP_MIN;
+        if (plane) cancel(plane);
+        const { planeTransform } = layoutExpanded(slot, box, plane, desktop);
+        // Applied directly rather than animated: this tracks a drag-resize, so
+        // it has to land on the same frame as the new viewport size.
+        if (plane) plane.style.transform = planeTransform ?? "";
+        activePlaneTransform = planeTransform;
+      });
+    };
+
+    window.addEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      cancelAnimationFrame(frameId);
+    };
+  }, [focused]);
 
   return { slotRef, boxRef, heroRef };
 }

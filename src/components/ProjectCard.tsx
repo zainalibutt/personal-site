@@ -63,89 +63,101 @@ export function ProjectCard({
             "border-line bg-bg absolute inset-0 overflow-hidden rounded-2xl border",
             "transition-[transform,box-shadow] duration-500 ease-[var(--ease-out-soft)]",
             "data-[expanded=false]:group-hover:-translate-y-2",
-            "data-[expanded=false]:group-hover:scale-[1.06]",
+            "data-[expanded=false]:group-hover:scale-[1.04]",
             "data-[expanded=false]:group-hover:shadow-2xl",
-            "data-[expanded=false]:group-hover:shadow-word-600/15",
+            "data-[expanded=false]:group-hover:shadow-word-700/20",
             "data-[expanded=true]:shadow-2xl",
             "motion-reduce:transform-none motion-reduce:transition-none",
           ].join(" ")}
         >
-          <div className="expand-scroll h-full overscroll-contain">
+          <div className="expand-scroll overscroll-contain">
             <div className="expand-layout">
-              <div ref={heroRef} className="expand-hero">
+              <div className="expand-hero-col">
+                <div ref={heroRef} className="expand-hero">
                   <PreviewSurface
                     project={project}
                     priority={project.flagship}
-                    className="w-full rounded-2xl"
+                    className="w-full"
                   />
                 </div>
 
-                {/* Revealed by the opening clip. Inert at rest so five case
-                    studies are not sitting in the accessibility tree. */}
-                <div className="expand-detail" inert={!focused}>
-                  <h2 className="text-ink text-3xl sm:text-4xl">
-                    {project.title}
-                  </h2>
-                  <p className="text-muted mt-2 text-lg text-pretty">
-                    {project.tagline}
-                  </p>
-
-                  <dl className="mt-6 flex flex-wrap gap-x-8 gap-y-3 text-sm">
-                    <div>
-                      <dt className="text-muted">Year</dt>
-                      <dd className="text-ink tabular-nums">{project.year}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-muted">Role</dt>
-                      <dd className="text-ink">{project.role}</dd>
-                    </div>
-                  </dl>
-
+                {/* Fills what was dead space beneath the hero. */}
+                <dl className="expand-meta">
+                  <div>
+                    <dt>Year</dt>
+                    <dd className="tabular-nums">{project.year}</dd>
+                  </div>
+                  <div>
+                    <dt>Role</dt>
+                    <dd>{project.role}</dd>
+                  </div>
+                  <div className="col-span-2">
+                    <dt>Built with</dt>
+                    <dd className="mt-2 flex flex-wrap gap-1.5">
+                      {project.stack.map((tech) => (
+                        <span key={tech} className="tag">
+                          {tech}
+                        </span>
+                      ))}
+                    </dd>
+                  </div>
                   {(project.repo || project.live) && (
-                    <nav className="mt-4 flex gap-6 text-sm">
+                    <div className="col-span-2 flex gap-5 pt-1">
                       {project.live && (
                         <a
-                          className="text-accent underline underline-offset-4"
+                          className="text-accent hover:text-ink underline underline-offset-4"
                           href={project.live}
                         >
-                          Live
+                          Live site
                         </a>
                       )}
                       {project.repo && (
                         <a
-                          className="text-accent underline underline-offset-4"
+                          className="text-accent hover:text-ink underline underline-offset-4"
                           href={project.repo}
                         >
-                          Source
+                          Source code
                         </a>
                       )}
-                    </nav>
+                    </div>
                   )}
+                </dl>
+              </div>
 
-                  <div className="mt-8">{body}</div>
+              {/* Revealed by the opening clip. Inert at rest so five case
+                  studies are not sitting in the accessibility tree. */}
+              <div className="expand-detail" inert={!focused}>
+                <h2 className="text-ink text-4xl leading-[1.1] text-balance">
+                  {project.title}
+                </h2>
+                <p className="text-muted mt-3 max-w-[46ch] text-xl leading-snug text-pretty">
+                  {project.tagline}
+                </p>
+                <div className="mt-10">{body}</div>
               </div>
             </div>
           </div>
 
           {focused && (
             <button
+              data-close
               onClick={() => router.back()}
-              className="bg-bg/85 text-ink border-line absolute top-4 right-4 z-10 rounded-full border px-4 py-2 text-sm backdrop-blur"
+              aria-label="Close project"
+              className="border-line bg-bg/90 text-muted hover:text-ink absolute top-3 right-3 z-10 rounded-full border px-3 py-1.5 text-xs backdrop-blur transition-colors"
             >
-              Close <kbd className="text-muted ml-1">Esc</kbd>
+              Close <kbd className="ml-1 font-sans opacity-70">Esc</kbd>
             </button>
           )}
         </div>
       </div>
 
-      {/* Field-level label. Stays put while the box expands over it. */}
       {/* Hidden while focused: the expanded artefact carries its own title, so
           leaving this visible renders the project twice. */}
       <Link
         href={`/projects/${project.slug}`}
         scroll={false}
         prefetch
-        className="mt-5 block space-y-1.5 px-1 transition-opacity duration-300 focus-visible:outline-none"
+        className="mt-5 block px-1 transition-opacity duration-300 focus-visible:outline-none"
         // Inline rather than a utility class: the artefact's own animations put
         // competing opacity rules on this subtree, and this must always win.
         style={{
@@ -163,10 +175,14 @@ export function ProjectCard({
             {project.year}
           </span>
         </span>
-        <span className="text-muted block text-pretty">{project.tagline}</span>
-        <span className="text-muted/80 flex flex-wrap gap-x-3 gap-y-1 pt-2 text-xs">
+        <span className="text-muted mt-1 block max-w-[42ch] text-pretty">
+          {project.tagline}
+        </span>
+        <span className="mt-3 flex flex-wrap gap-1.5">
           {project.stack.map((tech) => (
-            <span key={tech}>{tech}</span>
+            <span key={tech} className="tag">
+              {tech}
+            </span>
           ))}
         </span>
       </Link>

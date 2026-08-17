@@ -67,6 +67,16 @@ export function PreviewSurface({
         />
       )}
 
+      {/* Assetless artefacts read as unfinished otherwise — a flat colour block
+          looks like a failed image, not a considered placeholder. */}
+      {!preview.poster && (
+        <div className="absolute inset-0 flex items-end p-5">
+          <span className="rounded-full bg-white/15 px-3 py-1 text-[0.6875rem] tracking-wide text-white/80 backdrop-blur-sm">
+            Capture coming
+          </span>
+        </div>
+      )}
+
       {/* flagship miniatures mount here. Proof-Lens and Melody get
           bespoke interactive demos; the surface below them stays as the
           pre-enhancement state so the card is complete before they load. */}

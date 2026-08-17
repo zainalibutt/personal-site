@@ -1,6 +1,7 @@
 import { getAllProjects } from "@/lib/content";
 import { site } from "@/lib/site";
 import { About } from "@/components/About";
+import { EdgeFade } from "@/components/EdgeFade";
 import { ProjectBody } from "@/components/ProjectBody";
 import { ProjectField, type FieldItem } from "@/components/ProjectField";
 
@@ -14,55 +15,60 @@ export default function Home() {
   });
 
   return (
-    // `data-plane` marks the surface the camera moves. Focusing an artefact
-    // translates and scales this whole element, so every other item keeps its
-    // spatial relationship instead of being covered over.
-    <main
-      id="main"
-      data-plane
-      className="mx-auto w-[min(96rem,calc(100%-3rem))] origin-top-left pb-40 will-change-transform"
-    >
-      {/* the entry. Name and links centred, per the wireframe. */}
-      <header className="flex flex-col items-center py-24 text-center sm:py-32">
-        <h1 className="text-ink text-5xl text-balance sm:text-7xl">
-          {site.name}
-        </h1>
-        <p className="text-muted mt-5 max-w-xl text-lg text-pretty sm:text-xl">
-          {site.role} · {site.location}
-        </p>
+    <>
+      {/* Outside the plane on purpose — see EdgeFade. */}
+      <EdgeFade />
 
-        <nav
-          aria-label="Elsewhere"
-          className="mt-8 flex flex-wrap justify-center gap-x-8 gap-y-2 text-sm"
-        >
-          <a
-            className="text-accent hover:text-ink underline underline-offset-8 transition-colors"
-            href={site.links.github}
-          >
-            GitHub
-          </a>
-          <a
-            className="text-accent hover:text-ink underline underline-offset-8 transition-colors"
-            href={site.links.linkedin}
-          >
-            LinkedIn
-          </a>
-          <a
-            className="text-accent hover:text-ink underline underline-offset-8 transition-colors"
-            href={`mailto:${site.links.email}`}
-          >
-            Email
-          </a>
-        </nav>
-      </header>
+      {/* `data-plane` marks the surface the camera moves. Focusing an artefact
+          translates and scales this whole element, so every other item keeps its
+          spatial relationship instead of being covered over. */}
+      <main
+        id="main"
+        data-plane
+        className="mx-auto w-[min(96rem,calc(100%-3rem))] origin-top-left pb-40 will-change-transform"
+      >
+        {/* the entry. Name and links centred, per the wireframe. */}
+        <header className="flex flex-col items-center pt-16 pb-14 text-center sm:pt-20 sm:pb-16">
+          <h1 className="text-ink text-6xl tracking-[-0.03em] text-balance sm:text-7xl">
+            {site.name}
+          </h1>
+          <p className="text-muted mt-4 max-w-xl text-lg text-pretty sm:text-xl">
+            {site.role} · {site.location}
+          </p>
 
-      <h2 id="work-heading" className="sr-only">
-        Selected work
-      </h2>
+          <nav
+            aria-label="Elsewhere"
+            className="mt-8 flex flex-wrap justify-center gap-x-8 gap-y-2 text-sm"
+          >
+            <a
+              className="text-accent hover:text-ink underline underline-offset-8 transition-colors"
+              href={site.links.github}
+            >
+              GitHub
+            </a>
+            <a
+              className="text-accent hover:text-ink underline underline-offset-8 transition-colors"
+              href={site.links.linkedin}
+            >
+              LinkedIn
+            </a>
+            <a
+              className="text-accent hover:text-ink underline underline-offset-8 transition-colors"
+              href={`mailto:${site.links.email}`}
+            >
+              Email
+            </a>
+          </nav>
+        </header>
 
-      <ProjectField items={items}>
-        <About />
-      </ProjectField>
-    </main>
+        <h2 id="work-heading" className="sr-only">
+          Selected work
+        </h2>
+
+        <ProjectField items={items}>
+          <About />
+        </ProjectField>
+      </main>
+    </>
   );
 }

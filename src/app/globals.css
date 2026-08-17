@@ -149,20 +149,85 @@
   width: 100%;
 }
 
+/* Metadata under the hero. Hidden at rest — it would otherwise sit in the
+   clipped region and count toward the resting box's height. */
+.expand-meta {
+  display: none;
+}
+
 [data-expanded="true"] .expand-scroll {
   overflow-y: auto;
+  scrollbar-width: thin;
 }
 
 [data-expanded="true"] .expand-layout {
-  padding: clamp(1.25rem, 2.5vw, 2.5rem);
-  gap: clamp(1.5rem, 3vw, 2.75rem);
+  padding: clamp(1.5rem, 2.6vw, 2.75rem);
+  gap: clamp(1.75rem, 3vw, 3rem);
+}
+
+[data-expanded="true"] .expand-meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem 1.5rem;
+  margin-top: 1.75rem;
+  font-size: 0.875rem;
+}
+
+.expand-meta dt {
+  color: var(--muted);
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.expand-meta dd {
+  color: var(--ink);
+  margin-top: 0.25rem;
+}
+
+/* Small caps-ish chip. Used in the field and inside the expanded artefact, so
+   the stack never reads as loose debris under the tagline. */
+.tag {
+  display: inline-block;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.6875rem;
+  line-height: 1.5;
+  letter-spacing: 0.02em;
+  color: var(--muted);
+  white-space: nowrap;
 }
 
 @media (min-width: 1024px) {
   [data-expanded="true"] .expand-layout {
-    grid-template-columns: minmax(0, 46%) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 42%) minmax(0, 1fr);
     align-items: start;
   }
+
+  /* The case study is far taller than the hero column, which otherwise leaves a
+     large empty block under the metadata. Pinning it keeps the artefact in view
+     while the writing scrolls past it. */
+  [data-expanded="true"] .expand-hero-col {
+    position: sticky;
+    top: 0;
+    align-self: start;
+  }
+}
+
+/* Softens the viewport edge while an artefact is focused, so neighbouring
+   content reads as continuing past the frame rather than being cut off
+   mid-word. Deliberately only the outer edge — this is not a backdrop and must
+   never dim the neighbours, which is the whole point of the camera model. */
+.edge-fade {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  pointer-events: none;
+  background:
+    linear-gradient(to right, var(--bg) 0%, transparent 7%, transparent 93%, var(--bg) 100%),
+    linear-gradient(to bottom, var(--bg) 0%, transparent 6%, transparent 94%, var(--bg) 100%);
+  animation: motion-fade-in 420ms var(--ease-out-soft) both;
 }
 
 .motion-rise {
