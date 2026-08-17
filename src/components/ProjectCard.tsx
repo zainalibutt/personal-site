@@ -139,13 +139,23 @@ export function ProjectCard({
       </div>
 
       {/* Field-level label. Stays put while the box expands over it. */}
+      {/* Hidden while focused: the expanded artefact carries its own title, so
+          leaving this visible renders the project twice. */}
       <Link
         href={`/projects/${project.slug}`}
         scroll={false}
         prefetch
-        className="mt-5 block space-y-1.5 px-1 focus-visible:outline-none"
+        className="mt-5 block space-y-1.5 px-1 transition-opacity duration-300 focus-visible:outline-none"
+        // Inline rather than a utility class: the artefact's own animations put
+        // competing opacity rules on this subtree, and this must always win.
+        style={{
+          opacity: focused ? 0 : 1,
+          pointerEvents: focused ? "none" : undefined,
+        }}
         aria-label={`${project.title} — ${project.tagline}`}
         aria-expanded={focused}
+        aria-hidden={focused}
+        tabIndex={focused ? -1 : undefined}
       >
         <span className="flex items-baseline justify-between gap-4">
           <span className="text-ink text-2xl">{project.title}</span>

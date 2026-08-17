@@ -29,22 +29,19 @@ import { prefersReducedMotion, setFocusState } from "@/lib/motion-layer";
  * it renders at this scale, so a large value would blow the typography up.
  * Everything visible grows by exactly this much.
  */
-const ZOOM = 1.35;
-
 /**
  * Fraction of the viewport the focused artefact occupies once framed.
- *
- * Deliberately not close to 1. The artefact has to leave room for its
- * neighbours to stay visible beside it — that is the entire point of moving the
- * camera rather than opening a panel. At 0.66 the About column keeps roughly
- * four fifths of itself in frame while Proof-Lens is open.
- *
- * Text inside the artefact renders at ZOOM, so ~21px body copy. That reads as
- * deliberate for a case study; if it ever needs to be exactly 1x, the fix is a
- * counter-scale of 1/ZOOM on the content wrapper, not a smaller ZOOM.
+ * The zoom is derived from these, not fixed.
  */
-const FRAME_W = 0.66;
-const FRAME_H = 0.8;
+const FRAME_W = 0.7;
+const FRAME_H = 0.86;
+
+/** Keeps the camera sane on very wide or very narrow viewports. */
+const MIN_ZOOM = 1.15;
+const MAX_ZOOM = 2.6;
+
+/** Clearance left between a growing artefact and the centre column. */
+const SPINE_GAP = 28;
 
 /** Below this the plane does not move; the artefact just opens near-fullscreen. */
 const DESKTOP_MIN = 1024;
@@ -73,18 +70,54 @@ function resetPlane(plane: HTMLElement): void {
   activePlaneTransform = null;
 }
 
-function targetSize(desktop: boolean) {
+/**
+ * Works out how far an artefact may grow, and how hard the camera pushes in.
+ *
+ * The artefact grows only as far as its own column allows — never across the
+ * centre spine, because that is what puts it *on top of* About instead of
+ * beside it. The zoom then does the rest of the work of filling the frame.
+ *
+ * Because the artefact stays small in plane space and the camera is doing the
+ * magnifying, its content has to be authored at screen size and counter-scaled
+ * by 1/zoom. That is what keeps body copy at 1x however far the camera pushes.
+ */
+function frame(slot: HTMLElement, desktop: boolean) {
+  const restWidth = slot.offsetWidth;
+  const restHeight = slot.offsetHeight;
+
   if (!desktop) {
+    const width = window.innerWidth - 32;
     return {
-      width: window.innerWidth - 32,
+      width,
       height: window.innerHeight * 0.88,
+      zoom: 1,
+      restWidth,
+      restHeight,
     };
   }
-  // Divided by ZOOM because the plane will scale it back up when framing.
-  return {
-    width: (window.innerWidth * FRAME_W) / ZOOM,
-    height: (window.innerHeight * FRAME_H) / ZOOM,
-  };
+
+  const slotRect = slot.getBoundingClientRect();
+  const centre = slotRect.left + slotRect.width / 2;
+  const spine = document.querySelector<HTMLElement>("[data-spine]");
+
+  // Half-width available before the artefact would cross the spine.
+  let halfLimit = Number.POSITIVE_INFINITY;
+  if (spine) {
+    const spineRect = spine.getBoundingClientRect();
+    halfLimit =
+      centre < spineRect.left
+        ? spineRect.left - SPINE_GAP - centre
+        : centre - (spineRect.right + SPINE_GAP);
+  }
+
+  const width = Math.max(restWidth, Math.min(restWidth * 1.6, halfLimit * 2));
+  const zoom = Math.min(
+    MAX_ZOOM,
+    Math.max(MIN_ZOOM, (window.innerWidth * FRAME_W) / width),
+  );
+  const height = (window.innerHeight * FRAME_H) / zoom;
+
+  return { width, height, zoom, restWidth, restHeight };
 }
 
 export function useBoxExpand(focused: boolean, slug: string) {
@@ -109,9 +142,8 @@ export function useBoxExpand(focused: boolean, slug: string) {
       cancel(hero);
       if (plane) resetPlane(plane);
 
-      const restWidth = slot.offsetWidth;
-      const restHeight = slot.offsetHeight;
-      const target = targetSize(desktop);
+      const target = frame(slot, desktop);
+      const { restWidth, restHeight, zoom } = target;
 
       // Grow around the slot's centre, so every corner moves outward.
       const spreadX = Math.max(0, (target.width - restWidth) / 2);
@@ -124,6 +156,17 @@ export function useBoxExpand(focused: boolean, slug: string) {
       box.style.width = `${target.width}px`;
       box.style.height = `${target.height}px`;
       box.style.zIndex = "50";
+
+      // Counter-scale: the content is laid out at the size it will occupy on
+      // screen, then shrunk by 1/zoom so it fits the artefact's small plane
+      // footprint. The camera scales it back up, landing typography at 1x.
+      const scroll = box.querySelector<HTMLElement>(".expand-scroll");
+      if (scroll) {
+        scroll.style.width = `${target.width * zoom}px`;
+        scroll.style.height = `${target.height * zoom}px`;
+        scroll.style.transformOrigin = "0 0";
+        scroll.style.transform = `scale(${1 / zoom})`;
+      }
       setFocusState("opening", slug);
 
       if (reduced) {
@@ -171,9 +214,9 @@ export function useBoxExpand(focused: boolean, slug: string) {
         const centreY = boxRect.top - planeRect.top + boxRect.height / 2;
         // Solve for the translate that lands that centre on the viewport centre
         // once the plane is scaled about its top-left corner.
-        const tx = window.innerWidth / 2 - planeRect.left - ZOOM * centreX;
-        const ty = window.innerHeight / 2 - planeRect.top - ZOOM * centreY;
-        const transform = `translate(${tx}px, ${ty}px) scale(${ZOOM})`;
+        const tx = window.innerWidth / 2 - planeRect.left - zoom * centreX;
+        const ty = window.innerHeight / 2 - planeRect.top - zoom * centreY;
+        const transform = `translate(${tx}px, ${ty}px) scale(${zoom})`;
         activePlaneTransform = transform;
 
         plane.animate([{ transform: "none" }, { transform }], {
@@ -223,6 +266,13 @@ export function useBoxExpand(focused: boolean, slug: string) {
         box.style.zIndex = "";
         box.style.clipPath = "";
         hero.style.transform = "";
+        const scroll = box.querySelector<HTMLElement>(".expand-scroll");
+        if (scroll) {
+          scroll.style.width = "";
+          scroll.style.height = "";
+          scroll.style.transform = "";
+          scroll.style.transformOrigin = "";
+        }
         if (plane) resetPlane(plane);
         setFocusState("idle");
       };

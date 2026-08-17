@@ -35,7 +35,12 @@ export function ProjectField({
     <div className="grid items-start gap-x-10 gap-y-16 lg:grid-cols-[1fr_minmax(0,24rem)_1fr] lg:gap-x-14">
       <Flank items={left} offsetIndex={0} className="lg:order-1" />
 
-      <div className="lg:sticky lg:top-24 lg:order-2">{children}</div>
+      {/* `data-spine` is measured when framing a zoom: an artefact may never
+          grow across the centre column, or it occludes About instead of sitting
+          beside it. See docs/ARCHITECTURE.md. */}
+      <div data-spine className="lg:sticky lg:top-24 lg:order-2">
+        {children}
+      </div>
 
       <Flank items={right} offsetIndex={1} className="lg:order-3 lg:mt-32" />
     </div>
