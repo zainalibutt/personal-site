@@ -26,12 +26,25 @@ const BASE = arg("url", "http://localhost:3100");
 const WIDTH = Number(arg("w", "1440"));
 const HEIGHT = Number(arg("h", "900"));
 
-/** Waits for every running animation to finish, rather than guessing a delay. */
+/**
+ * Waits for every running animation to finish, rather than guessing a delay.
+ *
+ * Infinite animations are excluded, and the whole wait is raced against a
+ * timer. The phone springboard idles forever by design, so its `finished`
+ * promise never resolves — which hung every mobile shoot indefinitely. The
+ * project's own rule is that an animation gets a timer guard as well as its
+ * `finished` promise; the harness enforcing that rule did not follow it.
+ */
 async function settle(page: Page): Promise<void> {
   await page.evaluate(async () => {
-    await Promise.all(
-      document.getAnimations().map((a) => a.finished.catch(() => undefined)),
-    );
+    const finite = document
+      .getAnimations()
+      .filter((a) => a.effect?.getComputedTiming().iterations !== Infinity);
+
+    await Promise.race([
+      Promise.all(finite.map((a) => a.finished.catch(() => undefined))),
+      new Promise((resolve) => setTimeout(resolve, 3000)),
+    ]);
   });
   await page.waitForTimeout(150);
 }
@@ -70,14 +83,22 @@ async function main() {
 
   // Hover state on the first artefact.
   const firstCard = page.locator("article").first();
-  await firstCard.hover();
+  // `force` skips Playwright's stability check. On a phone the artefacts idle
+  // with an infinite animation, so they are never "stable" and the default
+  // check waits for a settling that will never come. Clickability is asserted
+  // properly further down with a raw mouse click at coordinates, which is a
+  // truer test anyway.
+  await firstCard.hover({ force: true });
   await shoot(page, "03-hover");
 
   // Focused states, both flanks — the left/right asymmetry is the thing worth
   // checking, since the camera has to frame each one differently.
   for (const slug of ["proof-lens", "melody"]) {
     await page.goto(BASE, { waitUntil: "networkidle" });
-    await page.locator(`a[href="/projects/${slug}"]`).first().click();
+    await page
+      .locator(`a[href="/projects/${slug}"]`)
+      .first()
+      .click({ force: true });
     // Wait on the actual state change, not a guessed delay — a dev-server
     // recompile can swallow the click and yield a screenshot of the home page.
     await page.waitForURL(`**/projects/${slug}`, { timeout: 15000 });
@@ -108,8 +129,17 @@ async function main() {
     await page.mouse.wheel(0, 600);
     await page.waitForTimeout(400);
     const after = await page.evaluate(() => window.scrollY);
+    // The phone springboard is sized to fit the fold, so there is legitimately
+    // nothing to scroll there. Without this the check reports BLOCKED for the
+    // layout working exactly as intended, and a false alarm that fires every
+    // run is one nobody reads.
+    const scrollable = await page.evaluate(
+      () => document.documentElement.scrollHeight > window.innerHeight + 1,
+    );
     console.log(
-      `  scroll over artefact: ${before} -> ${after} ${after > before ? "OK" : "BLOCKED"}`,
+      scrollable
+        ? `  scroll over artefact: ${before} -> ${after} ${after > before ? "OK" : "BLOCKED"}`
+        : `  scroll over artefact: page fits the viewport, nothing to scroll`,
     );
 
     // Reading order on a phone. The flanks are two DOM containers, so stacking

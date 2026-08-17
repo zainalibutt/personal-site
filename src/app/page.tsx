@@ -29,20 +29,26 @@ export default function Home() {
       <main
         id="main"
         data-plane
-        className="mx-auto w-[min(96rem,calc(100%-3rem))] origin-top-left pb-40 will-change-transform"
+        /* The deep bottom padding is desktop breathing room. On a phone the
+           springboard is sized to the fold, so 160px of nothing underneath is
+           160px of scroll for no reason. */
+        className="mx-auto w-[min(96rem,calc(100%-3rem))] origin-top-left pb-10 will-change-transform md:pb-40"
       >
         {/* the entry. Name and links centred, per the wireframe. */}
-        <header className="flex flex-col items-center pt-16 pb-14 text-center sm:pt-20 sm:pb-16">
-          <h1 className="text-ink text-6xl tracking-[-0.03em] text-balance sm:text-7xl">
+        {/* Tighter on a phone: the springboard below is sized to clear the fold
+            on a 667px viewport, and every pixel this header spends is one the
+            icons do not have. */}
+        <header className="flex flex-col items-center pt-8 pb-8 text-center md:pt-16 md:pb-14 lg:pt-20 lg:pb-16">
+          <h1 className="text-ink text-4xl tracking-[-0.03em] text-balance md:text-6xl lg:text-7xl">
             {site.name}
           </h1>
-          <p className="text-muted mt-4 max-w-xl text-lg text-pretty sm:text-xl">
+          <p className="text-muted mt-2 max-w-xl text-pretty md:mt-4 md:text-lg lg:text-xl">
             {site.role} · {site.location}
           </p>
 
           <nav
             aria-label="Elsewhere"
-            className="mt-8 flex flex-wrap justify-center gap-x-8 gap-y-2 text-sm"
+            className="mt-4 flex flex-wrap justify-center gap-x-8 gap-y-2 text-sm md:mt-8"
           >
             <a
               className="text-accent hover:text-ink underline underline-offset-8 transition-colors"

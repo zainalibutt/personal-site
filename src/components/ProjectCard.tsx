@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { PreviewSurface } from "./PreviewSurface";
@@ -62,8 +63,10 @@ export function ProjectCard({
       <div
         ref={slotRef}
         data-well={focused ? "focused" : hovered ? "hover" : "rest"}
-        className="relative"
-        style={{ aspectRatio: project.preview.aspectRatio }}
+        className="artefact-slot relative"
+        /* Not `aspectRatio` directly: the phone layout overrides this to a
+           square, and an inline value would outrank any stylesheet. */
+        style={{ "--ar": project.preview.aspectRatio } as React.CSSProperties}
       >
         <div
           ref={boxRef}
@@ -83,10 +86,26 @@ export function ProjectCard({
             <div className="expand-layout">
               <div className="expand-hero-col">
                 <div ref={heroRef} className="expand-hero">
+                  {/* The artefact's face on a phone. It is inside the box, not
+                      beside it, so opening still grows *this* thing — the camera
+                      pushes into the icon rather than swapping it for a panel.
+                      Hidden from assistive tech: the caption below already
+                      names the artefact, and a second name is noise. */}
+                  <span aria-hidden className="artefact-icon">
+                    <Image
+                      src={`/projects/${project.slug}/icon.png`}
+                      alt=""
+                      width={512}
+                      height={512}
+                      priority={project.flagship}
+                      className="h-full w-full object-cover"
+                    />
+                  </span>
+
                   <PreviewSurface
                     project={project}
                     priority={project.flagship}
-                    className="w-full"
+                    className="artefact-preview w-full"
                   />
                 </div>
 
@@ -214,16 +233,18 @@ export function ProjectCard({
         aria-hidden={focused}
         tabIndex={focused ? -1 : undefined}
       >
-        <span className="flex items-baseline justify-between gap-4">
-          <span className="text-ink text-2xl">{project.title}</span>
-          <span className="text-muted shrink-0 font-mono text-sm tabular-nums">
+        <span className="caption-head flex items-baseline justify-between gap-4">
+          <span className="caption-title text-ink text-2xl">
+            {project.title}
+          </span>
+          <span className="caption-detail text-muted shrink-0 font-mono text-sm tabular-nums">
             {project.year}
           </span>
         </span>
-        <span className="text-muted mt-1 block max-w-[42ch] text-pretty">
+        <span className="caption-detail text-muted mt-1 block max-w-[42ch] text-pretty">
           {project.tagline}
         </span>
-        <span className="mt-3 flex flex-wrap gap-1.5">
+        <span className="caption-detail mt-3 flex flex-wrap gap-1.5">
           {project.stack.map((tech) => (
             <span key={tech} className="tag">
               {tech}

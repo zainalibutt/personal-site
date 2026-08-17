@@ -261,6 +261,150 @@
   margin-top: 0.25rem;
 }
 
+/* ---------------------------------------------------------------------------
+   The artefact's footprint.
+
+   Comes from frontmatter everywhere except a phone, where every artefact is an
+   app icon and therefore square. Set through a variable so the phone rule can
+   win — an inline `aspect-ratio` could not be overridden by any stylesheet.
+   --------------------------------------------------------------------------- */
+.artefact-slot {
+  aspect-ratio: var(--ar);
+}
+
+/* The icon face. Present in the markup at every width; shown only on a phone,
+   and only while the artefact is at rest. */
+.artefact-icon {
+  display: none;
+}
+
+/* ---------------------------------------------------------------------------
+   The phone springboard.
+
+   A stack of screenshot panels is the wrong thing to put in front of someone on
+   a phone: it is a lot of scrolling past images too small to read, to reach
+   writing they did not ask for yet. Zain's call, and the right one — on a phone
+   the artefacts become app icons, everything fits one screen, and the work is
+   one tap away rather than five scrolls down.
+
+   Deliberately not `overflow: hidden`. This is sized to fit a 667px viewport,
+   but a phone that overflows anyway should scroll the last few pixels rather
+   than trap them.
+   --------------------------------------------------------------------------- */
+@media (max-width: 767px) {
+  /* Sized against the viewport's *height*, not a fixed rem, because that is the
+     axis this layout is actually competing for. A 390x844 phone gets the full
+     84px tile; a 375x667 one gets a smaller tile rather than a scrollbar. The
+     lower bound stays well above the 44px minimum tap target — the layout is
+     allowed to shrink, never to become hard to hit. `dvh` so an address bar
+     appearing does not resize the icons. */
+  .artefact-slot {
+    aspect-ratio: 1 / 1;
+    max-width: clamp(3.5rem, 9.5dvh, 5.25rem);
+    margin-inline: auto;
+  }
+
+  .project-field {
+    row-gap: clamp(0.875rem, 2.6dvh, 1.75rem);
+  }
+
+  /* The header and the trailing space compete with the icons for the same
+     fold, so they give way on short screens too. Everything in this block is
+     one rule: on a phone, height is the scarce axis. */
+  [data-plane] {
+    padding-bottom: clamp(0.5rem, 2dvh, 2.5rem);
+  }
+
+  [data-plane] > header {
+    padding-top: clamp(1rem, 3.2dvh, 2rem);
+    padding-bottom: clamp(1rem, 3.2dvh, 2rem);
+  }
+
+  /* The tile is the obvious target and is comfortably large. This is the
+     labelled one, and 16px of text is not a tap target. */
+  .artefact-cell > article > a {
+    padding-block: clamp(0.25rem, 1.2dvh, 0.625rem);
+  }
+
+  /* The box is the tile: no page-coloured fill behind an icon that already has
+     its own ground, and a squarer radius so it reads as an app icon rather than
+     as a card that happens to be small. `data-expanded` lives on the box
+     itself, so it is a subject here, never an ancestor. */
+  .artefact-slot > div[data-expanded="false"] {
+    border-radius: 22%;
+    background: transparent;
+  }
+
+  .artefact-slot > div[data-expanded="false"] .artefact-icon {
+    display: block;
+    position: absolute;
+    inset: 0;
+  }
+
+  /* The screenshot is still the hero once the artefact opens — it is only the
+     resting face that changes. */
+  .artefact-slot > div[data-expanded="false"] .artefact-preview {
+    display: none;
+  }
+
+  /* The caption is a *sibling* of that box, so it cannot be scoped to it — and
+     does not need to be. An open artefact carries its own title, tagline and
+     metadata inside the box, and hides this caption outright. */
+  .caption-detail {
+    display: none;
+  }
+
+  .caption-head {
+    display: block;
+  }
+
+  .caption-title {
+    display: block;
+    text-align: center;
+    font-size: 0.8125rem;
+    line-height: 1.25;
+    text-wrap: balance;
+  }
+
+  .artefact-cell > article > a {
+    margin-top: 0.625rem;
+  }
+
+  /* Idling, so the springboard reads as alive rather than as a static menu.
+     Each tile gets its own period and phase from the cell, so they never fall
+     into step — five icons bobbing in unison would look like one object. */
+  @keyframes artefact-bob {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-6px);
+    }
+  }
+
+  .artefact-cell {
+    animation: artefact-bob var(--bob, 6s) ease-in-out var(--bob-delay, 0s)
+      infinite;
+  }
+
+  /* Frozen in place — not reset — the moment anything is focused. The open
+     measures the artefact's resting rect, and a rect captured mid-bob would
+     start the camera a few pixels off where the icon actually is. */
+  body:has([data-well="focused"]) .artefact-cell {
+    animation-play-state: paused;
+  }
+
+  /* An animated transform gives every cell its own stacking context, so the
+     opened artefact's `z-index: 50` only ranks it *within its own cell* and the
+     tiles after it in the DOM paint straight over the case study. The cell
+     carrying the open artefact has to be raised too. */
+  .artefact-cell:has([data-well="focused"]) {
+    position: relative;
+    z-index: 50;
+  }
+}
+
 /* Small caps-ish chip. Used in the field and inside the expanded artefact, so
    the stack never reads as loose debris under the tagline. */
 .tag {

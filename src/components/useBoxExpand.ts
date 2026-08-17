@@ -133,13 +133,38 @@ function layoutExpanded(
   desktop: boolean,
 ) {
   const target = frame(slot, desktop);
-  const spreadX = Math.max(0, (target.width - target.restWidth) / 2);
-  const spreadY = Math.max(0, (target.height - target.restHeight) / 2);
 
-  box.style.left = `${-spreadX}px`;
-  box.style.top = `${-spreadY}px`;
+  if (desktop) {
+    // The camera does the framing, so the artefact simply grows about its own
+    // centre and the plane moves to meet it.
+    box.style.left = `${-((target.width - target.restWidth) / 2)}px`;
+    box.style.top = `${-((target.height - target.restHeight) / 2)}px`;
+  } else {
+    // There is no camera on a phone — the plane never moves — so the artefact
+    // has to place itself. Growing symmetrically about its own centre was
+    // correct while a resting artefact was as wide as the column; now that it
+    // is an 80px icon sitting in one half of a two-column springboard, the same
+    // spread throws the panel off the side of the screen.
+    const rect = slot.getBoundingClientRect();
+    box.style.left = `${(window.innerWidth - target.width) / 2 - rect.left}px`;
+    box.style.top = `${(window.innerHeight - target.height) / 2 - rect.top}px`;
+  }
+
   box.style.width = `${target.width}px`;
   box.style.height = `${target.height}px`;
+
+  /* Where the resting artefact sits *inside* the opened box, so the clip can
+     open from the icon itself rather than from the box's centre. On desktop the
+     two coincide; on a phone they do not, and assuming they did is what made
+     the panel appear to unfold from the wrong place. */
+  const boxRect = box.getBoundingClientRect();
+  const slotRect = slot.getBoundingClientRect();
+  const inset = {
+    top: Math.max(0, slotRect.top - boxRect.top),
+    right: Math.max(0, boxRect.right - slotRect.right),
+    bottom: Math.max(0, boxRect.bottom - slotRect.bottom),
+    left: Math.max(0, slotRect.left - boxRect.left),
+  };
 
   const scroll = box.querySelector<HTMLElement>(".expand-scroll");
   if (scroll) {
@@ -172,7 +197,7 @@ function layoutExpanded(
     planeTransform = `translate(${tx}px, ${ty}px) scale(${target.zoom})`;
   }
 
-  return { spreadX, spreadY, planeTransform, target };
+  return { inset, planeTransform, target };
 }
 
 export function useBoxExpand(focused: boolean, slug: string) {
@@ -204,7 +229,7 @@ export function useBoxExpand(focused: boolean, slug: string) {
       // Counter-scale lives in here: content is laid out at the size it will
       // occupy on screen, then shrunk by 1/zoom to fit the artefact's small
       // plane footprint. The camera scales it back up, landing type at 1x.
-      const { spreadX, spreadY, planeTransform, target } = layoutExpanded(
+      const { inset, planeTransform, target } = layoutExpanded(
         slot,
         box,
         plane,
@@ -226,7 +251,7 @@ export function useBoxExpand(focused: boolean, slug: string) {
       const opening = box.animate(
         [
           {
-            clipPath: `inset(${spreadY}px ${spreadX}px ${spreadY}px ${spreadX}px round ${RADIUS}px)`,
+            clipPath: `inset(${inset.top}px ${inset.right}px ${inset.bottom}px ${inset.left}px round ${RADIUS}px)`,
           },
           { clipPath: `inset(0px 0px 0px 0px round ${RADIUS}px)` },
         ],
@@ -321,17 +346,24 @@ export function useBoxExpand(focused: boolean, slug: string) {
       }
 
       const restWidth = slot.offsetWidth;
-      const restHeight = slot.offsetHeight;
-      const spreadX = Math.max(0, (box.offsetWidth - restWidth) / 2);
-      const spreadY = Math.max(0, (box.offsetHeight - restHeight) / 2);
       const heroFinal = hero.getBoundingClientRect();
       const restRect = slot.getBoundingClientRect();
+
+      // Collapses back into wherever the artefact actually rests, which is not
+      // the centre of the open box on a phone. Mirrors the opening inset.
+      const boxRect = box.getBoundingClientRect();
+      const inset = {
+        top: Math.max(0, restRect.top - boxRect.top),
+        right: Math.max(0, boxRect.right - restRect.right),
+        bottom: Math.max(0, boxRect.bottom - restRect.bottom),
+        left: Math.max(0, restRect.left - boxRect.left),
+      };
 
       const closing = box.animate(
         [
           { clipPath: `inset(0px 0px 0px 0px round ${RADIUS}px)` },
           {
-            clipPath: `inset(${spreadY}px ${spreadX}px ${spreadY}px ${spreadX}px round ${RADIUS}px)`,
+            clipPath: `inset(${inset.top}px ${inset.right}px ${inset.bottom}px ${inset.left}px round ${RADIUS}px)`,
           },
         ],
         { duration: CLOSE_MS, easing: CLOSE_EASE, fill: "both" },

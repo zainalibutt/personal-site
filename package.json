@@ -14,7 +14,7 @@
     "test:e2e": "playwright test",
     "shoot": "tsx scripts/shoot.ts",
     "og": "tsx scripts/og.ts",
-    "figures": "tsx scripts/figure-age-groups.ts && tsx scripts/figure-iou-device.ts",
+    "figures": "tsx scripts/figure-age-groups.ts && tsx scripts/figure-iou-device.ts && tsx scripts/figure-icons.ts",
     "check": "npm run typecheck && npm run lint && npm run test"
   },
   "dependencies": {

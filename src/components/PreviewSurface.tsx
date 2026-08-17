@@ -48,7 +48,9 @@ export function PreviewSurface({
           src={preview.poster}
           alt={preview.alt ?? ""}
           fill
-          className={preview.fit === "contain" ? "object-contain" : "object-cover"}
+          className={
+            preview.fit === "contain" ? "object-contain" : "object-cover"
+          }
           sizes="(min-width: 1024px) 34vw, (min-width: 640px) 50vw, 100vw"
           priority={priority}
         />

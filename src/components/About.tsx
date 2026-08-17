@@ -7,8 +7,11 @@ import { site } from "@/lib/site";
  */
 export function About() {
   return (
-    <section aria-labelledby="about-heading" className="space-y-6">
-      <div className="flex items-start justify-between gap-6">
+    <section
+      aria-labelledby="about-heading"
+      className="max-md:text-center md:space-y-6"
+    >
+      <div className="flex items-start justify-between gap-6 max-md:hidden">
         <h2 id="about-heading" className="text-ink text-3xl">
           About
         </h2>
@@ -23,6 +26,23 @@ export function About() {
         />
       </div>
 
+      {/* The phone gets two sentences and nothing else — no heading, no
+          portrait, no link list. It sits between the two rows of icons, which
+          is where it can be read without being in the way. Everything it would
+          otherwise link to is already in the page header. */}
+      <p className="text-muted mx-auto max-w-[34ch] text-[0.9375rem] leading-relaxed text-pretty md:hidden">
+        I build product end to end — mobile, web, and the backend underneath.
+        Computer Science graduate in {site.location}, freelancing now, looking
+        for a graduate or product engineering role.{" "}
+        <a
+          href={site.links.linkedin}
+          className="text-accent hover:text-ink underline underline-offset-4 transition-colors"
+        >
+          More on LinkedIn
+        </a>
+        .
+      </p>
+
       {/* Draft A of docs/ABOUT_DRAFTS.md, which Zain picked: plain register,
           concrete nouns, no thesis. The thesis lives in the case studies
           instead, where it has evidence sitting next to it — his call, and the
@@ -31,7 +51,7 @@ export function About() {
 
           Still draft copy, not his. The specifics are true — they are read
           off his CV — but the voice has not been through him yet. */}
-      <div className="text-muted space-y-4 text-pretty">
+      <div className="text-muted space-y-4 text-pretty max-md:hidden">
         <p>
           I build product end to end — mobile, web, and the backend underneath.
         </p>
@@ -53,7 +73,7 @@ export function About() {
           is removed from the content stream, not covered over, so it does not
           survive copy-paste or a parser. The original lives in
           `assets/raw/documents/`, which is gitignored and stays that way. */}
-      <ul className="text-sm">
+      <ul className="text-sm max-md:hidden">
         {[
           { label: "Email", href: `mailto:${site.links.email}` },
           { label: "CV", href: "/ZainButt-CV.pdf" },
