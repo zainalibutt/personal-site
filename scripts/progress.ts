@@ -40,6 +40,13 @@ interface Milestone {
 
 const MILESTONES: Milestone[] = [
   {
+    sha: "5901a7e",
+    slug: "00-warm",
+    title: "The warm direction",
+    note: "The first look, and the one that got rejected. Cream ground, Fraunces display, terracotta accent, artefacts in an ordinary two-column grid. Worth keeping in the record: warm cream, a high-contrast serif and terracotta is the combination every template reaches for, so the rejection was right for reasons that took a while to articulate.",
+    focus: "proof-lens",
+  },
+  {
     sha: "7e1321a",
     slug: "01-white-flank",
     title: "White page, flanking field",
