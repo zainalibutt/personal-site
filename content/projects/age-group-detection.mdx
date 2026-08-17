@@ -9,13 +9,17 @@ order: 12
 repo: https://github.com/zainalibutt/age-group-detection
 preview:
   type: image
-  alt: An image going in, class probabilities coming out
+  poster: /projects/age-group-detection/hero.png
+  alt: Accuracy for three models on the same four age classes — HOG+SVM 0.7106, HOG+MLP 0.7294, ResNet18 0.7871
   aspectRatio: 16 / 10
-  dominantColour: "#93a4c2"
+  dominantColour: "#0b1226"
 draft: false
 ---
 
 {/* DRAFT COPY — written from the repo description, needs Zain's review. */}
+
+This one has no interface and was never meant to. It ran from a notebook — a
+demonstration rather than a product, included because the method is the point.
 
 ## The problem
 
@@ -32,6 +36,19 @@ Three pipelines built to be compared like for like.
 - **ResNet18** — transfer learning from a pretrained backbone.
 
 Identical splits, identical preprocessing, identical metrics.
+
+## The result
+
+| Model | Accuracy | Macro F1 | Inference | Size |
+| --- | --- | --- | --- | --- |
+| HOG + SVM | 0.7106 | 0.7008 | 0.02 ms | 0.10 MB |
+| HOG + MLP | 0.7294 | 0.7181 | 0.02 ms | 10.41 MB |
+| ResNet18 | **0.7871** | **0.7796** | 19.91 ms | 42.72 MB |
+
+ResNet18 wins by roughly eight points over the classical baseline, and pays for
+it with a thousandfold increase in inference time and four hundred times the
+model size. Whether that trade is worth making depends entirely on where the
+thing has to run — which is the answer the comparison existed to produce.
 
 ## What was hard
 

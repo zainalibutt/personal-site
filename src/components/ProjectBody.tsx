@@ -1,5 +1,6 @@
 import { MDXRemote } from "next-mdx-remote/rsc";
 import type { MDXComponents } from "mdx/types";
+import remarkGfm from "remark-gfm";
 
 /**
  * MDX renderer for case-study bodies. Styling lives here rather than in a
@@ -42,8 +43,37 @@ const components: MDXComponents = {
       {...props}
     />
   ),
+
+  /* Results tables. The page's rule is that data is set in the monospace and
+     prose is not, so the cells are mono and the header labels carry the same
+     uppercase tracking as the artefact metadata. Wrapped in its own scroller:
+     a wide table must never widen the case-study column, which is measured
+     against the centre spine. */
+  table: (props) => (
+    <div className="mb-6 max-w-[68ch] overflow-x-auto">
+      <table className="w-full border-collapse text-left text-sm" {...props} />
+    </div>
+  ),
+  th: (props) => (
+    <th
+      className="border-line text-muted border-b px-3 py-2 font-mono text-[0.6875rem] font-normal tracking-[0.08em] uppercase"
+      {...props}
+    />
+  ),
+  td: (props) => (
+    <td
+      className="border-line/60 text-ink/85 border-b px-3 py-2 font-mono tabular-nums"
+      {...props}
+    />
+  ),
 };
 
 export function ProjectBody({ source }: { source: string }) {
-  return <MDXRemote source={source} components={components} />;
+  return (
+    <MDXRemote
+      source={source}
+      components={components}
+      options={{ mdxOptions: { remarkPlugins: [remarkGfm] } }}
+    />
+  );
 }

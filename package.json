@@ -14,6 +14,7 @@
     "test:e2e": "playwright test",
     "shoot": "tsx scripts/shoot.ts",
     "og": "tsx scripts/og.ts",
+    "figures": "tsx scripts/figure-age-groups.ts",
     "check": "npm run typecheck && npm run lint && npm run test"
   },
   "dependencies": {
@@ -22,6 +23,7 @@
     "next-mdx-remote": "^6.0.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",
+    "remark-gfm": "^4.0.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {

@@ -1,8 +1,14 @@
 # About copy — drafts
 
-**These are drafts, not copy.** None of this is in Zain's voice yet; it exists so
-there is something to react to instead of a blank request. Pick one, cut it
-apart, or reject all three — the reaction is the useful output.
+**Resolved 2026-08-17: Draft A won, with a change.** Zain took A's register for
+About and moved the thesis into the case studies instead, where it has evidence
+next to it. See decision 16. The shipped copy also names the freelance work
+specifically, which the drafts could not because the CV had not been read yet.
+
+**It is still not in his voice.** The register is his choice; the words are not
+his. That remains open.
+
+Kept below as the record of what was considered.
 
 The About block is the most-read text on the page and the only prose on the
 entry screen. It sits in the centre spine, roughly 380px wide, so each paragraph
