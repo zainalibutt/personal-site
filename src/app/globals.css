@@ -8,8 +8,14 @@
    than inverted in place so the mid tones stay usable for borders and chips.
    --------------------------------------------------------------------------- */
 @theme {
-  --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  /* Three roles, named by role rather than by face, so the faces can be
+     swapped in layout.tsx without touching a stylesheet. `--font-data` is a
+     monospace and is reserved for *data* — years, stack chips, metadata labels.
+     Never for prose: this is the evidence register, and it stops being one the
+     moment it decorates a sentence. */
+  --font-display: var(--font-display-face), Georgia, "Times New Roman", serif;
+  --font-sans: var(--font-body-face), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-data-face), ui-monospace, "SF Mono", Menlo, monospace;
 
   --color-paper-50: #f2f6fd;
   --color-paper-100: #e2eaf9;
@@ -53,12 +59,19 @@
 /* Deep space is the design, not a dark-mode variant — the page does NOT follow
    `prefers-color-scheme`, in either direction. Every visitor gets this. */
 :root {
-  --bg: #060a16;
-  --surface: #0e1830;
-  --ink: #e2eaf9;
-  --muted: #8fa6ce;
-  --line: #1e2a48;
-  --accent: #7fa9f5;
+  /* `--bg` is the *deepest* value, not the average one: the edge fade and the
+     skip link both resolve to it at the viewport edge, which is where the
+     ground gradient below bottoms out. Lifting this to the mid tone puts a
+     visible seam around the frame. */
+  --bg: #04070f;
+  --bg-lift: #102046;
+  --bg-mid: #070d1e;
+
+  --surface: #111d3d;
+  --ink: #e6edfb;
+  --muted: #9cb2da;
+  --line: #26365f;
+  --accent: #86b5ff;
 }
 
 /* Kept so a deliberate light toggle could be added later without redefining
@@ -77,8 +90,25 @@
     -webkit-text-size-adjust: 100%;
   }
 
+  /* The ground is graded, not flat. Six tones of the same blue spread across
+     the viewport does more for depth than any amount of extra hue, and it costs
+     nothing: this is a paint on the body, not another canvas pass. Fixed, so it
+     does not slide against the field while the page scrolls. */
   body {
     background-color: var(--bg);
+    background-image:
+      radial-gradient(
+        70% 55% at 88% 78%,
+        rgba(44, 148, 190, 0.14) 0%,
+        rgba(44, 148, 190, 0) 100%
+      ),
+      radial-gradient(
+        120% 85% at 50% -8%,
+        var(--bg-lift) 0%,
+        var(--bg-mid) 42%,
+        var(--bg) 100%
+      );
+    background-attachment: fixed;
     color: var(--ink);
     font-family: var(--font-sans);
     font-synthesis-weight: none;
@@ -220,8 +250,9 @@
 
 .expand-meta dt {
   color: var(--muted);
-  font-size: 0.75rem;
-  letter-spacing: 0.06em;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
 }
 
@@ -237,8 +268,9 @@
   border: 1px solid var(--line);
   border-radius: 999px;
   padding: 0.125rem 0.5rem;
-  font-size: 0.6875rem;
-  line-height: 1.5;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  line-height: 1.6;
   letter-spacing: 0.02em;
   color: var(--muted);
   white-space: nowrap;
@@ -270,8 +302,20 @@
   z-index: 60;
   pointer-events: none;
   background:
-    linear-gradient(to right, var(--bg) 0%, transparent 7%, transparent 93%, var(--bg) 100%),
-    linear-gradient(to bottom, var(--bg) 0%, transparent 6%, transparent 94%, var(--bg) 100%);
+    linear-gradient(
+      to right,
+      var(--bg) 0%,
+      transparent 7%,
+      transparent 93%,
+      var(--bg) 100%
+    ),
+    linear-gradient(
+      to bottom,
+      var(--bg) 0%,
+      transparent 6%,
+      transparent 94%,
+      var(--bg) 100%
+    );
   animation: motion-fade-in var(--dur-reveal) var(--ease-out-soft) both;
 }
 

@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <!-- The signature at 16px: a lattice with one mass in it. Three lines is the
+       most that survives at favicon size — a full grid turns to mush — and the
+       bend is exaggerated well past what the real field does, because at this
+       scale a subtle deformation is no deformation at all. -->
+  <rect width="32" height="32" rx="7" fill="#04070f" />
+  <g fill="none" stroke="#5b8ae8" stroke-width="1.6" stroke-linecap="round">
+    <path d="M4 9c4 0 6 3.4 12 3.4S24 9 28 9" opacity="0.55" />
+    <path d="M4 16c4 0 6 5.4 12 5.4S24 16 28 16" opacity="0.9" />
+    <path d="M4 23c4 0 6 3.4 12 3.4S24 23 28 23" opacity="0.55" />
+  </g>
+  <circle cx="16" cy="19" r="2.6" fill="#86b5ff" />
+</svg>

@@ -1,19 +1,33 @@
 import type { Metadata } from "next";
-import { Fraunces, Inter } from "next/font/google";
+import { Bodoni_Moda, IBM_Plex_Mono, Inter } from "next/font/google";
 import { site } from "@/lib/site";
 import "./globals.css";
 
-/* Warm editorial: an old-style serif for display against a neutral grotesk
-   body. See docs/BRIEF.md §5. */
-const fraunces = Fraunces({
+/* Display: a high-contrast face drawn with rule and compass, which is the same
+   argument the lattice makes. Replaced Fraunces, whose warmth belonged to the
+   cream palette that decision 7 retired. It appears in four places on the page
+   — the name, "About", and the two heading levels inside an open project — so
+   it is a signature, not a workhorse. */
+const display = Bodoni_Moda({
   subsets: ["latin"],
-  variable: "--font-fraunces",
+  variable: "--font-display-face",
   display: "swap",
 });
 
-const inter = Inter({
+/* Body stays Inter. Every word a reader actually reads is set in it, so this
+   is the one role where being unremarkable is the requirement. */
+const body = Inter({
   subsets: ["latin"],
-  variable: "--font-inter",
+  variable: "--font-body-face",
+  display: "swap",
+});
+
+/* Data only — years, stack chips, metadata labels. Never prose: this is the
+   evidence register and it stops being one the moment it decorates a sentence. */
+const data = IBM_Plex_Mono({
+  subsets: ["latin"],
+  weight: ["400"],
+  variable: "--font-data-face",
   display: "swap",
 });
 
@@ -45,7 +59,10 @@ export default function RootLayout({
   modal: React.ReactNode;
 }>) {
   return (
-    <html lang="en-GB" className={`${fraunces.variable} ${inter.variable}`}>
+    <html
+      lang="en-GB"
+      className={`${display.variable} ${body.variable} ${data.variable}`}
+    >
       <body className="min-h-dvh antialiased">
         <a
           href="#main"

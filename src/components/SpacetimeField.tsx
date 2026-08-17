@@ -132,7 +132,14 @@ export function SpacetimeField() {
     let idleFrames = 0;
 
     // Eased state, so the field always trails the input rather than snapping.
-    const cursor = { x: -9999, y: -9999, tx: -9999, ty: -9999, weight: 0, tw: 0 };
+    const cursor = {
+      x: -9999,
+      y: -9999,
+      tx: -9999,
+      ty: -9999,
+      weight: 0,
+      tw: 0,
+    };
     let focusWeight = 0;
     let focusTarget = 0;
     /**
@@ -163,11 +170,16 @@ export function SpacetimeField() {
       if (!octx) return;
       octx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
+      /* Four clouds that were four blues, which is why the ground read flat —
+         nothing separates tones that differ only in lightness once they are all
+         at 16% alpha. They now travel in hue as well: indigo overhead, cyan on
+         the right flank, a warmer blue below. Alphas stay low and let the hue do
+         the work, because this must not compete with the lattice drawn over it. */
       const clouds = [
-        { nx: 0.16, ny: 0.28, r: 0.62, c: "63, 110, 208" },
-        { nx: 0.84, ny: 0.66, r: 0.58, c: "91, 138, 232" },
-        { nx: 0.52, ny: 0.05, r: 0.46, c: "58, 78, 168" },
-        { nx: 0.72, ny: 1.02, r: 0.5, c: "42, 96, 150" },
+        { nx: 0.16, ny: 0.28, r: 0.62, c: "58, 104, 206", a: 0.2 },
+        { nx: 0.84, ny: 0.66, r: 0.58, c: "44, 148, 190", a: 0.19 },
+        { nx: 0.52, ny: 0.05, r: 0.46, c: "92, 74, 192", a: 0.18 },
+        { nx: 0.72, ny: 1.02, r: 0.5, c: "48, 118, 174", a: 0.13 },
       ];
 
       for (const cloud of clouds) {
@@ -175,8 +187,8 @@ export function SpacetimeField() {
         const cy = cloud.ny * height;
         const radius = cloud.r * Math.max(width, height);
         const g = octx.createRadialGradient(cx, cy, 0, cx, cy, radius);
-        g.addColorStop(0, `rgba(${cloud.c}, 0.16)`);
-        g.addColorStop(0.45, `rgba(${cloud.c}, 0.06)`);
+        g.addColorStop(0, `rgba(${cloud.c}, ${cloud.a})`);
+        g.addColorStop(0.45, `rgba(${cloud.c}, ${cloud.a * 0.38})`);
         g.addColorStop(1, `rgba(${cloud.c}, 0)`);
         octx.fillStyle = g;
         octx.fillRect(0, 0, width, height);

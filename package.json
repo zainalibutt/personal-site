@@ -13,6 +13,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "shoot": "tsx scripts/shoot.ts",
+    "og": "tsx scripts/og.ts",
     "check": "npm run typecheck && npm run lint && npm run test"
   },
   "dependencies": {

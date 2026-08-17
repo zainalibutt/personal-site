@@ -97,7 +97,7 @@ export function ProjectCard({
                 >
                   <div>
                     <dt>Year</dt>
-                    <dd className="tabular-nums">{project.year}</dd>
+                    <dd className="font-mono tabular-nums">{project.year}</dd>
                   </div>
                   <div>
                     <dt>Role</dt>
@@ -212,7 +212,7 @@ export function ProjectCard({
       >
         <span className="flex items-baseline justify-between gap-4">
           <span className="text-ink text-2xl">{project.title}</span>
-          <span className="text-muted shrink-0 text-sm tabular-nums">
+          <span className="text-muted shrink-0 font-mono text-sm tabular-nums">
             {project.year}
           </span>
         </span>
