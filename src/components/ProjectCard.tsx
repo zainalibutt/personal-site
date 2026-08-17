@@ -138,6 +138,21 @@ export function ProjectCard({
             </div>
           </div>
 
+          {/* The artefact itself is the obvious thing to click, and until now
+              only the caption underneath was a link. Purely a pointer target:
+              the caption below carries the accessible name and the tab stop, so
+              this stays out of the tree rather than duplicating it. */}
+          {!focused && (
+            <Link
+              href={`/projects/${project.slug}`}
+              scroll={false}
+              prefetch
+              aria-hidden
+              tabIndex={-1}
+              className="absolute inset-0 z-[5]"
+            />
+          )}
+
           {focused && (
             <button
               data-close
