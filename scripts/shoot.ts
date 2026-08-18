@@ -49,10 +49,34 @@ async function settle(page: Page): Promise<void> {
   await page.waitForTimeout(150);
 }
 
+/**
+ * A full-page capture stitches from scroll position zero, so any element driven
+ * by a *view* timeline never enters its range and is photographed at its `from`
+ * keyframe — which for the arrival animation is `opacity: 0`. The frame then
+ * shows four of six artefacts missing and a void where the page should be, and
+ * the page itself is perfectly fine.
+ *
+ * That is the worst possible failure for a harness whose entire job is to be
+ * believed, so the full-page shot neutralises those animations first. The
+ * viewport shots leave them alone: there the arrival is real and worth seeing.
+ */
+const FREEZE_ARRIVAL = `
+  .artefact-cell {
+    animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }`;
+
 async function shoot(page: Page, name: string, fullPage = false) {
   await settle(page);
   const file = path.join(OUT, `${name}.png`);
+
+  const frozen = fullPage
+    ? await page.addStyleTag({ content: FREEZE_ARRIVAL })
+    : null;
   await page.screenshot({ path: file, fullPage });
+  if (frozen) await frozen.evaluate((node: Element) => node.remove());
+
   console.log(`  ${name}.png`);
 }
 

@@ -43,10 +43,21 @@ export interface FieldItem {
  * its full height, which drove the second flagship 1044px down the page and
  * clean off the first screen.
  *
- * Odd indices are the right flank and carry the larger offset, so the two
- * columns stay off-beat rather than reading as a table.
+ * Derived rather than looked up. This was a five-entry table indexed with
+ * `i % 5`, which worked until a sixth artefact arrived: index 5 wrapped to the
+ * table's first value — a *left*-flank offset of zero applied to a right-flank
+ * card. That card then sat at the top of its row while the one above it was
+ * pushed to the bottom of the previous row, and the gap between them collapsed.
+ *
+ * A rule cannot wrap. The right flank carries a constant lead so the two
+ * columns stay off-beat, and each row adds a little more so the field drifts
+ * rather than marching.
  */
-const DRIFT_REM = [0, 8, 2, 10, 4];
+const RIGHT_FLANK_LEAD = 8;
+const ROW_DRIFT = 2;
+
+const driftFor = (i: number) =>
+  (i % 2 === 1 ? RIGHT_FLANK_LEAD : 0) + Math.floor(i / 2) * ROW_DRIFT;
 
 /** The phone springboard is two icons wide. */
 const PHONE_COLUMNS = 2;
@@ -80,7 +91,7 @@ export function ProjectField({
         {
           "--col": i % 2 === 0 ? 1 : 3,
           "--row": Math.floor(i / 2) + 1,
-          "--drift": `${DRIFT_REM[i % DRIFT_REM.length]}rem`,
+          "--drift": `${driftFor(i)}rem`,
           "--bob": `${(i % 3) * 1.1 + 5.4}s`,
           "--bob-delay": `${i * 0.7}s`,
         } as React.CSSProperties
