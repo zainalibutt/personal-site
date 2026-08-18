@@ -21,13 +21,34 @@ import path from "node:path";
  * `style-src` allows it for the same practical reason: the artefacts carry
  * computed inline styles for grid placement and the camera's transforms.
  */
+/**
+ * Development needs two things production does not, and saying so here is
+ * better than loosening the shipped policy to match:
+ *
+ * - `'unsafe-eval'`, because Next's dev server and React Fast Refresh evaluate
+ *   modules that way. Production bundles do not.
+ * - `va.vercel-scripts.com`, because `@vercel/analytics` pulls a *debug* script
+ *   from that host in development. On a real deployment the script is served
+ *   from this origin instead, which is why the live site reports no violations.
+ *
+ * Without this split the strict policy silently breaks hot reload and fills the
+ * console with violations — which is how a real error gets missed.
+ */
+const dev = process.env.NODE_ENV === "development";
+
+const scriptSrc = dev
+  ? "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://va.vercel-scripts.com"
+  : "script-src 'self' 'unsafe-inline'";
+
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline'",
+  scriptSrc,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob:",
   "font-src 'self'",
-  "connect-src 'self'",
+  dev
+    ? "connect-src 'self' ws: https://va.vercel-scripts.com"
+    : "connect-src 'self'",
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self'",

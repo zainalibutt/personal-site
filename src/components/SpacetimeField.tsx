@@ -57,6 +57,25 @@ const CURSOR_PULL = 26;
 const WANDER_RADIUS = 340;
 const WANDER_PULL = 34;
 
+/** The horizon. Everything inside it is drawn as nothing at all. */
+const CORE_RADIUS = 21;
+
+/** The photon ring sits just outside the horizon, where light that grazed the
+ *  mass comes back around. Thin on purpose — a thick one reads as a bubble. */
+const RING_SCALE = 1.38;
+
+/**
+ * Deflection of background stars, in pixels at one core radius.
+ *
+ * This is the detail that separates a black hole from a blue circle, and it
+ * runs *against* everything else in this file: the lattice is spacetime and it
+ * dents inward, but starlight passing a mass bends around it, so a star's
+ * apparent position moves radially **outward**. Same mass, opposite sign,
+ * because one of them is the sheet and the other is something travelling
+ * across it.
+ */
+const LENS_STRENGTH = 260;
+
 /** Milliseconds per unit of noise, per axis. Different on each so the path
  *  never closes and never repeats. */
 const WANDER_MS_X = 11000;
@@ -211,6 +230,13 @@ export function SpacetimeField() {
     /** Set in `resize`, because it depends on viewport width. */
     let wanders = false;
     const wanderer = { x: 0, y: 0 };
+    /** Held by identity so the star pass can exclude it — see `lens`. */
+    const wanderMass: Mass = {
+      x: 0,
+      y: 0,
+      radius: WANDER_RADIUS,
+      pull: 0,
+    };
 
     const moveWanderer = (now: number) => {
       if (!wanders) return;
@@ -321,14 +347,71 @@ export function SpacetimeField() {
         });
       }
       if (wanders) {
-        masses.push({
-          x: wanderer.x,
-          y: wanderer.y,
-          radius: WANDER_RADIUS,
-          pull: WANDER_PULL * entrance,
-        });
+        wanderMass.x = wanderer.x;
+        wanderMass.y = wanderer.y;
+        wanderMass.pull = WANDER_PULL * entrance;
+        masses.push(wanderMass);
       }
       return masses;
+    };
+
+    /**
+     * Bends starlight around the wanderer.
+     *
+     * Applied to the stars *instead of* the wanderer's own inward pull, which
+     * is why `wanderMass` is filtered out of their mass list before this runs.
+     * The lattice keeps being dented inward; the light does the opposite. That
+     * asymmetry is the entire difference between this and a blue circle.
+     *
+     * Returns null for a star behind the horizon, which is then not drawn —
+     * light that close does not come back out.
+     */
+    const lens = (x: number, y: number): [number, number] | null => {
+      if (!wanders) return [x, y];
+      const dx = x - wanderer.x;
+      const dy = y - wanderer.y;
+      const r = Math.hypot(dx, dy);
+      if (r < CORE_RADIUS * RING_SCALE) return null;
+      // Falls off as 1/r, so the shift is obvious at the ring and negligible a
+      // few hundred pixels out.
+      const push = (LENS_STRENGTH * entrance) / r;
+      return [x + (dx / r) * push, y + (dy / r) * push];
+    };
+
+    /** Core, photon ring and a little glow, drawn after the lattice so the
+     *  horizon swallows the grid rather than being striped by it — which is
+     *  also what a horizon does. */
+    const drawWanderer = () => {
+      if (!wanders || entrance < 0.05) return;
+      const { x, y } = wanderer;
+      const ring = CORE_RADIUS * RING_SCALE;
+
+      const glow = ctx.createRadialGradient(x, y, ring, x, y, ring * 5.5);
+      glow.addColorStop(0, `rgba(150, 190, 255, ${0.22 * entrance})`);
+      glow.addColorStop(0.35, `rgba(110, 150, 230, ${0.07 * entrance})`);
+      glow.addColorStop(1, "rgba(110, 150, 230, 0)");
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(x, y, ring * 5.5, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.fillStyle = "#01030a";
+      ctx.arc(x, y, CORE_RADIUS, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Brighter on one limb. A real disk beams toward you on the side rotating
+      // into view; this is a fixed axis rather than a physical simulation, but
+      // an evenly lit ring reads as a drawn circle and this does not.
+      const limb = ctx.createLinearGradient(x - ring, y, x + ring, y);
+      limb.addColorStop(0, `rgba(226, 238, 255, ${0.95 * entrance})`);
+      limb.addColorStop(0.5, `rgba(150, 190, 255, ${0.5 * entrance})`);
+      limb.addColorStop(1, `rgba(120, 160, 235, ${0.28 * entrance})`);
+      ctx.strokeStyle = limb;
+      ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      ctx.arc(x, y, ring, 0, Math.PI * 2);
+      ctx.stroke();
     };
 
     const draw = () => {
@@ -342,14 +425,21 @@ export function SpacetimeField() {
 
       // Stars sit in the sheet, so they are displaced by the same masses as the
       // lattice. Without this they float on top and the depth falls apart.
+      //
+      // The wanderer is the exception, and is excluded here: it acts on the
+      // starfield as a lens rather than as a well, pushing apparent positions
+      // outward instead of pulling them in. See `lens`.
+      const starMasses = masses.filter((m) => m !== wanderMass);
       for (const star of stars) {
         const x = star.nx * width;
         const y = star.ny * height;
-        const [dx, dy] = displace(x, y, masses);
+        const [dx, dy] = displace(x, y, starMasses);
+        const lensed = lens(x + dx, y + dy);
+        if (!lensed) continue;
         const twinkle = 0.78 + 0.22 * Math.sin(now / 1400 + star.phase);
         ctx.beginPath();
         ctx.fillStyle = `rgba(214, 230, 255, ${star.a * twinkle})`;
-        ctx.arc(x + dx, y + dy, star.r, 0, Math.PI * 2);
+        ctx.arc(lensed[0], lensed[1], star.r, 0, Math.PI * 2);
         ctx.fill();
       }
 
@@ -391,6 +481,11 @@ export function SpacetimeField() {
         }
       }
       ctx.stroke();
+
+      // Last, so the horizon swallows the lattice instead of being striped by
+      // it. Grid lines terminating at the edge of a black disc is both the
+      // clearer image and the more correct one.
+      drawWanderer();
     };
 
     const tick = () => {
