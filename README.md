@@ -2,7 +2,7 @@
 
 Personal site of Zain Butt — full-stack product engineer, London.
 
-- **Live:** https://zain.org.uk _(not yet deployed)_
+- **Live:** https://zain.org.uk
 - **GitHub:** [@zainalibutt](https://github.com/zainalibutt)
 - **LinkedIn:** [zain-butt-dev](https://linkedin.com/in/zain-butt-dev)
 
@@ -18,7 +18,8 @@ rejected are in [`docs/DIRECTIONS.md`](docs/DIRECTIONS.md).
 ## Stack
 
 Next.js 16 (App Router) · React 19 · TypeScript strict · Tailwind v4 ·
-`motion` · MDX · Vitest · Playwright · deployed on Vercel.
+MDX · Vitest · Playwright · deployed on Vercel. No animation library — see
+[`docs/DECISIONS.md`](docs/DECISIONS.md) decision 3.
 
 ## Getting started
 
@@ -30,13 +31,13 @@ npm install
 npm run dev
 ```
 
-| Script              | Does                              |
-| ------------------- | --------------------------------- |
-| `npm run dev`       | Dev server on :3000               |
-| `npm run build`     | Production build                  |
-| `npm run check`     | Typecheck, lint and unit tests    |
-| `npm run test`      | Vitest                            |
-| `npm run format`    | Prettier                          |
+| Script           | Does                           |
+| ---------------- | ------------------------------ |
+| `npm run dev`    | Dev server on :3000            |
+| `npm run build`  | Production build               |
+| `npm run check`  | Typecheck, lint and unit tests |
+| `npm run test`   | Vitest                         |
+| `npm run format` | Prettier                       |
 
 ## Adding a project
 
@@ -73,13 +74,13 @@ vanishing from the grid.
 
 ## Architecture
 
-| Path                                | Role                                                    |
-| ----------------------------------- | ------------------------------------------------------- |
-| `src/app/page.tsx`                  | Entry and project field                                 |
-| `src/app/projects/[slug]/page.tsx`  | Full case study — what a **cold visit** renders         |
+| Path                                | Role                                                            |
+| ----------------------------------- | --------------------------------------------------------------- |
+| `src/app/page.tsx`                  | Entry and project field                                         |
+| `src/app/projects/[slug]/page.tsx`  | Full case study — what a **cold visit** renders                 |
 | `src/app/@modal/(.)projects/[slug]` | Intercepted focused view — what an **in-session** click renders |
-| `src/components/ProjectCard.tsx`    | Card, holds the source `layoutId`s                      |
-| `src/components/FocusShell.tsx`     | Focused state, holds the matching `layoutId`s           |
+| `src/components/ProjectCard.tsx`    | Card, holds the source `layoutId`s                              |
+| `src/components/FocusShell.tsx`     | Focused state, holds the matching `layoutId`s                   |
 
 The shared `layoutId` values across the last two files are what make the morph
 work. Keep them in sync.

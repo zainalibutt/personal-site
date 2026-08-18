@@ -49,8 +49,9 @@ export function About() {
           right one, since a thesis on the entry screen has to be taken on
           trust.
 
-          Still draft copy, not his. The specifics are true — they are read
-          off his CV — but the voice has not been through him yet. */}
+          Still a draft in register rather than in voice. The specifics are
+          true — they are read off the CV — but the wording has not had a pass
+          from Zain himself. */}
       <div className="text-muted space-y-4 text-pretty max-md:hidden">
         {/* `site.thesis` finally has a home. It is Zain's own sentence and was
             written as "the one sentence a visitor should leave with", then sat
