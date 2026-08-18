@@ -107,22 +107,34 @@ const WANDER_FADE_OVER = 130;
 const GRAB_RADIUS = 70;
 const GRAB_RADIUS_OVER_LINK = 34;
 
-/** Per-frame velocity retained after a throw. 0.94 gives roughly a second and a
- *  half of travel — long enough to feel thrown, short enough not to be a toy
- *  that has to be waited out. */
-const THROW_DRAG = 0.94;
+/**
+ * Per-frame velocity retained. Higher than it was, because this is now the only
+ * thing slowing a throw down — nothing pulls the mass anywhere.
+ */
+const THROW_DRAG = 0.965;
 
-/** Above this speed (px/frame) the noise path does not pull at all, so a hard
- *  throw is not yanked back in mid-flight. */
-const RETURN_ABOVE = 6;
+/**
+ * Peak wander acceleration, px/frame².
+ *
+ * The noise drives *acceleration*, not position. That is the whole difference
+ * between this and what it was: an absolute noise path meant the mass always had
+ * somewhere else it was supposed to be, so throwing or dropping it anywhere
+ * snapped it back like an elastic band. Accelerating instead means it wanders
+ * from wherever it happens to be, and a throw simply changes where that is.
+ *
+ * Terminal drift is roughly `WANDER_ACCEL / (1 - THROW_DRAG)` px/frame.
+ */
+const WANDER_ACCEL = 0.055;
 
-/** How firmly it is drawn back onto the path once slow. Deliberately weak: the
- *  return should read as drifting home, not as a snap. */
-const RETURN_LERP = 0.012;
+/** Edge containment. A spring, not a wall — see `moveWanderer`. Generous, so
+ *  the mass is genuinely free everywhere except near the frame. */
+const EDGE_MARGIN = 110;
+const EDGE_SPRING = 0.012;
 
-/** Edge containment. A spring, not a wall — see `moveWanderer`. */
-const EDGE_MARGIN = 60;
-const EDGE_SPRING = 0.015;
+/** Sideways nudge away from the About column while it is wandering on its own.
+ *  Zero at the centre and zero at the band edge, so there is no point at which
+ *  the force flips direction — which is what a wall would do. */
+const SPINE_PUSH = 0.05;
 
 /**
  * How quickly the About-avoidance comes back after a throw.
@@ -321,8 +333,6 @@ export function SpacetimeField() {
       placed: false,
     };
     const grab = { held: false, overLink: false, dx: 0, dy: 0 };
-    /** The noise path it is drawn back onto once a throw has run out. */
-    const path = { x: 0, y: 0 };
     /** Held by identity so the star pass can exclude it — see `lens`. */
     const wanderMass: Mass = {
       x: 0,
@@ -334,23 +344,14 @@ export function SpacetimeField() {
     const moveWanderer = (now: number) => {
       if (!wanders) return;
 
-      /* Pushed toward the flanks. Raising |u| to a power below 1 stretches the
-         path outward without ever reversing it, so the mass crosses the middle
-         quickly instead of loitering there. This is the "soft avoid": a warp of
-         where it spends its time, not a wall it turns at. A wall would need the
-         side to be chosen, and choosing flips at the centre — which is a jump,
-         which is the bounce we are trying not to have. */
-      const u = drift(noiseX, now / WANDER_MS_X) * 2 - 1;
-      const flanked = Math.sign(u) * Math.abs(u) ** 0.45;
-      path.x = (0.5 + 0.42 * flanked) * width;
-      path.y = (0.08 + 0.84 * drift(noiseY, now / WANDER_MS_Y)) * height;
-
       if (!wanderer.placed) {
-        // Start on the path rather than flying in from the origin.
-        wanderer.x = path.x;
-        wanderer.y = path.y;
+        // Start somewhere sensible rather than flying in from the origin.
+        wanderer.x = width * 0.24;
+        wanderer.y = height * 0.42;
         wanderer.placed = true;
-      } else if (grab.held) {
+      }
+
+      if (grab.held) {
         // Held: it goes exactly where the hand goes, and remembers how fast it
         // was moving. Smoothed, because a single frame's delta at the moment of
         // release is noisy enough to turn a gentle placement into a launch.
@@ -361,8 +362,31 @@ export function SpacetimeField() {
         wanderer.x = nx;
         wanderer.y = ny;
       } else {
-        wanderer.x += wanderer.vx;
-        wanderer.y += wanderer.vy;
+        /* Noise accelerates it; nothing positions it. Scaled by `autonomy` so a
+           fresh throw is not immediately steered — it coasts first, then starts
+           wandering again from wherever it ended up. */
+        const ax = (drift(noiseX, now / WANDER_MS_X) - 0.5) * WANDER_ACCEL;
+        const ay = (drift(noiseY, now / WANDER_MS_Y) - 0.5) * WANDER_ACCEL;
+        wanderer.vx += ax * 2 * wanderer.autonomy;
+        wanderer.vy += ay * 2 * wanderer.autonomy;
+
+        /* A sideways bias out of the reading column, applied as a force rather
+           than a boundary. Zero at the centre line and zero at the band edge, so
+           it never reverses direction at a point — it just makes lingering over
+           the words less likely than lingering anywhere else. */
+        const spine = document.querySelector<HTMLElement>("[data-spine]");
+        if (spine && wanderer.autonomy > 0.5) {
+          const r = spine.getBoundingClientRect();
+          if (r.width > 0) {
+            const half = r.width / 2 + WANDER_CLEAR_X;
+            const dx = wanderer.x - (r.left + r.width / 2);
+            if (Math.abs(dx) < half) {
+              const t = dx / half;
+              wanderer.vx += t * (1 - Math.abs(t)) * SPINE_PUSH;
+            }
+          }
+        }
+
         wanderer.vx *= THROW_DRAG;
         wanderer.vy *= THROW_DRAG;
 
@@ -380,15 +404,8 @@ export function SpacetimeField() {
           wanderer.vy -= (wanderer.y - (height - EDGE_MARGIN)) * EDGE_SPRING;
         }
 
-        /* And drawn back onto its own path — but only once the throw has spent
-           itself. While it is still travelling fast the pull is zero, so a hard
-           throw crosses the screen instead of being yanked back mid-flight.
-           As speed decays the pull comes in, and the return is a drift rather
-           than a snap. */
-        const speed = Math.hypot(wanderer.vx, wanderer.vy);
-        const reclaim = Math.max(0, 1 - speed / RETURN_ABOVE);
-        wanderer.x += (path.x - wanderer.x) * reclaim * RETURN_LERP;
-        wanderer.y += (path.y - wanderer.y) * reclaim * RETURN_LERP;
+        wanderer.x += wanderer.vx;
+        wanderer.y += wanderer.vy;
       }
 
       /* And where it does cross, it gets out of the way of the reading. About is
@@ -442,7 +459,6 @@ export function SpacetimeField() {
           Math.round(wanderer.y),
           wanderer.fade.toFixed(3),
           Math.hypot(wanderer.vx, wanderer.vy).toFixed(2),
-          Math.round(Math.hypot(path.x - wanderer.x, path.y - wanderer.y)),
           wanderer.autonomy.toFixed(2),
           grab.held ? 1 : 0,
         ].join(",");
