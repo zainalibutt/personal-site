@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import { Bodoni_Moda, IBM_Plex_Mono, Inter } from "next/font/google";
 import { site } from "@/lib/site";
 import "./globals.css";
@@ -72,6 +73,12 @@ export default function RootLayout({
         </a>
         {children}
         {modal}
+
+        {/* Vercel Web Analytics. Chosen over Plausible, which the roadmap had
+            assumed: this is free, needs no cookie banner because it sets no
+            cookies, and inlines nothing at build. It is inert outside a Vercel
+            deployment, so local runs stay clean. */}
+        <Analytics />
       </body>
     </html>
   );
