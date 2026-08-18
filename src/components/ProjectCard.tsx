@@ -228,7 +228,15 @@ export function ProjectCard({
           opacity: focused ? 0 : 1,
           pointerEvents: focused ? "none" : undefined,
         }}
-        aria-label={`${project.title} — ${project.tagline}`}
+        /* No `aria-label`. It used to read "<title> — <tagline>", which *omits*
+           the year and the stack chips that are visibly inside this link — a
+           WCAG 2.5.3 failure (Label in Name, level A) on all five of the page's
+           primary targets. Someone using speech input reads "Proof-Lens 2026"
+           off the screen and addresses a control that is not called that.
+
+           The link's own text is a better name anyway, and it adapts: on a
+           phone the year, tagline and chips are `display: none`, so the name
+           collapses to just the title. */
         aria-expanded={focused}
         aria-hidden={focused}
         tabIndex={focused ? -1 : undefined}
