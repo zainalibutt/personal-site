@@ -86,6 +86,29 @@ const nextConfig: NextConfig = {
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
+
+  /**
+   * One canonical hostname.
+   *
+   * `www` and the apex both resolve to this deployment, so without this they
+   * serve identical content on two hostnames — which splits any ranking signal
+   * and gives anyone linking the site two different addresses for it. A 308 at
+   * the edge is cheaper and more certain than relying on a canonical tag being
+   * honoured.
+   *
+   * Done here rather than in the Vercel dashboard so the rule lives with the
+   * code that depends on it, and survives the project being recreated.
+   */
+  async redirects() {
+    return [
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.zain.org.uk" }],
+        destination: "https://zain.org.uk/:path*",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

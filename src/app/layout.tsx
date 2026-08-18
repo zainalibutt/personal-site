@@ -39,6 +39,9 @@ export const metadata: Metadata = {
     template: `%s — ${site.name}`,
   },
   description: site.description,
+  // Resolved against `metadataBase` per route, so every page declares itself
+  // canonical at the apex regardless of the hostname it was reached on.
+  alternates: { canonical: "./" },
   openGraph: {
     type: "website",
     locale: "en_GB",
