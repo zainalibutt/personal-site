@@ -1,5 +1,5 @@
 /**
- * The Revenue OS card image.
+ * The Revenue OS boundary figure.
  *
  * Revenue OS is private and stays private, and its live views carry third-party
  * personal data — prospect names and business addresses — which cannot go on a
@@ -21,7 +21,7 @@ const OUT = path.join(
   "public",
   "projects",
   "revenue-os",
-  "hero.png",
+  "boundary.png",
 );
 
 const WIDTH = 1280;

@@ -9,7 +9,7 @@ order: 3
 preview:
   type: image
   poster: /projects/revenue-os/hero.png
-  alt: The outreach boundary — drafted, approved, verified sent, above the exceptions the database raises
+  alt: The Revenue OS command centre, showing the next action to approve as a batch
   aspectRatio: 16 / 9
   dominantColour: "#0b1226"
 draft: false
@@ -61,6 +61,8 @@ The rules live in the database, not in the application.
   a valid licence to send.
 - **Audit payloads are redacted at write time**, so the change log cannot quietly
   become a second copy of the personal data it is auditing.
+
+![The outreach boundary — drafted, approved, verified sent, above the exceptions the database raises](/projects/revenue-os/boundary.png)
 
 A Vercel cron job is the only execution path. It runs once a day, sends only the
 current London date's approved group, records lineage before marking anything

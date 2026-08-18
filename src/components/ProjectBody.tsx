@@ -44,6 +44,18 @@ const components: MDXComponents = {
     />
   ),
 
+  /* Figures inside a case study. Constrained to the prose measure and given the
+     same hairline as everything else, so a diagram reads as part of the writing
+     rather than as an attachment to it. */
+  img: (props) => (
+    // eslint-disable-next-line @next/next/no-img-element, jsx-a11y/alt-text
+    <img
+      className="border-line mb-6 max-w-[68ch] rounded-xl border"
+      loading="lazy"
+      {...props}
+    />
+  ),
+
   /* Results tables. The page's rule is that data is set in the monospace and
      prose is not, so the cells are mono and the header labels carry the same
      uppercase tracking as the artefact metadata. Wrapped in its own scroller:
