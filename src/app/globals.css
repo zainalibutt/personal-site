@@ -400,17 +400,7 @@
   body:has([data-well="focused"]) .artefact-cell {
     animation-play-state: paused;
   }
-
-  /* An animated transform gives every cell its own stacking context, so the
-     opened artefact's `z-index: 50` only ranks it *within its own cell* and the
-     tiles after it in the DOM paint straight over the case study. The cell
-     carrying the open artefact has to be raised too. */
-  .artefact-cell:has([data-well="focused"]) {
-    position: relative;
-    z-index: 50;
-  }
 }
-
 
 /* ---------------------------------------------------------------------------
    Grain.
@@ -497,6 +487,57 @@ body::after {
   letter-spacing: 0.1em;
   color: var(--muted);
   opacity: 0.7;
+}
+
+/* ---------------------------------------------------------------------------
+   Arrival on scroll.
+
+   Nothing on this page reacted to being scrolled to, so everything below the
+   fold was simply *already there* — which is the difference between a page that
+   feels built and one that feels laid out.
+
+   A scroll-driven animation, so there is no observer, no state and no JavaScript
+   at all. Guarded by `@supports`: where the timeline is unsupported the same
+   keyframes would run once on load and flash, so browsers without it get the
+   static page rather than a worse animation.
+
+   Deliberately small — 14px and a fade. This is the page settling, not elements
+   flying in, which is the same rule the artefact reveal follows.
+   --------------------------------------------------------------------------- */
+@supports (animation-timeline: view()) {
+  @media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
+    @keyframes artefact-arrive {
+      from {
+        opacity: 0;
+        transform: translateY(14px);
+      }
+      to {
+        opacity: 1;
+        transform: none;
+      }
+    }
+
+    .artefact-cell {
+      animation: artefact-arrive linear both;
+      animation-timeline: view();
+      /* Finished well before the card is centred, so it is settled by the time
+         anyone reads it — and long before they could click it. */
+      animation-range: entry 0% entry 32%;
+    }
+  }
+}
+
+/* An animated transform gives an element its own stacking context, so the
+   opened artefact's `z-index: 50` only ranks it *within its own cell* and the
+   cards after it in the DOM paint straight over the case study. The cell
+   carrying the open artefact has to be raised too. Applies at every width: both
+   the phone's idle bob and the scroll arrival above create that context. */
+.artefact-cell:has([data-well="focused"]) {
+  position: relative;
+  z-index: 50;
+  /* A running animation would keep re-asserting its own transform over the
+     camera's. Nothing should move while an artefact is open. */
+  animation: none;
 }
 
 /* Small caps-ish chip. Used in the field and inside the expanded artefact, so

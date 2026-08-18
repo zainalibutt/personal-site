@@ -38,17 +38,22 @@ export default function Home() {
         {/* Tighter on a phone: the springboard below is sized to clear the fold
             on a 667px viewport, and every pixel this header spends is one the
             icons do not have. */}
-        <header className="flex flex-col items-center pt-8 pb-8 text-center md:pt-16 md:pb-14 lg:pt-20 lg:pb-16">
-          <h1 className="text-ink text-4xl tracking-[-0.03em] text-balance md:text-6xl lg:text-7xl">
-            {site.name}
-          </h1>
-          <p className="text-muted mt-2 max-w-xl text-pretty md:mt-4 md:text-lg lg:text-xl">
-            {site.role} · {site.location}
-          </p>
+        <header className="flex flex-col items-center pt-8 pb-8 text-center md:pt-16 md:pb-14 lg:flex-row lg:items-end lg:justify-between lg:pt-24 lg:pb-20 lg:text-left">
+          <div>
+            {/* The role as a mono label rather than a sentence under the name.
+                It is data about him, which is what the monospace is for, and it
+                gives the name something to sit against instead of floating. */}
+            <p className="text-muted font-mono text-[0.6875rem] tracking-[0.2em] uppercase md:text-xs">
+              {site.role} · {site.location}
+            </p>
+            <h1 className="text-ink mt-3 text-5xl tracking-[-0.035em] text-balance md:mt-4 md:text-7xl lg:text-[6.5rem] lg:leading-[0.92]">
+              {site.name}
+            </h1>
+          </div>
 
           <nav
             aria-label="Elsewhere"
-            className="mt-4 flex flex-wrap justify-center gap-x-8 gap-y-2 text-sm md:mt-8"
+            className="mt-6 flex flex-wrap justify-center gap-x-8 gap-y-2 text-sm md:mt-8 lg:mt-0 lg:shrink-0 lg:justify-end"
           >
             <a
               className="text-accent hover:text-ink underline underline-offset-8 transition-colors"
