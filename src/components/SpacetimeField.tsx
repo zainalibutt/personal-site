@@ -567,7 +567,13 @@ export function SpacetimeField() {
       if (wanders) {
         wanderMass.x = wanderer.x;
         wanderMass.y = wanderer.y;
-        wanderMass.pull = WANDER_PULL * entrance * wanderer.fade;
+        /* Full strength regardless of `fade`. The mass is always there — only
+           the *drawing* of it gets out of the way of the reading. Fading the
+           pull too made the lattice go flat wherever the disc was hidden, which
+           read as the thing ceasing to exist rather than passing behind
+           something. Zain's call, and the right one: a bend in the mesh under
+           body copy costs nothing legible. */
+        wanderMass.pull = WANDER_PULL * entrance;
         masses.push(wanderMass);
       }
       return masses;
@@ -592,7 +598,9 @@ export function SpacetimeField() {
       if (wanderer.fade > 0.5 && r < CORE_RADIUS * RING_SCALE) return null;
       // Falls off as 1/r, so the shift is obvious at the ring and negligible a
       // few hundred pixels out.
-      const push = (LENS_STRENGTH * entrance * wanderer.fade) / r;
+      // Also unfaded: an invisible mass still bends the light behind it, which
+      // is the one clue that something is there at all while the disc is hidden.
+      const push = (LENS_STRENGTH * entrance) / r;
       return [x + (dx / r) * push, y + (dy / r) * push];
     };
 
