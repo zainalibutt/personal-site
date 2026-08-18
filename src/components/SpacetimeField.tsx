@@ -92,6 +92,42 @@ const WANDER_CLEAR_Y = 60;
 /** Distance over which it fades back in once clear. */
 const WANDER_FADE_OVER = 130;
 
+/**
+ * How close the pointer has to be to pick it up.
+ *
+ * Two radii, because the wanderer spends much of its time drifting *behind* an
+ * artefact, and every artefact is covered edge to edge by its own link. Refusing
+ * to grab over a link at all made the toy work only in the gaps; grabbing over
+ * one at the full radius would start stealing clicks from the artefacts, which
+ * is the one thing on this site that must never get harder.
+ *
+ * So: generous over empty ground, and tight enough over a link that you have to
+ * be essentially on the disc itself — which is 21px across, with a ring at 29.
+ */
+const GRAB_RADIUS = 70;
+const GRAB_RADIUS_OVER_LINK = 34;
+
+/** Per-frame velocity retained after a throw. 0.94 gives roughly a second and a
+ *  half of travel — long enough to feel thrown, short enough not to be a toy
+ *  that has to be waited out. */
+const THROW_DRAG = 0.94;
+
+/** Above this speed (px/frame) the noise path does not pull at all, so a hard
+ *  throw is not yanked back in mid-flight. */
+const RETURN_ABOVE = 6;
+
+/** How firmly it is drawn back onto the path once slow. Deliberately weak: the
+ *  return should read as drifting home, not as a snap. */
+const RETURN_LERP = 0.012;
+
+/** Edge containment. A spring, not a wall — see `moveWanderer`. */
+const EDGE_MARGIN = 60;
+const EDGE_SPRING = 0.015;
+
+/** While held, it never fades below this over About. Losing the thing in your
+ *  hand reads as a bug; dimming it does not. */
+const HELD_FADE_FLOOR = 0.55;
+
 /** Milliseconds per unit of noise, per axis. Different on each so the path
  *  never closes and never repeats. */
 const WANDER_MS_X = 11000;
@@ -253,7 +289,18 @@ export function SpacetimeField() {
 
     /** Set in `resize`, because it depends on viewport width. */
     let wanders = false;
-    const wanderer = { x: 0, y: 0, fade: 1 };
+    /**
+     * Position, velocity and whether it is currently in someone's hand.
+     *
+     * It used to be a pure function of the clock — position read straight off
+     * the noise, no state at all. Being able to pick it up means it needs a
+     * real position that something else can overwrite, and a velocity to keep
+     * when let go.
+     */
+    const wanderer = { x: 0, y: 0, vx: 0, vy: 0, fade: 1, placed: false };
+    const grab = { held: false, overLink: false, dx: 0, dy: 0 };
+    /** The noise path it is drawn back onto once a throw has run out. */
+    const path = { x: 0, y: 0 };
     /** Held by identity so the star pass can exclude it — see `lens`. */
     const wanderMass: Mass = {
       x: 0,
@@ -273,8 +320,54 @@ export function SpacetimeField() {
          which is the bounce we are trying not to have. */
       const u = drift(noiseX, now / WANDER_MS_X) * 2 - 1;
       const flanked = Math.sign(u) * Math.abs(u) ** 0.45;
-      wanderer.x = (0.5 + 0.42 * flanked) * width;
-      wanderer.y = (0.08 + 0.84 * drift(noiseY, now / WANDER_MS_Y)) * height;
+      path.x = (0.5 + 0.42 * flanked) * width;
+      path.y = (0.08 + 0.84 * drift(noiseY, now / WANDER_MS_Y)) * height;
+
+      if (!wanderer.placed) {
+        // Start on the path rather than flying in from the origin.
+        wanderer.x = path.x;
+        wanderer.y = path.y;
+        wanderer.placed = true;
+      } else if (grab.held) {
+        // Held: it goes exactly where the hand goes, and remembers how fast it
+        // was moving. Smoothed, because a single frame's delta at the moment of
+        // release is noisy enough to turn a gentle placement into a launch.
+        const nx = cursor.tx + grab.dx;
+        const ny = cursor.ty + grab.dy;
+        wanderer.vx = wanderer.vx * 0.55 + (nx - wanderer.x) * 0.45;
+        wanderer.vy = wanderer.vy * 0.55 + (ny - wanderer.y) * 0.45;
+        wanderer.x = nx;
+        wanderer.y = ny;
+      } else {
+        wanderer.x += wanderer.vx;
+        wanderer.y += wanderer.vy;
+        wanderer.vx *= THROW_DRAG;
+        wanderer.vy *= THROW_DRAG;
+
+        /* Caught at the edges by a spring rather than a wall. A wall reverses
+           velocity, which is the bounce this whole thing was built to avoid;
+           a spring turns it around over several frames and the drag settles it. */
+        if (wanderer.x < EDGE_MARGIN) {
+          wanderer.vx += (EDGE_MARGIN - wanderer.x) * EDGE_SPRING;
+        } else if (wanderer.x > width - EDGE_MARGIN) {
+          wanderer.vx -= (wanderer.x - (width - EDGE_MARGIN)) * EDGE_SPRING;
+        }
+        if (wanderer.y < EDGE_MARGIN) {
+          wanderer.vy += (EDGE_MARGIN - wanderer.y) * EDGE_SPRING;
+        } else if (wanderer.y > height - EDGE_MARGIN) {
+          wanderer.vy -= (wanderer.y - (height - EDGE_MARGIN)) * EDGE_SPRING;
+        }
+
+        /* And drawn back onto its own path — but only once the throw has spent
+           itself. While it is still travelling fast the pull is zero, so a hard
+           throw crosses the screen instead of being yanked back mid-flight.
+           As speed decays the pull comes in, and the return is a drift rather
+           than a snap. */
+        const speed = Math.hypot(wanderer.vx, wanderer.vy);
+        const reclaim = Math.max(0, 1 - speed / RETURN_ABOVE);
+        wanderer.x += (path.x - wanderer.x) * reclaim * RETURN_LERP;
+        wanderer.y += (path.y - wanderer.y) * reclaim * RETURN_LERP;
+      }
 
       /* And where it does cross, it gets out of the way of the reading. About is
          the only prose on the entry screen, and a dark disc with a bright ring
@@ -306,16 +399,22 @@ export function SpacetimeField() {
         }
       }
       const t = Math.min(1, clearance / WANDER_FADE_OVER);
-      wanderer.fade = t * t * (3 - 2 * t);
+      const smooth = t * t * (3 - 2 * t);
+      wanderer.fade = grab.held ? Math.max(HELD_FADE_FLOOR, smooth) : smooth;
 
       /* Development only. The wanderer is the one thing here that cannot be
          verified from a screenshot — a bright star and a photon ring are the
          same colour to a pixel threshold, which is exactly how the first
          attempt at checking this measured the wrong object entirely. */
       if (process.env.NODE_ENV !== "production") {
-        canvas.dataset.wander = `${Math.round(wanderer.x)},${Math.round(
-          wanderer.y,
-        )},${wanderer.fade.toFixed(3)}`;
+        canvas.dataset.wander = [
+          Math.round(wanderer.x),
+          Math.round(wanderer.y),
+          wanderer.fade.toFixed(3),
+          Math.hypot(wanderer.vx, wanderer.vy).toFixed(2),
+          Math.round(Math.hypot(path.x - wanderer.x, path.y - wanderer.y)),
+          grab.held ? 1 : 0,
+        ].join(",");
       }
     };
 
@@ -572,6 +671,8 @@ export function SpacetimeField() {
         entrance,
         wanderer.x,
         wanderer.y,
+        wanderer.vx,
+        wanderer.vy,
       ].join();
 
       // Included in the idle comparison rather than special-cased: the loop then
@@ -599,6 +700,8 @@ export function SpacetimeField() {
         entrance,
         wanderer.x,
         wanderer.y,
+        wanderer.vx,
+        wanderer.vy,
       ].join();
       idleFrames = before === after ? idleFrames + 1 : 0;
       if (idleFrames > 20) {
@@ -622,11 +725,79 @@ export function SpacetimeField() {
         cursor.y = event.clientY;
       }
       cursor.tw = 1;
+      if (!grab.held) {
+        // Only worth setting over empty ground: a link's own `cursor: pointer`
+        // wins against a style on the body, so there is nothing to show there.
+        const over =
+          nearWanderer(event.clientX, event.clientY, event.target) &&
+          !interactive(event.target);
+        setCursor(over ? "grab" : "");
+      }
       wake();
     };
 
     const onPointerLeave = () => {
       cursor.tw = 0;
+      wake();
+    };
+
+    /** Whether this component is currently overriding the page's cursor, so it
+     *  only ever clears a style it set itself. */
+    let styledCursor = false;
+    const setCursor = (value: string) => {
+      if (!value && !styledCursor) return;
+      document.body.style.cursor = value;
+      styledCursor = value !== "";
+    };
+
+    const interactive = (target: EventTarget | null) =>
+      Boolean((target as HTMLElement)?.closest?.("a, button"));
+
+    const nearWanderer = (x: number, y: number, target: EventTarget | null) => {
+      if (!wanders) return false;
+      const radius = interactive(target) ? GRAB_RADIUS_OVER_LINK : GRAB_RADIUS;
+      return Math.hypot(x - wanderer.x, y - wanderer.y) < radius;
+    };
+
+    /* A grab that began on top of a link has to swallow the click that pointerup
+       would otherwise produce, or picking the thing up navigates. Capture phase
+       and once, so it can never outlive the gesture that armed it. */
+    const swallowNextClick = () => {
+      window.addEventListener(
+        "click",
+        (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+        },
+        { capture: true, once: true },
+      );
+    };
+
+    const onPointerDown = (event: PointerEvent) => {
+      // Mouse only. On a touch screen a drag is how you scroll, and quietly
+      // eating that to play with a background ornament would be indefensible —
+      // though in practice the wanderer does not run at those widths anyway.
+      if (event.pointerType !== "mouse" || event.button !== 0) return;
+      if (!nearWanderer(event.clientX, event.clientY, event.target)) return;
+
+      grab.overLink = interactive(event.target);
+      grab.held = true;
+      grab.dx = wanderer.x - event.clientX;
+      grab.dy = wanderer.y - event.clientY;
+      wanderer.vx = 0;
+      wanderer.vy = 0;
+      setCursor("grabbing");
+      // Stops the drag turning into a text selection across the page.
+      event.preventDefault();
+      wake();
+    };
+
+    const onPointerUp = () => {
+      if (!grab.held) return;
+      grab.held = false;
+      if (grab.overLink) swallowNextClick();
+      grab.overLink = false;
+      setCursor("");
       wake();
     };
 
@@ -672,12 +843,19 @@ export function SpacetimeField() {
     window.addEventListener("resize", resize);
     window.addEventListener("pointermove", onPointerMove, { passive: true });
     document.addEventListener("pointerleave", onPointerLeave);
+    window.addEventListener("pointerdown", onPointerDown);
+    window.addEventListener("pointerup", onPointerUp);
+    window.addEventListener("pointercancel", onPointerUp);
 
     return () => {
       unsubscribe();
       window.removeEventListener("resize", resize);
       window.removeEventListener("pointermove", onPointerMove);
       document.removeEventListener("pointerleave", onPointerLeave);
+      window.removeEventListener("pointerdown", onPointerDown);
+      window.removeEventListener("pointerup", onPointerUp);
+      window.removeEventListener("pointercancel", onPointerUp);
+      setCursor("");
       clearInterval(sustain);
       cancelAnimationFrame(raf);
     };
