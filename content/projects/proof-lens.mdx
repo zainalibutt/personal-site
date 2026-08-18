@@ -50,24 +50,31 @@ design where the proof is a lookup against a service you control.
 
 ## What I'd change
 
-{/* DRAFT, 2026-08-18 — needs Zain's own pass. Every claim here
-    is either visible in the repo or a judgement about the design, not a
-    recollection. */}
+{/* Condensed from Zain's own dissertation (§4.3.1, §6.2.2, §6.4) rather than
+    reasoned from the repository. The judgements here are his. */}
 
-The signature proves which key signed a capture. It does not prove that the key
-was in a phone rather than an emulator, and hardware attestation is exactly the
-part that varies most across devices — it is strongest where you need it least.
-The honest framing is the one already on the page: it verifies provenance, not
-reality. Someone can still point a genuine, attested camera at a convincing
-fake.
+**Device trust is an assumption, not a guarantee, and the report says so.** The
+Ed25519 private key lives in Expo SecureStore, which is not Secure
+Enclave-backed attestation. If that key is extracted, the server cannot
+distinguish legitimate credentials from forged ones — and revocation limits
+future damage without invalidating anything already signed. Native
+hardware-backed key storage is the first thing I would change, because it is the
+only item that moves the root of trust rather than the reporting around it.
 
-The RFC 3161 dependency is the part I would change first. Anchoring against a
-single timestamping authority means every bundle ever issued inherits that
-authority's lifespan. Countersigning with two, from different jurisdictions,
-costs almost nothing at capture time and removes a single point of failure that
-only becomes visible years later, when it is far too late to re-issue anything.
+**All temporal assurance depends on a single authority.** Every bundle inherits
+FreeTSA's lifespan, and during the project its leaf certificate expired and the
+service kept operating anyway. That is the clearest possible argument for
+multi-TSA redundancy: the failure mode is not the authority disappearing, it is
+the authority continuing to look fine.
 
-The bundle format was cut to what a verifier needs offline, which meant leaving
-out most of the capture context. I would revisit that trade — the difference
-between "this file is unaltered" and "this file is unaltered and here is what
-was around it" is most of the difference between evidence and a checksum.
+**The evaluation was same-author.** Two iOS devices, single-user conditions, no
+blind external review or third-party retest. The protocol behaviour and the
+offline verification workflow are evidenced, but "no one else has tried to break
+it" is a limitation of the evidence, not a property of the system.
+
+I ordered the remaining work by how much it would strengthen the truth of the
+security claims rather than by how appealing the feature was — external
+adversarial review first, hardware-backed keys second, a retention and erasure
+policy for the GDPR Article 17 tension third. Interoperability and packaging
+come last, because they make the thing easier to ship without making any of its
+claims more true.
