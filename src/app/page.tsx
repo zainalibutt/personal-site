@@ -71,13 +71,50 @@ export default function Home() {
           </nav>
         </header>
 
-        <h2 id="work-heading" className="sr-only">
+        {/* Was `sr-only`. A sighted visitor got a name and then some floating
+            rectangles, with nothing saying they were a considered set. */}
+        <h2
+          id="work-heading"
+          className="section-label mb-10 max-md:hidden md:mb-12"
+        >
           Selected work
         </h2>
 
         <ProjectField items={items}>
           <About />
         </ProjectField>
+        {/* The page used to simply stop after the last artefact, which reads as
+            unfinished however good the thing above it is. Inside the plane, so
+            the camera carries it like everything else.
+
+            Hidden on a phone: the springboard is sized to the fold, and a
+            footer whose every link is already in the header above cost 148px of
+            scroll to say nothing new. */}
+        <footer className="border-line text-muted mt-28 flex flex-wrap items-baseline justify-between gap-x-8 gap-y-3 border-t pt-8 font-mono text-[0.6875rem] tracking-[0.14em] uppercase max-md:hidden md:mt-40">
+          <span>
+            {site.name} · {site.location}
+          </span>
+          <span className="flex flex-wrap gap-x-6 gap-y-2">
+            <a
+              className="hover:text-ink transition-colors"
+              href={`mailto:${site.links.email}`}
+            >
+              {site.links.email}
+            </a>
+            <a
+              className="hover:text-ink transition-colors"
+              href={site.links.github}
+            >
+              GitHub
+            </a>
+            <a
+              className="hover:text-ink transition-colors"
+              href={site.links.linkedin}
+            >
+              LinkedIn
+            </a>
+          </span>
+        </footer>
       </main>
     </>
   );

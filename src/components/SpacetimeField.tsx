@@ -124,9 +124,23 @@ const RETURN_LERP = 0.012;
 const EDGE_MARGIN = 60;
 const EDGE_SPRING = 0.015;
 
-/** While held, it never fades below this over About. Losing the thing in your
- *  hand reads as a bug; dimming it does not. */
-const HELD_FADE_FLOOR = 0.55;
+/**
+ * How quickly the About-avoidance comes back after a throw.
+ *
+ * The avoidance is suspended entirely while the wanderer is in someone's hand
+ * or still travelling, because fading it out mid-flight made the throw stutter
+ * and look broken — the thing you just threw dissolved halfway across the
+ * screen. Deliberate handling outranks the reading: if you drag it onto the
+ * words, that is where you wanted it.
+ *
+ * Once it is slow again and drifting on its own, the avoidance eases back in
+ * over roughly two seconds rather than snapping on.
+ */
+const AUTONOMY_LERP = 0.012;
+
+/** Below this speed (px/frame) it counts as wandering again rather than still
+ *  being thrown. */
+const AUTONOMY_BELOW = 0.6;
 
 /** Milliseconds per unit of noise, per axis. Different on each so the path
  *  never closes and never repeats. */
@@ -297,7 +311,15 @@ export function SpacetimeField() {
      * real position that something else can overwrite, and a velocity to keep
      * when let go.
      */
-    const wanderer = { x: 0, y: 0, vx: 0, vy: 0, fade: 1, placed: false };
+    const wanderer = {
+      x: 0,
+      y: 0,
+      vx: 0,
+      vy: 0,
+      fade: 1,
+      autonomy: 1,
+      placed: false,
+    };
     const grab = { held: false, overLink: false, dx: 0, dy: 0 };
     /** The noise path it is drawn back onto once a throw has run out. */
     const path = { x: 0, y: 0 };
@@ -400,7 +422,15 @@ export function SpacetimeField() {
       }
       const t = Math.min(1, clearance / WANDER_FADE_OVER);
       const smooth = t * t * (3 - 2 * t);
-      wanderer.fade = grab.held ? Math.max(HELD_FADE_FLOOR, smooth) : smooth;
+
+      /* `autonomy` is how much of the About-avoidance applies: 0 while held or
+         still flying, 1 once it is wandering under its own steam again. Blended
+         rather than switched, so nothing pops at either end. */
+      const speed = Math.hypot(wanderer.vx, wanderer.vy);
+      const wandering = !grab.held && speed < AUTONOMY_BELOW;
+      wanderer.autonomy +=
+        ((wandering ? 1 : 0) - wanderer.autonomy) * AUTONOMY_LERP;
+      wanderer.fade = 1 - wanderer.autonomy * (1 - smooth);
 
       /* Development only. The wanderer is the one thing here that cannot be
          verified from a screenshot — a bright star and a photon ring are the
@@ -413,6 +443,7 @@ export function SpacetimeField() {
           wanderer.fade.toFixed(3),
           Math.hypot(wanderer.vx, wanderer.vy).toFixed(2),
           Math.round(Math.hypot(path.x - wanderer.x, path.y - wanderer.y)),
+          wanderer.autonomy.toFixed(2),
           grab.held ? 1 : 0,
         ].join(",");
       }
@@ -673,6 +704,7 @@ export function SpacetimeField() {
         wanderer.y,
         wanderer.vx,
         wanderer.vy,
+        wanderer.autonomy,
       ].join();
 
       // Included in the idle comparison rather than special-cased: the loop then
@@ -702,6 +734,7 @@ export function SpacetimeField() {
         wanderer.y,
         wanderer.vx,
         wanderer.vy,
+        wanderer.autonomy,
       ].join();
       idleFrames = before === after ? idleFrames + 1 : 0;
       if (idleFrames > 20) {
@@ -786,6 +819,7 @@ export function SpacetimeField() {
       grab.dy = wanderer.y - event.clientY;
       wanderer.vx = 0;
       wanderer.vy = 0;
+      wanderer.autonomy = 0;
       setCursor("grabbing");
       // Stops the drag turning into a text selection across the page.
       event.preventDefault();

@@ -18,8 +18,11 @@ import type { ProjectSummary } from "@/lib/content";
 export function ProjectCard({
   project,
   body,
+  index,
 }: {
   project: ProjectSummary;
+  /** Position in the field, for the printed index. */
+  index: number;
   /** Server-rendered case study. Present at rest, clipped out of view. */
   body: React.ReactNode;
 }) {
@@ -72,13 +75,10 @@ export function ProjectCard({
           ref={boxRef}
           data-expanded="false"
           className={[
-            "border-line bg-bg absolute inset-0 overflow-hidden rounded-2xl border",
+            "artefact-box border-line bg-bg absolute inset-0 overflow-hidden rounded-2xl border",
             "transition-[transform,box-shadow] duration-500 ease-[var(--ease-out-soft)]",
             "data-[expanded=false]:group-hover:-translate-y-2",
             "data-[expanded=false]:group-hover:scale-[1.04]",
-            "data-[expanded=false]:group-hover:shadow-2xl",
-            "data-[expanded=false]:group-hover:shadow-word-700/20",
-            "data-[expanded=true]:shadow-2xl",
             "motion-reduce:transform-none motion-reduce:transition-none",
           ].join(" ")}
         >
@@ -243,6 +243,12 @@ export function ProjectCard({
       >
         <span className="caption-head flex items-baseline justify-between gap-4">
           <span className="caption-title text-ink text-2xl">
+            {/* Index, not decoration: five artefacts with no numbering read as
+                whatever happened to be lying around. `aria-hidden` because the
+                position is already conveyed by the list order. */}
+            <span aria-hidden className="artefact-index mr-3">
+              {String(index + 1).padStart(2, "0")}
+            </span>
             {project.title}
           </span>
           <span className="caption-detail text-muted shrink-0 font-mono text-sm tabular-nums">

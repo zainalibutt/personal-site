@@ -76,7 +76,7 @@ export function ProjectField({
          inline `grid-column: 3` would land in a column that does not exist. */
       className="artefact-cell lg:[grid-column-start:var(--col)] lg:[grid-row-start:var(--row)] lg:mt-[var(--drift)]"
     >
-      <ProjectCard project={item.project} body={item.body} />
+      <ProjectCard project={item.project} body={item.body} index={i} />
     </div>
   ));
 
@@ -86,8 +86,11 @@ export function ProjectField({
         // Phone: a springboard. Two columns of icons with About between them,
         // which is where the flagships end up either side of the first row.
         "project-field grid grid-cols-2 gap-x-4 gap-y-7",
-        // Tablet: the old single column of full panels.
-        "md:flex md:flex-col md:gap-16",
+        // Tablet: the conventional two-up grid of full panels. It was a single
+        // column, which at 900px wide ran to 4,600px of scrolling — legible,
+        // but structurally the same "wade through everything" shape the phone
+        // springboard exists to avoid.
+        "md:gap-x-8 md:gap-y-14",
         "lg:grid lg:grid-cols-[1fr_minmax(0,24rem)_1fr] lg:items-start lg:gap-x-14 lg:gap-y-12",
       ].join(" ")}
     >
@@ -98,10 +101,10 @@ export function ProjectField({
           beside it. See docs/ARCHITECTURE.md. */}
       <div
         data-spine
-        /* `max-md:` on the span, so it cannot compete with the explicit column
+        /* `max-lg:` on the span, so it cannot compete with the explicit column
            at `lg` — two rules setting `grid-column` at the same breakpoint
            resolve by stylesheet order, which is not something to rely on. */
-        className="max-md:col-span-2 lg:sticky lg:top-24 lg:[grid-column:2] lg:[grid-row:1/-1] lg:self-start"
+        className="max-lg:col-span-2 lg:sticky lg:top-24 lg:[grid-column:2] lg:[grid-row:1/-1] lg:self-start"
       >
         {children}
       </div>

@@ -333,6 +333,12 @@
   .artefact-slot > div[data-expanded="false"] {
     border-radius: 22%;
     background: transparent;
+    /* An icon is not a card: no edge highlight, no card shadow. */
+    box-shadow: none;
+  }
+
+  .artefact-index {
+    display: none;
   }
 
   .artefact-slot > div[data-expanded="false"] .artefact-icon {
@@ -403,6 +409,94 @@
     position: relative;
     z-index: 50;
   }
+}
+
+
+/* ---------------------------------------------------------------------------
+   Grain.
+
+   The single largest reason a dark page reads as cheap is that a CSS gradient
+   is *perfectly* smooth, and nothing real is. A few percent of monochrome noise
+   over everything gives the ground tooth, breaks up the banding a large
+   gradient produces on 8-bit displays, and costs one tiled data URI.
+
+   Fixed rather than scrolling, so it behaves like film on the lens rather than
+   texture on the page. Above everything, but `pointer-events: none`, so it
+   never touches a hit target.
+   --------------------------------------------------------------------------- */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.035;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+@media (prefers-reduced-motion: reduce) {
+  /* Static anyway, but honour the intent: no texture for anyone who has asked
+     the interface to calm down. */
+  body::after {
+    opacity: 0.02;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Artefact material.
+
+   A one-pixel border and a flat fill is what every card on the internet looks
+   like. These give the box an edge that catches light from above and a shadow
+   with two falloffs rather than one, which is the difference between a shape
+   and an object.
+   --------------------------------------------------------------------------- */
+.artefact-box {
+  box-shadow:
+    inset 0 1px 0 0 rgb(255 255 255 / 0.07),
+    0 1px 2px 0 rgb(0 0 0 / 0.4),
+    0 12px 32px -12px rgb(0 0 0 / 0.55);
+}
+
+[data-expanded="false"].artefact-box:hover {
+  box-shadow:
+    inset 0 1px 0 0 rgb(255 255 255 / 0.12),
+    0 2px 4px 0 rgb(0 0 0 / 0.45),
+    0 28px 60px -18px rgb(0 0 0 / 0.7),
+    0 0 0 1px rgb(134 181 255 / 0.14);
+}
+
+/* ---------------------------------------------------------------------------
+   Editorial furniture.
+
+   The page had no visible structure at all: the "Selected work" heading was
+   screen-reader only, so a sighted visitor got a name and then some floating
+   rectangles. A label, a rule and an index are what make a set of things read
+   as a considered sequence rather than as whatever happened to be lying around.
+   --------------------------------------------------------------------------- */
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.section-label::after {
+  content: "";
+  height: 1px;
+  flex: 1;
+  background: linear-gradient(to right, var(--line), transparent);
+}
+
+.artefact-index {
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  opacity: 0.7;
 }
 
 /* Small caps-ish chip. Used in the field and inside the expanded artefact, so
