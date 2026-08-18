@@ -76,14 +76,38 @@ const RING_SCALE = 1.38;
  */
 const LENS_STRENGTH = 260;
 
+/**
+ * Clearance around the About column before the wanderer starts fading, in px.
+ *
+ * Deliberately small. The first pass reserved 170px a side, which on a 1440
+ * viewport put the mass out of sight for over half its journey, and on a
+ * 1024-wide laptop would have hidden it essentially always — the flanks either
+ * side of a 384px centre column are simply not wide enough to hold a 170px
+ * buffer plus a fade. What actually costs legibility is the drawn disc and its
+ * glow sitting *on* the words, so the buffer only has to cover that.
+ */
+const WANDER_CLEAR_X = 45;
+const WANDER_CLEAR_Y = 60;
+
+/** Distance over which it fades back in once clear. */
+const WANDER_FADE_OVER = 130;
+
 /** Milliseconds per unit of noise, per axis. Different on each so the path
  *  never closes and never repeats. */
 const WANDER_MS_X = 11000;
 const WANDER_MS_Y = 13000;
 
-/** Below this the wanderer does not run at all — it is the one thing here that
- *  keeps the loop awake permanently, and a phone should not pay for it. */
-const WANDER_MIN_WIDTH = 1024;
+/**
+ * Below this the wanderer does not run at all.
+ *
+ * It is the one thing here that keeps the render loop awake permanently, so it
+ * has to be worth the frames. Measured across 45 samples of drift: at 1440px it
+ * is clearly visible three quarters of the time, at 1024px only a fifth — the
+ * flanks either side of the centre column are too narrow there for it to emerge
+ * from behind the reading. A narrow laptop therefore gets the old behaviour,
+ * zero cost when nothing moves, rather than a permanent loop it can barely see.
+ */
+const WANDER_MIN_WIDTH = 1200;
 
 /**
  * Deterministic 1D value noise, smoothstepped between integer samples.
@@ -229,7 +253,7 @@ export function SpacetimeField() {
 
     /** Set in `resize`, because it depends on viewport width. */
     let wanders = false;
-    const wanderer = { x: 0, y: 0 };
+    const wanderer = { x: 0, y: 0, fade: 1 };
     /** Held by identity so the star pass can exclude it — see `lens`. */
     const wanderMass: Mass = {
       x: 0,
@@ -240,11 +264,59 @@ export function SpacetimeField() {
 
     const moveWanderer = (now: number) => {
       if (!wanders) return;
-      // Mapped into the middle 84% of the viewport. Value noise sits around its
-      // own mean, so this is a tendency rather than a boundary — it never has to
-      // be turned around at an edge.
-      wanderer.x = (0.08 + 0.84 * drift(noiseX, now / WANDER_MS_X)) * width;
+
+      /* Pushed toward the flanks. Raising |u| to a power below 1 stretches the
+         path outward without ever reversing it, so the mass crosses the middle
+         quickly instead of loitering there. This is the "soft avoid": a warp of
+         where it spends its time, not a wall it turns at. A wall would need the
+         side to be chosen, and choosing flips at the centre — which is a jump,
+         which is the bounce we are trying not to have. */
+      const u = drift(noiseX, now / WANDER_MS_X) * 2 - 1;
+      const flanked = Math.sign(u) * Math.abs(u) ** 0.45;
+      wanderer.x = (0.5 + 0.42 * flanked) * width;
       wanderer.y = (0.08 + 0.84 * drift(noiseY, now / WANDER_MS_Y)) * height;
+
+      /* And where it does cross, it gets out of the way of the reading. About is
+         the only prose on the entry screen, and a dark disc with a bright ring
+         travelling under body copy is exactly the kind of visual that costs
+         legibility — which loses, every time.
+
+         Distance to the *padded* spine box, so the fade begins well before any
+         overlap. Zero inside, rising smoothly outside: continuous everywhere,
+         so nothing snaps on or off. Measured live, which is safe here only
+         because the value feeds a fade and never accumulates — during a camera
+         move this reads through the transform and briefly lies, and a brief lie
+         about opacity is invisible. */
+      const spine = document.querySelector<HTMLElement>("[data-spine]");
+      let clearance = Number.POSITIVE_INFINITY;
+      if (spine) {
+        const r = spine.getBoundingClientRect();
+        if (r.width > 0) {
+          const dx = Math.max(
+            r.left - WANDER_CLEAR_X - wanderer.x,
+            0,
+            wanderer.x - (r.right + WANDER_CLEAR_X),
+          );
+          const dy = Math.max(
+            r.top - WANDER_CLEAR_Y - wanderer.y,
+            0,
+            wanderer.y - (r.bottom + WANDER_CLEAR_Y),
+          );
+          clearance = Math.hypot(dx, dy);
+        }
+      }
+      const t = Math.min(1, clearance / WANDER_FADE_OVER);
+      wanderer.fade = t * t * (3 - 2 * t);
+
+      /* Development only. The wanderer is the one thing here that cannot be
+         verified from a screenshot — a bright star and a photon ring are the
+         same colour to a pixel threshold, which is exactly how the first
+         attempt at checking this measured the wrong object entirely. */
+      if (process.env.NODE_ENV !== "production") {
+        canvas.dataset.wander = `${Math.round(wanderer.x)},${Math.round(
+          wanderer.y,
+        )},${wanderer.fade.toFixed(3)}`;
+      }
     };
 
     /**
@@ -349,7 +421,7 @@ export function SpacetimeField() {
       if (wanders) {
         wanderMass.x = wanderer.x;
         wanderMass.y = wanderer.y;
-        wanderMass.pull = WANDER_PULL * entrance;
+        wanderMass.pull = WANDER_PULL * entrance * wanderer.fade;
         masses.push(wanderMass);
       }
       return masses;
@@ -371,10 +443,10 @@ export function SpacetimeField() {
       const dx = x - wanderer.x;
       const dy = y - wanderer.y;
       const r = Math.hypot(dx, dy);
-      if (r < CORE_RADIUS * RING_SCALE) return null;
+      if (wanderer.fade > 0.5 && r < CORE_RADIUS * RING_SCALE) return null;
       // Falls off as 1/r, so the shift is obvious at the ring and negligible a
       // few hundred pixels out.
-      const push = (LENS_STRENGTH * entrance) / r;
+      const push = (LENS_STRENGTH * entrance * wanderer.fade) / r;
       return [x + (dx / r) * push, y + (dy / r) * push];
     };
 
@@ -382,31 +454,34 @@ export function SpacetimeField() {
      *  horizon swallows the grid rather than being striped by it — which is
      *  also what a horizon does. */
     const drawWanderer = () => {
-      if (!wanders || entrance < 0.05) return;
-      const { x, y } = wanderer;
+      if (!wanders || entrance < 0.05 || wanderer.fade < 0.02) return;
+      const { x, y, fade } = wanderer;
       const ring = CORE_RADIUS * RING_SCALE;
 
       const glow = ctx.createRadialGradient(x, y, ring, x, y, ring * 5.5);
-      glow.addColorStop(0, `rgba(150, 190, 255, ${0.22 * entrance})`);
-      glow.addColorStop(0.35, `rgba(110, 150, 230, ${0.07 * entrance})`);
+      glow.addColorStop(0, `rgba(150, 190, 255, ${0.22 * entrance * fade})`);
+      glow.addColorStop(0.35, `rgba(110, 150, 230, ${0.07 * entrance * fade})`);
       glow.addColorStop(1, "rgba(110, 150, 230, 0)");
       ctx.fillStyle = glow;
       ctx.beginPath();
       ctx.arc(x, y, ring * 5.5, 0, Math.PI * 2);
       ctx.fill();
 
+      ctx.save();
+      ctx.globalAlpha = fade;
       ctx.beginPath();
       ctx.fillStyle = "#01030a";
       ctx.arc(x, y, CORE_RADIUS, 0, Math.PI * 2);
       ctx.fill();
+      ctx.restore();
 
       // Brighter on one limb. A real disk beams toward you on the side rotating
       // into view; this is a fixed axis rather than a physical simulation, but
       // an evenly lit ring reads as a drawn circle and this does not.
       const limb = ctx.createLinearGradient(x - ring, y, x + ring, y);
-      limb.addColorStop(0, `rgba(226, 238, 255, ${0.95 * entrance})`);
-      limb.addColorStop(0.5, `rgba(150, 190, 255, ${0.5 * entrance})`);
-      limb.addColorStop(1, `rgba(120, 160, 235, ${0.28 * entrance})`);
+      limb.addColorStop(0, `rgba(226, 238, 255, ${0.95 * entrance * fade})`);
+      limb.addColorStop(0.5, `rgba(150, 190, 255, ${0.5 * entrance * fade})`);
+      limb.addColorStop(1, `rgba(120, 160, 235, ${0.28 * entrance * fade})`);
       ctx.strokeStyle = limb;
       ctx.lineWidth = 1.6;
       ctx.beginPath();
