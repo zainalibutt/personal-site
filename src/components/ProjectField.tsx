@@ -48,6 +48,9 @@ export interface FieldItem {
  */
 const DRIFT_REM = [0, 8, 2, 10, 4];
 
+/** The phone springboard is two icons wide. */
+const PHONE_COLUMNS = 2;
+
 export function ProjectField({
   items,
   children,
@@ -56,8 +59,19 @@ export function ProjectField({
   /** The central spine — about copy and portrait. */
   children: React.ReactNode;
 }) {
-  /** About goes straight after the flagships, in the DOM, for everyone. */
-  const spineAt = items.filter((item) => item.project.flagship).length;
+  /**
+   * Where About sits in the one DOM stream.
+   *
+   * After the first full row of the phone springboard — not after the
+   * flagships, which is what it used to be. With two flagships those were the
+   * same thing; with three, About landed mid-row and left a tile hanging on its
+   * own, which cost a whole extra row of height on the layout least able to
+   * afford it.
+   *
+   * Reading order stays right either way: the two strongest artefacts, then who
+   * he is, then everything else.
+   */
+  const spineAt = PHONE_COLUMNS;
 
   const cards = items.map((item, i) => (
     <div

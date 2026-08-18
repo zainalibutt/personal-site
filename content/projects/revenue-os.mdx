@@ -1,0 +1,108 @@
+---
+title: Revenue OS
+tagline: A pipeline that cannot record what it cannot prove.
+year: 2026
+role: Design and engineering
+stack: [TypeScript, Next.js, Supabase, Postgres, Vercel Cron, Gmail API]
+flagship: true
+order: 3
+preview:
+  type: image
+  poster: /projects/revenue-os/hero.png
+  alt: The outreach boundary — drafted, approved, verified sent, above the exceptions the database raises
+  aspectRatio: 16 / 9
+  dominantColour: "#0b1226"
+draft: false
+---
+
+{/* DRAFT COPY — written from the schema, the migrations and the operating
+    notes. Needs Zain's review, and his call on how much to say publicly. */}
+
+The third time the same question turned up, pointed at my own income: how do you
+know a record is true? Proof-Lens asks it of a file and Melody of a filing.
+Revenue OS asks it of a claim my own system makes about itself — that an email
+was sent, to someone who agreed to be contacted, after a human said yes.
+
+**This one is private and stays private.** It runs a real pipeline containing
+real people's contact details, so there is no repository to read and no live
+link to follow. What is shown here is the part that is safe to show and also
+the part worth showing.
+
+## The problem
+
+Anything that sends email on your behalf is a small machine for embarrassing
+you. The failure modes are not exotic: a message goes to someone who asked never
+to hear from you again, a retry sends the same thing twice, a batch you never
+approved goes out because a script read the wrong flag, or the system records a
+send that never actually happened and you follow up on a conversation that does
+not exist.
+
+Every one of those is a data-integrity problem wearing a sales hat.
+
+## The approach
+
+The rules live in the database, not in the application.
+
+- **The boundary is a trigger.** Before any outreach row can move toward a sent
+  state, `enforce_outreach_boundary` checks it against the do-not-contact list
+  and the suppression list, requires a linked approval record, requires that
+  approval to actually be approved, and requires a *named, approved batch*
+  before sent state can be recorded at all.
+- **Sent means provable.** The same trigger refuses the write without a verified
+  Gmail message ID and a sent timestamp, and rejects anything that did not use
+  the approved sender alias.
+- **The ledger is immutable.** Once a message is verified sent,
+  `lock_verified_sent_ledger` makes those fields unchangeable — including the
+  human approval timestamp and the verified thread ID.
+- **Identities cannot be edited away.** A do-not-contact entry cannot be
+  altered; the only legal move is to add a separate suppression record, so the
+  history of who asked not to be contacted is append-only.
+- **Approvals expire.** A batch that was approved and then left alone stops being
+  a valid licence to send.
+- **Audit payloads are redacted at write time**, so the change log cannot quietly
+  become a second copy of the personal data it is auditing.
+
+A Vercel cron job is the only execution path. It runs once a day, sends only the
+current London date's approved group, records lineage before marking anything
+sent, and is capped at twenty messages. It cannot approve, draft, rewrite or add
+a recipient.
+
+## What was hard
+
+Deciding that the application layer could not be trusted — including the parts I
+wrote.
+
+Every one of those guarantees started life as a check in TypeScript, which is
+exactly where such checks go to die: a new code path forgets one, a script
+written in a hurry bypasses the service entirely, an agent with database
+credentials does something reasonable-looking at three in the morning. Moving
+them into triggers means the rule holds no matter what touches the row, and it
+means a bug in my own code fails loudly instead of sending something it should
+not have.
+
+The other hard part was accepting that an unprovable send is not a send. If the
+provider outcome cannot be recorded, the message is held for human review and
+never automatically retried — because the alternative is a system that resolves
+its own uncertainty by guessing, which is the failure this whole site is about.
+
+## What I'd change
+
+{/* DRAFT, 2026-08-18 — needs Zain's own pass. Every claim here is
+    visible in the migrations or the operating notes, not a recollection.
+ */}
+
+The twenty-a-day cap is a number I chose rather than derived, and it is doing
+two jobs at once — protecting deliverability and protecting me from myself. Those
+deserve separate controls, because the right answer to the first is a function of
+domain reputation and the right answer to the second is a matter of judgement.
+
+The approval model is per-batch, which is the right unit for sending and the
+wrong unit for reviewing. Reviewing twenty messages as one decision means the
+twentieth gets less attention than the first, and the design currently makes
+that invisible rather than surfacing it.
+
+What I would build next is the reconciliation pass. The system proves what it
+sent; it does not yet prove that what it recorded matches what the provider
+believes a week later. Everything is in place for that check and it does not
+exist, which means the ledger is trustworthy at write time and merely probably
+correct thereafter.

@@ -36,12 +36,30 @@ async function main() {
 
   await page.goto(BASE, { waitUntil: "networkidle" });
 
-  // The entrance sequence settles the artefacts into the lattice. Shooting
-  // before it finishes captures a half-assembled page.
+  /* The entrance sequence settles the artefacts into the lattice, and shooting
+     before it finishes captures a half-assembled page.
+
+     Infinite and scroll-driven animations are excluded and the wait is raced
+     against a timer, for exactly the reason `scripts/shoot.ts` does the same:
+     the arrival animation is driven by a view timeline and its `finished`
+     promise never resolves, so waiting on all of them hung this script
+     indefinitely. The rule this project already had — every animation gets a
+     timer guard as well as its promise — applies to the tooling too. */
   await page.evaluate(async () => {
-    await Promise.all(
-      document.getAnimations().map((a) => a.finished.catch(() => undefined)),
-    );
+    const finite = document.getAnimations().filter((a) => {
+      const timing = a.effect?.getComputedTiming();
+      return (
+        timing?.iterations !== Infinity &&
+        !("timeline" in a && a.timeline
+          ? a.timeline.constructor.name.includes("ViewTimeline")
+          : false)
+      );
+    });
+
+    await Promise.race([
+      Promise.all(finite.map((a) => a.finished.catch(() => undefined))),
+      new Promise((resolve) => setTimeout(resolve, 3000)),
+    ]);
   });
   await page.waitForTimeout(600);
 

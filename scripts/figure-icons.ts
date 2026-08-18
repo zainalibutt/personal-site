@@ -25,6 +25,14 @@ const OUT = path.join(
   "icon.png",
 );
 
+const OUT_REVENUE = path.join(
+  process.cwd(),
+  "public",
+  "projects",
+  "revenue-os",
+  "icon.png",
+);
+
 /** Zain's own logos, which only need resizing. Gitignored source, so this
  *  regenerates on his machine and not in CI. */
 const SUPPLIED: Record<string, string> = {
@@ -81,9 +89,49 @@ const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${SIZE}" height="${S
   ${BARS.map((_, i) => bar(i)).join("\n  ")}
 </svg>`;
 
+/* Revenue OS has no logo either, and no interface that can be shown. Its mark is
+   the thing the system is actually about: a gate that will not open without a
+   countersignature. Same brushed-silver family, same single coloured element. */
+const revenueSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="${SIZE}" height="${SIZE}" viewBox="0 0 1254 1254">
+  <defs>
+    <linearGradient id="steel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#ffffff"/>
+      <stop offset="18%"  stop-color="#c9d2e0"/>
+      <stop offset="46%"  stop-color="#7d8798"/>
+      <stop offset="54%"  stop-color="#e8edf5"/>
+      <stop offset="82%"  stop-color="#98a2b3"/>
+      <stop offset="100%" stop-color="#5d6675"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%"   stop-color="#bcd6ff"/>
+      <stop offset="45%"  stop-color="#5b8ae8"/>
+      <stop offset="60%"  stop-color="#86b5ff"/>
+      <stop offset="100%" stop-color="#2b4fa0"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1254" height="1254" fill="#000000"/>
+
+  <!-- the shackle: an approval that has to be granted before anything passes -->
+  <path d="M430 566 V440 a197 197 0 0 1 394 0 V566"
+        fill="none" stroke="url(#steel)" stroke-width="76" stroke-linecap="round"/>
+
+  <!-- the body: a ledger of three entries, the last one verified -->
+  <rect x="330" y="566" width="594" height="420" rx="74" fill="url(#steel)"/>
+  <rect x="430" y="676" width="394" height="42" rx="21" fill="#0b0d12" opacity="0.55"/>
+  <rect x="430" y="762" width="394" height="42" rx="21" fill="#0b0d12" opacity="0.55"/>
+  <rect x="430" y="848" width="394" height="42" rx="21" fill="url(#accent)"/>
+</svg>`;
+
 async function main() {
   await sharp(Buffer.from(svg)).resize(ICON_PX, ICON_PX).png().toFile(OUT);
   console.log(`wrote ${path.relative(process.cwd(), OUT)}`);
+
+  await sharp(Buffer.from(revenueSvg))
+    .resize(ICON_PX, ICON_PX)
+    .png()
+    .toFile(OUT_REVENUE);
+  console.log(`wrote ${path.relative(process.cwd(), OUT_REVENUE)}`);
 
   for (const [slug, file] of Object.entries(SUPPLIED)) {
     const from = path.join(

@@ -52,6 +52,9 @@ export function ProjectCard({
   return (
     <article
       className="group"
+      /* Read by `npm run shoot --w 390`, which asserts the strongest work still
+         comes first in the one DOM stream. */
+      data-flagship={project.flagship}
       onPointerEnter={() => setHovered(true)}
       onPointerLeave={() => setHovered(false)}
     >

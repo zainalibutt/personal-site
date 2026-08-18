@@ -300,12 +300,12 @@
      appearing does not resize the icons. */
   .artefact-slot {
     aspect-ratio: 1 / 1;
-    max-width: clamp(3.5rem, 9.5dvh, 5.25rem);
+    max-width: clamp(3.25rem, 9dvh, 5.25rem);
     margin-inline: auto;
   }
 
   .project-field {
-    row-gap: clamp(0.875rem, 2.6dvh, 1.75rem);
+    row-gap: clamp(0.7rem, 2.3dvh, 1.75rem);
   }
 
   /* The header and the trailing space compete with the icons for the same
@@ -479,6 +479,16 @@ body::after {
   height: 1px;
   flex: 1;
   background: linear-gradient(to right, var(--line), transparent);
+}
+
+/* Hidden on the phone from *here* rather than with `max-md:hidden`.
+   `.section-label` is a plain class declared after Tailwind's utilities, so it
+   wins on source order — and for the same reason this override has to come
+   after the rule it is overriding, not before it. */
+@media (max-width: 767px) {
+  .section-label {
+    display: none;
+  }
 }
 
 .artefact-index {

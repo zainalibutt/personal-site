@@ -142,26 +142,37 @@ async function main() {
         : `  scroll over artefact: page fits the viewport, nothing to scroll`,
     );
 
-    // Reading order on a phone. The flanks are two DOM containers, so stacking
-    // them gives left-flank / spine / right-flank unless something forces the
-    // sequence back — which once put Melody, a flagship, below About and two
-    // lesser projects. Asserted rather than eyeballed: it regresses invisibly,
-    // because at desktop width the layout looks perfect either way.
+    /* What matters on a phone is no longer "are the flagships above About" —
+       that was the right check while the page scrolled and About sat halfway
+       down it. The springboard now fits the fold, so the guarantee worth
+       asserting is that *nothing* needs scrolling to be seen, plus that the
+       strongest work still comes first in the one DOM stream.
+
+       The old check failed the moment a third flagship was added, because About
+       sits after the first full row of icons by design. It was reporting a
+       layout decision as a regression. */
     if (WIDTH < 1024) {
       await page.goto(BASE, { waitUntil: "networkidle" });
-      const spine = await page.locator("[data-spine]").boundingBox();
-      const flagships = await page
-        .locator("article")
-        .filter({ hasText: /Proof-Lens|Melody/ })
-        .all();
-      const tops = await Promise.all(
-        flagships.map(async (f) => (await f.boundingBox())?.y ?? Infinity),
-      );
-      const lowest = Math.max(...tops);
+      const fold = await page.evaluate(() => {
+        const cells = [...document.querySelectorAll(".artefact-cell")];
+        const below = cells.filter(
+          (c) => c.getBoundingClientRect().bottom > window.innerHeight + 1,
+        ).length;
+        const flags = cells.map((c) =>
+          c.querySelector("[data-flagship='true']") ? 1 : 0,
+        );
+        const firstNonFlag = flags.indexOf(0);
+        const orderedFirst =
+          firstNonFlag === -1 || !flags.slice(firstNonFlag).includes(1);
+        return { total: cells.length, below, orderedFirst };
+      });
       console.log(
-        `  flagships above About: ${flagships.length} found, ${
-          spine && lowest < spine.y ? "OK" : "BURIED"
+        `  artefacts within the fold: ${fold.total - fold.below}/${fold.total} ${
+          fold.below === 0 ? "OK" : "OVERFLOWING"
         }`,
+      );
+      console.log(
+        `  flagships first in the DOM: ${fold.orderedFirst ? "OK" : "OUT OF ORDER"}`,
       );
     }
 

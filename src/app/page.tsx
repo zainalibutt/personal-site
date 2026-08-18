@@ -43,7 +43,7 @@ export default function Home() {
             {/* The role as a mono label rather than a sentence under the name.
                 It is data about him, which is what the monospace is for, and it
                 gives the name something to sit against instead of floating. */}
-            <p className="text-muted font-mono text-[0.6875rem] tracking-[0.2em] uppercase md:text-xs">
+            <p className="text-muted font-mono text-[0.625rem] tracking-[0.12em] text-balance uppercase md:text-xs md:tracking-[0.2em]">
               {site.role} · {site.location}
             </p>
             <h1 className="text-ink mt-3 text-5xl tracking-[-0.035em] text-balance md:mt-4 md:text-7xl lg:text-[6.5rem] lg:leading-[0.92]">
@@ -78,10 +78,7 @@ export default function Home() {
 
         {/* Was `sr-only`. A sighted visitor got a name and then some floating
             rectangles, with nothing saying they were a considered set. */}
-        <h2
-          id="work-heading"
-          className="section-label mb-10 max-md:hidden md:mb-12"
-        >
+        <h2 id="work-heading" className="section-label mb-10 md:mb-12">
           Selected work
         </h2>
 
