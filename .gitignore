@@ -45,3 +45,6 @@ assets/raw/
 
 .screens/
 .progress-worktree/
+
+.vercel
+.env*
