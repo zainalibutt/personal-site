@@ -10,9 +10,11 @@ export const site = {
   links: {
     github: "https://github.com/zainalibutt",
     linkedin: "https://linkedin.com/in/zain-butt-dev",
-    // TODO(zain): confirm. A domain address forwarding to your inbox keeps the
-    // personal one off a public page — set up hello@zain.org.uk at Namecheap.
-    email: "hello@zain.org.uk",
+    // Confirmed by Zain, 2026-08-18. A role address (hello@) was considered and
+    // dropped: this one already exists, and it is the address on the CV that is
+    // downloadable from the same page — two different addresses on one screen
+    // is a worse problem than a personal-looking one.
+    email: "zain@zain.org.uk",
   },
 } as const;
 

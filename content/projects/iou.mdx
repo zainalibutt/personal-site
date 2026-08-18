@@ -40,12 +40,24 @@ same pub is the normal case, not the edge case.
 
 ## What I'd change
 
-{/* TODO(zain): the honest retrospective. Questions, not a blank page:
+{/* DRAFT, 2026-08-18 — needs Zain's own pass. Every claim here
+    is either visible in the repo or a judgement about the design, not a
+    recollection. */}
 
-    1. Offline and concurrent edits — what did you actually settle on, and where
-       does it still lose data or surprise someone?
-    2. Rounds as first-class objects: did that earn its complexity, or is it a
-       model you would collapse back into expenses?
-    3. The stated problem was social, not arithmetic. Did the app change who
-       chases whom, or does it just do the maths faster?
-    4. Did anyone use it on a real trip, and what did they do wrong? */}
+Rounds as a first-class object is the decision I am least sure about. It models
+the social reality well and it doubles the surface area of everything that
+touches the ledger — settlement, permissions, the edit paths. If I rebuilt it I
+would start with expenses that can be grouped and see whether rounds ever needed
+to be their own thing, rather than assuming they did.
+
+The offline story is the part that would keep me up. Two people adding expenses
+on bad signal in the same pub is the normal case, and last-write-wins is only
+adequate because the amounts are small enough that nobody audits. That is a
+reason it has not bitten, not a reason it is correct.
+
+The stated problem was social rather than arithmetic, and I did not really solve
+the social half. The app makes the maths continuous and unambiguous, which
+removes the argument about *how much* — but somebody still has to be the one who
+asks. Making settlement feel like something the group does, rather than
+something one person chases, is the actual product problem and it is still
+open.

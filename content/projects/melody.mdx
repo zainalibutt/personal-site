@@ -48,12 +48,24 @@ normalisation layer that sits between EDGAR and anything a user sees.
 
 ## What I'd change
 
-{/* TODO(zain): the honest retrospective. Questions, not a blank page:
+{/* DRAFT, 2026-08-18 — needs Zain's own pass. Every claim here
+    is either visible in the repo or a judgement about the design, not a
+    recollection. */}
 
-    1. The normalisation layer is described as most of the work. What is still
-       wrong with it — which filers or which years does it silently mis-tag?
-    2. Command-first is a strong claim. Did you actually keep using the keyboard
-       once the panels existed, or did you start clicking?
-    3. Delayed data is labelled honestly, which costs you something. What does
-       the tool become unusable for as a result?
-    4. If you rebuilt it, does it stay a terminal? */}
+Normalisation is where nearly all of the work went and where the remaining
+problems live. Filers tag the same concept differently, and the same filer
+changes how it does so between years, so a mapping that looks complete against
+recent filings quietly degrades the further back you go. What I would change is
+not the mapping but the reporting around it: the interface should say when a
+figure came through a fallback path rather than a direct match, in the same way
+it already says when data is delayed.
+
+The command-first claim deserves testing rather than asserting. Once several
+panels are open, reaching for the pointer is genuinely faster for some things,
+and the interesting question is which — that is a usage question I never
+instrumented and should have.
+
+Labelling market data as delayed costs the tool any use case that depends on
+being current, which is most of the ones people expect from something that looks
+like a terminal. I would still make the same call. A research tool that is
+quietly stale is worse than one that is loudly late.

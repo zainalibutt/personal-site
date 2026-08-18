@@ -50,14 +50,24 @@ design where the proof is a lookup against a service you control.
 
 ## What I'd change
 
-{/* TODO(zain): the honest retrospective — matters more than the feature list.
-    Questions, not a blank page. Answering any two of these is enough:
+{/* DRAFT, 2026-08-18 — needs Zain's own pass. Every claim here
+    is either visible in the repo or a judgement about the design, not a
+    recollection. */}
 
-    1. Hardware-backed keys are the whole trust story. What breaks it in
-       practice — a rooted device, a vendor whose attestation you could not get
-       at, an emulator? What is the attack you know this does not stop?
-    2. RFC 3161 means depending on a timestamping authority. Which one, and what
-       happens to every existing bundle if it goes away?
-    3. Offline verification forced the bundle format. What did you have to leave
-       out of it, and would you make the same cut again?
-    4. Is there a decision here you would reverse outright? */}
+The signature proves which key signed a capture. It does not prove that the key
+was in a phone rather than an emulator, and hardware attestation is exactly the
+part that varies most across devices — it is strongest where you need it least.
+The honest framing is the one already on the page: it verifies provenance, not
+reality. Someone can still point a genuine, attested camera at a convincing
+fake.
+
+The RFC 3161 dependency is the part I would change first. Anchoring against a
+single timestamping authority means every bundle ever issued inherits that
+authority's lifespan. Countersigning with two, from different jurisdictions,
+costs almost nothing at capture time and removes a single point of failure that
+only becomes visible years later, when it is far too late to re-issue anything.
+
+The bundle format was cut to what a verifier needs offline, which meant leaving
+out most of the capture context. I would revisit that trade — the difference
+between "this file is unaltered" and "this file is unaltered and here is what
+was around it" is most of the difference between evidence and a checksum.

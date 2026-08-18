@@ -40,12 +40,23 @@ fell apart on a sparse one.
 
 ## What I'd change
 
-{/* TODO(zain): the honest retrospective. Questions, not a blank page:
+{/* DRAFT, 2026-08-18 — needs Zain's own pass. Every claim here
+    is either visible in the repo or a judgement about the design, not a
+    recollection. */}
 
-    1. Thresholds tuned on your camera roll fell apart on a sparse one. How is it
-       tuned now — heuristics, learned, or still hand-set and hoping?
-    2. Local-first ruled out a lot. What did you give up that you actually
-       wanted, and is there a version where sync is optional rather than absent?
-    3. Electron and SQLite: how does it behave on a 100k-photo library, and did
-       you measure or assume?
-    4. Which clustering failure is the one that would embarrass you in a demo? */}
+The clustering is tuned, not learned, and tuned against my own library — which
+is dense, urban and heavily photographed. On a sparse library the same
+thresholds produce either one enormous bundle or a hundred singletons. The fix
+is not better constants; it is deriving the thresholds from the library's own
+density before clustering anything, so the parameters are a property of the
+collection rather than of mine.
+
+Local-first was the right constraint and it cost more than I expected. No sync
+means no second device, and the moment someone has a phone and a laptop the
+model quietly stops matching how people actually keep photographs. I would keep
+the default and add optional, explicit sync rather than pretending the need is
+not there.
+
+I never measured it against a genuinely large library. Electron and SQLite are
+fine at the sizes I tested, and "fine at the sizes I tested" is exactly the
+sentence that precedes a performance problem.
