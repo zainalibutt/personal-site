@@ -345,6 +345,16 @@ export function useBoxExpand(focused: boolean, slug: string) {
         return;
       }
 
+      /* Measure with the plane at identity, exactly as the open does.
+         Reading these rects while the camera transform is still applied is the
+         hazard this project already had written down — never re-measure through
+         a live transform — and it made the close the mirror of nothing: the
+         hero scaled 1 -> 1.14 over the whole animation and then snapped to its
+         resting size when the styles were cleared. The transform goes straight
+         back so the plane's own animation still starts from where it was. */
+      const planeFrom = activePlaneTransform;
+      if (plane && planeFrom) plane.style.transform = "";
+
       const restWidth = slot.offsetWidth;
       const heroFinal = hero.getBoundingClientRect();
       const restRect = slot.getBoundingClientRect();
@@ -352,6 +362,7 @@ export function useBoxExpand(focused: boolean, slug: string) {
       // Collapses back into wherever the artefact actually rests, which is not
       // the centre of the open box on a phone. Mirrors the opening inset.
       const boxRect = box.getBoundingClientRect();
+      if (plane && planeFrom) plane.style.transform = planeFrom;
       const inset = {
         top: Math.max(0, restRect.top - boxRect.top),
         right: Math.max(0, boxRect.right - restRect.right),
@@ -382,8 +393,8 @@ export function useBoxExpand(focused: boolean, slug: string) {
         );
       }
 
-      if (plane && activePlaneTransform) {
-        const from = activePlaneTransform;
+      if (plane && planeFrom) {
+        const from = planeFrom;
         plane.style.transform = "";
         plane.animate([{ transform: from }, { transform: "none" }], {
           duration: CLOSE_MS,

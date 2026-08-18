@@ -48,24 +48,41 @@ normalisation layer that sits between EDGAR and anything a user sees.
 
 ## What I'd change
 
-{/* DRAFT, 2026-08-18 — needs Zain's own pass. Every claim here
-    is either visible in the repo or a judgement about the design, not a
-    recollection. */}
+{/* From Zain's own notes in `assets/raw/projects/project_info/`. The
+    judgements, the identifiers and the numbers are his. */}
 
-Normalisation is where nearly all of the work went and where the remaining
-problems live. Filers tag the same concept differently, and the same filer
-changes how it does so between years, so a mapping that looks complete against
-recent filings quietly degrades the further back you go. What I would change is
-not the mapping but the reporting around it: the interface should say when a
-figure came through a fallback path rather than a direct match, in the same way
-it already says when data is delayed.
+**The rate limiter and the cache are process-local, and that is the thing that
+breaks under success.** The limiter defaults to an in-process store, and the
+provider cache falls back to a module-scope `Map` when Supabase is not
+configured. At one instance this is fine. At two, each replica keeps its own
+counters, so "120 requests per five minutes" silently becomes 120 per replica
+with no coordination — and no test would catch it, because the whole suite runs
+in a single process.
 
-The command-first claim deserves testing rather than asserting. Once several
-panels are open, reaching for the pointer is genuinely faster for some things,
-and the interesting question is which — that is a usage question I never
-instrumented and should have.
+Moving both onto shared state is the single highest-leverage change rather than
+the easy one: every other weakness here is static, and this is the only one that
+gets worse precisely as the product succeeds.
 
-Labelling market data as delayed costs the tool any use case that depends on
-being current, which is most of the ones people expect from something that looks
-like a terminal. I would still make the same call. A research tool that is
-quietly stale is worse than one that is loudly late.
+**The XBRL normalisation drops metrics silently, which is a gap against the
+product's own premise.** It walks a preference-ordered list of concepts per
+metric, because companies tag the same line item differently — Apple files
+revenue under one concept where others use plain `Revenues`. If every candidate
+misses, that metric is simply omitted from the response; only when all five fail
+does it raise anything. A foreign private issuer filing 20-F instead of 10-K
+gets a financials panel that looks complete and is not, with nothing saying so.
+For a tool whose entire pitch is never hiding where a number came from, that is
+the wrong failure mode.
+
+**One thing I got wrong and fixed.** The provider chain falls back per
+*capability*, not per provider — one source structurally declines historical
+bars, which is a "will not" rather than a "cannot". The first version marked
+every bars response degraded, so every chart carried the badge, which teaches
+people to ignore it on the one occasion it means something.
+
+**What I would reverse** is shipping nine roadmap-shell commands: placeholder
+panels that opened and explained why they did not work yet. It felt honest, and
+it meant the help catalogue spent most of the project advertising features that
+did not exist, five of them blocked on paid data from the first day. They are
+retired now, replaced by a Planned section naming what each is actually waiting
+on. On a project whose whole pitch is not pretending, that is the one place
+where shipping something beat shipping nothing, and should not have.

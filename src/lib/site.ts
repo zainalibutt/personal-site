@@ -3,7 +3,8 @@ export const site = {
   role: "Full-stack product engineer",
   location: "London, UK",
   url: "https://zain.org.uk",
-  /** The one sentence a visitor should leave with — docs/BRIEF.md §1. */
+  /** The one sentence a visitor should leave with — docs/BRIEF.md §1.
+   *  Rendered as the opening claim of About. */
   thesis: "I'm incredibly adaptable, especially with today's tools.",
   description:
     "Full-stack product engineer in London, building secure TypeScript systems across mobile, web and backend.",

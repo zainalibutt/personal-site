@@ -40,23 +40,34 @@ fell apart on a sparse one.
 
 ## What I'd change
 
-{/* DRAFT, 2026-08-18 — needs Zain's own pass. Every claim here
-    is either visible in the repo or a judgement about the design, not a
-    recollection. */}
+{/* From Zain's own notes in `assets/raw/projects/project_info/`. The
+    judgements, the identifiers and the numbers are his. */}
 
-The clustering is tuned, not learned, and tuned against my own library — which
-is dense, urban and heavily photographed. On a sparse library the same
-thresholds produce either one enormous bundle or a hundred singletons. The fix
-is not better constants; it is deriving the thresholds from the library's own
-density before clustering anything, so the parameters are a property of the
-collection rather than of mine.
+**The database call is synchronous, and that is not a theoretical problem.**
+`node:sqlite`'s `DatabaseSync` blocks the whole event loop for every other
+request while a query runs. Before I added the pairing index, the Live Photo
+subquery took **13.2 seconds** against 2,370 assets — while the client polled it
+every 2.5 seconds. Splitting the reads and adding that index took the library
+endpoint to about **27ms**, and a timeline page to **14–79ms**.
 
-Local-first was the right constraint and it cost more than I expected. No sync
-means no second device, and the moment someone has a phone and a laptop the
-model quietly stops matching how people actually keep photographs. I would keep
-the default and add optional, explicit sync rather than pretending the need is
-not there.
+**Two smaller holes of the same shape.** Updating an asset is a plain
+read-then-write with no version check and no transaction, so two overlapping
+edits silently lose one. And the recursive file walk has no error handling and
+no depth limit, while the source-root check only requires a path of three
+characters — register something too broad and a single permission-denied
+subdirectory throws away the entire scan with no partial progress kept.
 
-I never measured it against a genuinely large library. Electron and SQLite are
-fine at the sizes I tested, and "fine at the sizes I tested" is exactly the
-sentence that precedes a performance problem.
+**The change that matters is neither of those.** It is the acceptance suite the
+roadmap already lists and I never built: automated proof that originals stay
+byte-identical after a scan, that a rescan is idempotent, and that a
+disconnected root cannot prune records. The whole pitch of this tool is
+"chronological truth, originals never touched", and that currently rests on my
+having been careful rather than on anything that fails a build when it stops
+being true. Three test files exist. The stated design target of 10,000 records
+under 250ms has never been verified, and the README says so.
+
+**What I would reverse** is the first attempt at derivation: two environment
+flags gating eager thumbnailing, which the dev script never set. The indexer
+worked perfectly and the app showed almost nothing — 2,076 of 2,375 assets had no
+preview — for as long as that went unnoticed. Derivation is now a second job type
+competing in the same poll loop, prioritised over scans in SQL.

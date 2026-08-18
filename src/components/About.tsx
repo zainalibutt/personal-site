@@ -52,8 +52,14 @@ export function About() {
           Still draft copy, not his. The specifics are true — they are read
           off his CV — but the voice has not been through him yet. */}
       <div className="text-muted space-y-4 text-pretty max-md:hidden">
+        {/* `site.thesis` finally has a home. It is Zain's own sentence and was
+            written as "the one sentence a visitor should leave with", then sat
+            unrendered for two days while the thesis moved into the case
+            studies. It belongs here: the claim first, its scope immediately
+            after, and the evidence for both in the paragraph below. */}
         <p>
-          I build product end to end — mobile, web, and the backend underneath.
+          <span className="text-ink">{site.thesis}</span> I build product end to
+          end — mobile, web, and the backend underneath.
         </p>
         <p>
           Recent work: a tool that proves a file has not been altered since it
