@@ -49,6 +49,22 @@ Requirements: 1920×1080 or higher, 30–60fps, MP4 (h.264). Move the cursor
 deliberately and slowly — jittery cursor movement ruins a loop. Do a couple of
 takes; the last one is always the calmest.
 
+**Anything running in a browser is filmed, not recorded by hand.**
+`scripts/film-lib.ts` drives the real site with Playwright and encodes what it
+painted, the same way `scripts/og.ts` photographs the real page. One shot list
+per project — `scripts/film-proof-lens.ts` is the worked example. Two things
+that shape the shot lists:
+
+- **Compose for the card, not for a window.** The card is ~490 CSS px wide, so
+  the film is shot at a ~900px viewport and delivered at 1024. A 1440px page
+  downscaled into a card is unreadable, whatever the source resolution was.
+- **The poster is the payoff, not the opening frame.** Most visitors never
+  hover, so the still is what the artefact says to them. Proof-Lens rests on
+  its verdict, not on an empty upload box.
+
+Only what cannot be driven from a browser is screen-recorded by hand — the
+phone capture flows, and Replay, which is Electron.
+
 ### Portrait set
 
 - Straight-on, 3/4 turn, and one candid working shot.
@@ -75,7 +91,7 @@ than a CV.
 | ----------- | ------------------------------------ | ----------------------------------------------------------------------------------------- |
 | Photos      | JPEG or HEIC, straight off the phone | ≥3000px long edge. **Do not crop or filter** — full frame gives room to art-direct later. |
 | Screenshots | PNG                                  | 2× / retina, no browser chrome, real content                                              |
-| Video       | MP4 (h.264)                          | ≥1920×1080, 30–60fps, 10–20s, audio optional                                              |
+| Video       | MP4 (h.264)                          | **Delivered** 1024px wide, 30fps, 10–20s, silent. Capture at 1920+; see below.             |
 | Documents   | PDF                                  | CV(s), whichever version should be public                                                 |
 
 ---

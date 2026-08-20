@@ -146,6 +146,10 @@ export function ProjectCard({
                   <PreviewSurface
                     project={project}
                     priority={project.flagship}
+                    /* Focused counts as active as well as hovered: opening an
+                       artefact moves the pointer off it, and a preview that
+                       stops the moment you commit to reading it is backwards. */
+                    active={hovered || focused}
                     className="artefact-preview w-full"
                   />
                 </div>

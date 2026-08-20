@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import type { ProjectSummary } from "@/lib/content";
 
@@ -15,14 +16,50 @@ import type { ProjectSummary } from "@/lib/content";
 export function PreviewSurface({
   project,
   priority = false,
+  active = false,
   className = "",
 }: {
   project: ProjectSummary;
   /** Flagships sit above the fold, so they load eagerly for LCP. */
   priority?: boolean;
+  /** Hovered or focused. A video preview plays only while this is true. */
+  active?: boolean;
   className?: string;
 }) {
   const { preview, title } = project;
+  const videoRef = useRef<HTMLVideoElement>(null);
+  /* Kept separate from `active` so the poster stays put until there is a
+     decoded frame to cross to. Switching on `active` alone shows a black gap
+     for however long the first fetch takes. */
+  const [playing, setPlaying] = useState(false);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    /* Touch has no hover, and a card that autoplays on scroll-past is four
+       videos fighting for a phone's bandwidth. `hover` is the honest signal
+       here — a narrow desktop window still has a pointer. */
+    const canHover = window.matchMedia("(hover: hover) and (pointer: fine)");
+    const stilled = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (!canHover.matches || stilled.matches) return;
+
+    if (!active) {
+      video.pause();
+      return;
+    }
+
+    /* Deliberate hover, not a cursor passing over on its way somewhere else.
+       Without this, crossing the field left to right starts every video. */
+    const intent = window.setTimeout(() => {
+      void video.play().catch(() => undefined);
+    }, 120);
+
+    return () => window.clearTimeout(intent);
+  }, [active]);
+
+  /* The card opens by expanding this same box, so the element is never
+     unmounted and playback simply continues — no handing `currentTime` over. */
 
   return (
     <div
@@ -58,13 +95,27 @@ export function PreviewSurface({
 
       {preview.type === "video" && preview.src && (
         <video
-          className="absolute inset-0 h-full w-full object-cover"
+          ref={videoRef}
+          /* Crossfaded in on the first decoded frame rather than mounted
+             visible. `preload="none"` means there is nothing to show until
+             playback actually starts, and an empty video element painted over
+             the poster is a black rectangle. */
+          className={[
+            "absolute inset-0 h-full w-full object-cover",
+            "transition-opacity duration-500 ease-[var(--ease-out-soft)]",
+            "motion-reduce:transition-none",
+            playing ? "opacity-100" : "opacity-0",
+          ].join(" ")}
           src={preview.src}
           poster={preview.poster}
           muted
           loop
           playsInline
           preload="none"
+          onPlaying={() => setPlaying(true)}
+          /* Back to the poster on pause, so a half-played frame is never what
+             the card rests on. */
+          onPause={() => setPlaying(false)}
           aria-label={preview.alt ?? `${title} preview`}
         />
       )}
