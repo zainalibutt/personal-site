@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { Portrait } from "./Portrait";
 import { site } from "@/lib/site";
 
 /**
@@ -16,14 +16,7 @@ export function About() {
           About
         </h2>
 
-        <Image
-          src="/portrait/zain.png"
-          alt="Zain Butt"
-          width={96}
-          height={96}
-          priority
-          className="border-line size-24 shrink-0 rounded-full border object-cover"
-        />
+        <Portrait src="/portrait/zain.png" alt={site.name} size={96} />
       </div>
 
       {/* The phone gets two sentences and nothing else — no heading, no
@@ -33,14 +26,7 @@ export function About() {
       <p className="text-muted mx-auto max-w-[34ch] text-[0.9375rem] leading-relaxed text-pretty md:hidden">
         I build product end to end — mobile, web, and the backend underneath.
         Computer Science graduate in {site.location}, freelancing now, looking
-        for a graduate or product engineering role.{" "}
-        <a
-          href={site.links.linkedin}
-          className="text-accent hover:text-ink underline underline-offset-4 transition-colors"
-        >
-          More on LinkedIn
-        </a>
-        .
+        for a graduate or product engineering role.
       </p>
 
       {/* Draft A of docs/ABOUT_DRAFTS.md, which Zain picked: plain register,
@@ -76,28 +62,11 @@ export function About() {
         </p>
       </div>
 
-      {/* The published CV is a redacted copy — the phone number on the original
-          is removed from the content stream, not covered over, so it does not
-          survive copy-paste or a parser. The original lives in
-          `assets/raw/documents/`, which is gitignored and stays that way. */}
-      <ul className="text-sm max-md:hidden">
-        {[
-          { label: "Email", href: `mailto:${site.links.email}` },
-          { label: "CV", href: "/ZainButt-CV.pdf" },
-          { label: "GitHub", href: site.links.github },
-          { label: "LinkedIn", href: site.links.linkedin },
-        ].map((link) => (
-          <li key={link.label} className="border-line border-b">
-            <a
-              href={link.href}
-              className="text-accent hover:text-ink flex items-baseline justify-between py-3 transition-colors"
-            >
-              <span>{link.label}</span>
-              <span aria-hidden>→</span>
-            </a>
-          </li>
-        ))}
-      </ul>
+      {/* No link list. Every one of these — email, CV, GitHub, LinkedIn — was
+          already in the page header a few hundred pixels above, and the same
+          three were in the footer below, so LinkedIn alone appeared three
+          times on one screen. They live in the header now, which is the one
+          place a visitor looks for them before they have read anything. */}
     </section>
   );
 }

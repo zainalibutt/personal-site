@@ -57,24 +57,35 @@ export default function Home() {
             </h1>
           </div>
 
+          {/* The only place these live now. They were here, again under About,
+              and again in the footer — LinkedIn three times on one screen —
+              which made the page feel like it was asking rather than showing.
+
+              The CV came up from the About list rather than being dropped: the
+              site argues the case, but a PDF is still the artefact a recruiter
+              forwards to someone else, and it is a different object from the
+              page it sits on. The published copy is redacted — the phone
+              number is removed from the content stream, not covered over, so
+              it survives neither copy-paste nor a parser. The original stays
+              in the gitignored `assets/raw/documents/`. */}
           <nav
             aria-label="Elsewhere"
-            className="mt-6 flex flex-wrap justify-center gap-x-8 gap-y-2 text-sm md:mt-8 lg:mt-0 lg:shrink-0 lg:justify-end"
+            className="mt-6 flex flex-wrap justify-center gap-2 md:mt-8 lg:mt-0 lg:shrink-0 lg:justify-end"
           >
-            <a
-              className="text-accent hover:text-ink underline underline-offset-8 transition-colors"
-              href={site.links.github}
-            >
+            <a className="link-chip" href={site.links.github}>
               GitHub
             </a>
-            <a
-              className="text-accent hover:text-ink underline underline-offset-8 transition-colors"
-              href={site.links.linkedin}
-            >
+            <a className="link-chip" href={site.links.linkedin}>
               LinkedIn
             </a>
+            <a className="link-chip" href="/ZainButt-CV.pdf">
+              CV
+            </a>
+            {/* Carries the accent at rest. Four equal chips is a list; one of
+                them being the thing he actually wants clicked makes it a
+                nav. */}
             <a
-              className="text-accent hover:text-ink underline underline-offset-8 transition-colors"
+              className="link-chip link-chip--primary"
               href={`mailto:${site.links.email}`}
             >
               Email
@@ -102,26 +113,16 @@ export default function Home() {
           <span>
             {site.name} · {site.location}
           </span>
-          <span className="flex flex-wrap gap-x-6 gap-y-2">
-            <a
-              className="hover:text-ink transition-colors"
-              href={`mailto:${site.links.email}`}
-            >
-              {site.links.email}
-            </a>
-            <a
-              className="hover:text-ink transition-colors"
-              href={site.links.github}
-            >
-              GitHub
-            </a>
-            <a
-              className="hover:text-ink transition-colors"
-              href={site.links.linkedin}
-            >
-              LinkedIn
-            </a>
-          </span>
+          {/* The address written out, not a third "GitHub · LinkedIn" pair.
+              A sign-off, which is what a footer is for — the navigation is
+              settled at the top of the page and does not need restating at the
+              bottom of it. */}
+          <a
+            className="hover:text-ink transition-colors"
+            href={`mailto:${site.links.email}`}
+          >
+            {site.links.email}
+          </a>
         </footer>
       </main>
     </>

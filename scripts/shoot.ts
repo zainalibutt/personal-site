@@ -214,6 +214,43 @@ async function main() {
         `  click artefact image: ${path} ${path.startsWith("/projects/") ? "OK" : "DEAD"}`,
       );
     }
+
+    /* The portrait opens a `<dialog>` in the top layer, and its size comes
+       from the picture inside it. That is exactly the arrangement that can
+       resolve to nothing while still reporting `open` — the first version
+       measured 2x2px and looked, from every boolean, like it worked. So the
+       assertion is about the pixels, not the state. Desktop only: the portrait
+       is not rendered in the springboard. */
+    if (WIDTH >= 768) {
+      await page.goto(BASE, { waitUntil: "networkidle" });
+      const trigger = page.locator(".portrait-trigger");
+      if (await trigger.count()) {
+        await trigger.click();
+        await page.waitForTimeout(500);
+        const shown = await page.evaluate(() => {
+          const dialog = document.querySelector<HTMLDialogElement>(
+            ".portrait-modal",
+          );
+          if (!dialog) return null;
+          const box = dialog.getBoundingClientRect();
+          return {
+            open: dialog.open,
+            w: Math.round(box.width),
+            h: Math.round(box.height),
+            centred: Math.abs(box.x + box.width / 2 - window.innerWidth / 2) < 4,
+          };
+        });
+        if (shown) {
+          const big = shown.open && shown.w > 200 && shown.h > 200;
+          console.log(
+            `  portrait enlarges: ${shown.w}x${shown.h}` +
+              `${shown.centred ? " centred" : " OFF-CENTRE"} ${big ? "OK" : "COLLAPSED"}`,
+          );
+          await page.screenshot({ path: path.join(OUT, "06-portrait.png") });
+        }
+        await page.keyboard.press("Escape");
+      }
+    }
   }
 
   await browser.close();

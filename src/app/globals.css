@@ -468,22 +468,17 @@ body::after {
    rectangles. A label, a rule and an index are what make a set of things read
    as a considered sequence rather than as whatever happened to be lying around.
    --------------------------------------------------------------------------- */
+/* No trailing rule. A 1px line ran the width of the page from this label, and
+   it cut straight across the lattice behind it — a second, flatter horizon
+   competing with the one the field is drawing. The label can hold the position
+   on its own; the mesh is the thing worth looking at. */
 .section-label {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
+  display: block;
   font-family: var(--font-mono);
   font-size: 0.6875rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--muted);
-}
-
-.section-label::after {
-  content: "";
-  height: 1px;
-  flex: 1;
-  background: linear-gradient(to right, var(--line), transparent);
 }
 
 /* Hidden on the phone from *here* rather than with `max-md:hidden`.
@@ -557,6 +552,141 @@ body::after {
 
 /* Small caps-ish chip. Used in the field and inside the expanded artefact, so
    the stack never reads as loose debris under the tagline. */
+/* ---------------------------------------------------------------------------
+   Elsewhere links.
+
+   These were underlined blue text, which is the browser default wearing the
+   site's palette — and there were three sets of them, so the page read as a
+   footer that had floated to the top. They now borrow the instrument language
+   the rest of the page already speaks: the hairline and radius of `.tag`, the
+   mono of the section labels. Controls, rather than prose that happens to be
+   accent-coloured.
+
+   The hover is a lift in contrast, not a colour swap: border and text both
+   resolve toward the accent over a faint wash, so the chip brightens the way
+   everything else on this page brightens.
+   ------------------------------------------------------------------------- */
+.link-chip {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.4rem 0.85rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  white-space: nowrap;
+  transition:
+    color var(--dur-micro) var(--ease-out-soft),
+    border-color var(--dur-micro) var(--ease-out-soft),
+    background-color var(--dur-micro) var(--ease-out-soft),
+    box-shadow var(--dur-micro) var(--ease-out-soft);
+}
+
+.link-chip:hover {
+  color: var(--ink);
+  border-color: color-mix(in oklab, var(--accent) 55%, transparent);
+  background: color-mix(in oklab, var(--accent) 9%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 8%, transparent);
+}
+
+/* One of the four is the thing he actually wants clicked. It carries the
+   accent at rest so the row has a destination rather than four equal options,
+   which is the whole difference between a nav and a list. */
+.link-chip--primary {
+  color: var(--accent);
+  border-color: color-mix(in oklab, var(--accent) 42%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .link-chip {
+    transition: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Portrait, enlarged.
+
+   A native `<dialog>` opened with `showModal()` rather than a positioned
+   overlay, for one specific reason: the top layer sits outside the document
+   flow entirely, so it is unaffected by the transform on `[data-plane]`. A
+   `position: fixed` overlay rendered inside About would resolve against the
+   plane instead of the viewport and land wherever the camera happened to be —
+   the exact trap `page.tsx` documents for SpacetimeField and EdgeFade.
+
+   Esc, focus trapping, and making the page behind inert all come with the
+   element rather than being rebuilt.
+   ------------------------------------------------------------------------- */
+.portrait-trigger {
+  border-radius: 999px;
+  cursor: zoom-in;
+  transition: box-shadow var(--dur-micro) var(--ease-out-soft);
+}
+
+.portrait-trigger:hover {
+  box-shadow: 0 0 0 4px color-mix(in oklab, var(--accent) 18%, transparent);
+}
+
+/* Sized from the image, not the other way round. Giving the dialog only a
+   `max-width` and the image `width: 100%` is circular — a box that takes its
+   width from its contents, containing something asking for all of it — and it
+   resolved to a 2px square. Both carry the same caps instead, and the picture
+   keeps its own ratio inside them. */
+.portrait-modal {
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 1rem;
+  background: var(--bg-mid);
+  width: auto;
+  max-width: min(92vw, 30rem);
+  max-height: 88vh;
+  overflow: hidden;
+  cursor: zoom-out;
+  /* A modal `<dialog>` centres itself with `margin: auto`, and Tailwind's
+     preflight zeroes the margin on every element — so it opened pinned to the
+     top-left corner of the viewport. Restated here rather than exempted from
+     preflight, because this is the only element on the page that relies on
+     the browser's own centring. */
+  margin: auto;
+}
+
+.portrait-modal img {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: min(92vw, 30rem);
+  /* Short viewports shrink it rather than cropping his head off. */
+  max-height: 88vh;
+}
+
+.portrait-modal::backdrop {
+  background: color-mix(in oklab, var(--bg) 84%, transparent);
+  backdrop-filter: blur(6px);
+}
+
+.portrait-modal[open] {
+  animation: portrait-in var(--dur-micro) var(--ease-out-soft);
+}
+
+@keyframes portrait-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portrait-trigger {
+    transition: none;
+  }
+
+  .portrait-modal[open] {
+    animation: none;
+  }
+}
+
 .tag {
   display: inline-block;
   border: 1px solid var(--line);
