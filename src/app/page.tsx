@@ -4,6 +4,7 @@ import { About } from "@/components/About";
 import { EdgeFade } from "@/components/EdgeFade";
 import { ProjectBody } from "@/components/ProjectBody";
 import { ProjectField, type FieldItem } from "@/components/ProjectField";
+import { ProjectMap } from "@/components/ProjectMap";
 import { SpacetimeField } from "@/components/SpacetimeField";
 
 export default function Home() {
@@ -22,6 +23,11 @@ export default function Home() {
           ancestor instead. */}
       <SpacetimeField />
       <EdgeFade />
+
+      {/* Outside the plane for the same reason as those two, and *before* it so
+          that tabbing while an artefact is open goes instrument first, then the
+          artefact itself. It renders nothing until something is focused. */}
+      <ProjectMap projects={items.map((item) => item.project)} />
 
       {/* `data-plane` marks the surface the camera moves. Focusing an artefact
           translates and scales this whole element, so every other item keeps its

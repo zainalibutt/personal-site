@@ -16,6 +16,22 @@ export const DURATION = {
   open: 660,
   /** Closing is faster than opening. Leaving should never feel laboured. */
   close: 440,
+  /**
+   * The camera crossing from one artefact to another.
+   *
+   * Equal to `close`, and that is the point rather than a coincidence: a travel
+   * is the site's two existing beats in sequence — leaving one artefact, then
+   * arriving at another — so it borrows the leaving duration for the crossing
+   * and the arriving one for the open that follows. No third tempo is
+   * introduced for a move that is made of two things the page already does.
+   *
+   * The artefact stays shut for the whole crossing, which is what keeps its
+   * type at 1x: content inside an artefact is counter-scaled by `1/zoom`, so
+   * anything revealed while the camera is still moving is revealed at the
+   * wrong size and grows into place. Not mirrored in `globals.css`; nothing in
+   * CSS drives this move.
+   */
+  travel: 440,
   /** Content resolving inside an opened artefact. */
   reveal: 420,
   /** Hover and other micro-states. */

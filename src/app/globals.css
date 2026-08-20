@@ -187,8 +187,13 @@
 [data-expanded="true"] .expand-reveal {
   animation: expand-reveal var(--dur-reveal) var(--ease-out-soft) both;
   /* Starts after the clip has begun opening, so content resolves into a window
-     that already exists rather than arriving with it. */
-  animation-delay: calc(160ms + var(--reveal-index, 0) * 70ms);
+     that already exists rather than arriving with it. `--reveal-lead` is pushed
+     out by `useBoxExpand` when the artefact is being arrived at by a travelling
+     camera, so the sequence still plays after the crossing rather than behind
+     a shut clip. */
+  animation-delay: calc(
+    var(--reveal-lead, 160ms) + var(--reveal-index, 0) * 70ms
+  );
 }
 
 /* ---------------------------------------------------------------------------
@@ -621,5 +626,217 @@ body::after {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+@layer components {
+  /* -------------------------------------------------------------------------
+     The project map — the field in miniature, while an artefact is open.
+
+     An instrument, not a menu, and not a widget: no panel, no border, no
+     counter. It sits directly on the field, which is its surface. Legibility
+     comes from the marks and the type carrying a little of the ground with
+     them, never from covering anything up.
+
+     See src/components/ProjectMap.tsx for why it is a map of real positions
+     rather than a list, and why it changes flank.
+     ------------------------------------------------------------------------- */
+  .project-map {
+    position: fixed;
+    top: 50%;
+    translate: 0 -50%;
+    z-index: 60;
+
+    /* Leaves quickly, arrives just behind the opening edge. The two are
+       asymmetric on purpose: when the flank changes it has to be gone before
+       the camera starts crossing, and back only once the artefact is there. */
+    opacity: 0;
+    transition: opacity 150ms var(--ease-in-out-soft);
+  }
+
+  .project-map[data-visible="true"] {
+    opacity: 1;
+    transition: opacity var(--dur-reveal) var(--ease-out-soft) 180ms;
+  }
+
+  /* The free flank — whichever side About is not on. Only one offset is ever
+     set, so the other stays auto and nothing can drag it across the viewport. */
+  .project-map[data-side="left"] {
+    left: clamp(1.25rem, 3.4vw, 3.75rem);
+  }
+
+  .project-map[data-side="right"] {
+    right: clamp(1.25rem, 3.4vw, 3.75rem);
+  }
+
+  .project-map-plot {
+    position: relative;
+    /* The field is two flanks and several rows, so a faithful plot of it is
+       tall and narrow. These are the only numbers that decide how big the map
+       is; every mark inside is placed by measured percentage. */
+    width: 7.5rem;
+    height: 11.5rem;
+  }
+
+  /* The ranking, drawn through the real positions. Deliberately at the
+     threshold of visible: it is there to say the order exists, not to be
+     read as a chart. */
+  .project-map-thread {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+  }
+
+  .project-map-thread polyline {
+    fill: none;
+    stroke: var(--line);
+    stroke-width: 1;
+    stroke-linejoin: round;
+    opacity: 0.85;
+  }
+
+  .project-map-plot li {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+  }
+
+  .project-map-plot a {
+    position: absolute;
+    /* Centres the mark on the artefact's position. The name is out of flow
+       below, so this translate cannot be thrown off by the width of a label
+       nobody can see. */
+    translate: -50% -50%;
+    display: flex;
+    align-items: center;
+    /* The tap target is far larger than the mark, which is 6px across. */
+    padding: 0.6rem;
+    border-radius: 999px;
+  }
+
+  .project-map-mark {
+    width: 6px;
+    height: 6px;
+    border-radius: 999px;
+    border: 1px solid var(--muted);
+    opacity: 0.62;
+    /* Carries a little of the ground with it rather than sitting on a panel,
+       so a 6px mark still reads where the lattice runs behind it. */
+    box-shadow:
+      0 0 0 2px color-mix(in oklab, var(--bg) 62%, transparent),
+      0 0 9px 3px color-mix(in oklab, var(--bg) 48%, transparent);
+    transition:
+      opacity var(--dur-micro) var(--ease-out-soft),
+      scale var(--dur-micro) var(--ease-out-soft);
+  }
+
+  .project-map-plot a:hover .project-map-mark,
+  .project-map-plot a:focus-visible .project-map-mark {
+    opacity: 1;
+    scale: 1.35;
+  }
+
+  /* Where you are. The one mark that is filled rather than drawn. */
+  .project-map-plot a[data-current="true"] .project-map-mark {
+    width: 10px;
+    height: 10px;
+    background: var(--accent);
+    border-color: var(--accent);
+    opacity: 1;
+    box-shadow:
+      0 0 0 3px color-mix(in oklab, var(--bg) 70%, transparent),
+      0 0 14px 3px color-mix(in oklab, var(--accent) 30%, transparent);
+  }
+
+  .project-map-name {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    color: var(--ink);
+    /* Ground carried behind the glyphs instead of a plate behind the label.
+       The brief for this instrument is that the field stays its surface. */
+    text-shadow:
+      0 0 4px var(--bg),
+      0 0 8px var(--bg),
+      0 0 14px var(--bg);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--dur-micro) var(--ease-out-soft);
+  }
+
+  /* Names point inward, toward the artefact, because that is where the gap is
+     and where the eye already sits. */
+  .project-map[data-side="left"] .project-map-name {
+    left: 100%;
+    margin-left: 0.45rem;
+  }
+
+  .project-map[data-side="right"] .project-map-name {
+    right: 100%;
+    margin-right: 0.45rem;
+  }
+
+  /* Only the artefact you are actually in is named. The rest give up their
+     names one at a time. */
+  .project-map-plot a[data-current="true"] .project-map-name,
+  .project-map-plot a:hover .project-map-name,
+  .project-map-plot a:focus-visible .project-map-name {
+    opacity: 1;
+  }
+
+  .project-map-plot a[data-current="true"] .project-map-name {
+    color: var(--accent);
+  }
+
+  /* -------------------------------------------------------------------------
+     Previous / next — the layouts with no camera.
+
+     Below `lg` the plane never moves and the open panel covers the screen, so a
+     map of positions would describe something nobody can see. Exactly one of
+     the two is ever in the document.
+     ------------------------------------------------------------------------- */
+  .project-steps {
+    display: flex;
+    justify-content: space-between;
+    gap: 1.5rem;
+    margin-top: 3.5rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--line);
+  }
+
+  .project-steps a {
+    display: grid;
+    gap: 0.15rem;
+    max-width: 45%;
+    color: var(--muted);
+    transition: color var(--dur-micro) var(--ease-out-soft);
+  }
+
+  .project-steps a:hover {
+    color: var(--ink);
+  }
+
+  .project-steps-next {
+    text-align: right;
+    justify-items: end;
+  }
+
+  .project-steps-label {
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  .project-steps-title {
+    color: var(--ink);
+    font-size: 0.9375rem;
+    line-height: 1.3;
   }
 }

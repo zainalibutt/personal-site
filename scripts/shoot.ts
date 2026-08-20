@@ -119,8 +119,12 @@ async function main() {
   // checking, since the camera has to frame each one differently.
   for (const slug of ["proof-lens", "melody"]) {
     await page.goto(BASE, { waitUntil: "networkidle" });
+    /* Scoped to the field. A bare href matches the previous/next links inside
+       other artefacts' case studies too, and `.first()` then picked whichever
+       happened to come first in the DOM — which was a hidden control belonging
+       to a different project. The harness must click the thing it names. */
     await page
-      .locator(`a[href="/projects/${slug}"]`)
+      .locator(`[data-artefact="${slug}"] a[href="/projects/${slug}"]`)
       .first()
       .click({ force: true });
     // Wait on the actual state change, not a guessed delay — a dev-server

@@ -3,6 +3,14 @@
 import { useEffect, useRef } from "react";
 import { prefersReducedMotion, setFocusState } from "@/lib/motion-layer";
 import { DURATION, EASE } from "@/lib/motion";
+import {
+  type Frame,
+  frameOn,
+  heldFrame,
+  holdFrame,
+  midFrame,
+  toTransform,
+} from "@/lib/camera";
 
 /**
  * Zooms the page into an artefact.
@@ -22,14 +30,22 @@ import { DURATION, EASE } from "@/lib/motion";
  *
  * This is also why there is no backdrop. Dimming the surroundings would defeat
  * the whole idea.
+ *
+ * ## Travelling straight from one artefact to another
+ *
+ * The camera can also move between two focused artefacts without resting at
+ * home in between. That is one route change, so both hooks re-run in the same
+ * commit — the one being left and the one being arrived at — and React orders
+ * them by DOM position, which is not something to build on.
+ *
+ * The handover is therefore explicit and symmetric, so it holds whichever hook
+ * runs first: the **arriving** artefact owns the camera and travels from
+ * whatever framing it finds, and the **departing** artefact collapses its own
+ * box and does not touch the plane at all. Before this, the departing hook's
+ * restore timer fired 580ms into the arriving hook's 660ms camera move and
+ * cancelled it, leaving an artefact expanded with the camera at identity.
  */
 
-/**
- * How much the plane scales when focused. Kept modest and constant: the
- * artefact's own growth supplies most of the sense of arrival, and text inside
- * it renders at this scale, so a large value would blow the typography up.
- * Everything visible grows by exactly this much.
- */
 /**
  * Fraction of the viewport the focused artefact occupies once framed.
  * The zoom is derived from these, not fixed.
@@ -49,12 +65,10 @@ const DESKTOP_MIN = 1024;
 
 const OPEN_MS = DURATION.open;
 const CLOSE_MS = DURATION.close;
+const TRAVEL_MS = DURATION.travel;
 const OPEN_EASE = EASE.out;
 const CLOSE_EASE = EASE.inOut;
 const RADIUS = 16;
-
-/** The transform currently holding the plane. Only one artefact opens at a time. */
-let activePlaneTransform: string | null = null;
 
 function cancel(element: HTMLElement): void {
   for (const animation of element.getAnimations()) animation.cancel();
@@ -64,11 +78,35 @@ function getPlane(): HTMLElement | null {
   return document.querySelector<HTMLElement>("[data-plane]");
 }
 
-/** Returns the plane to identity so it can be measured untransformed. */
-function resetPlane(plane: HTMLElement): void {
+/**
+ * Returns the plane to identity so it can be measured untransformed.
+ *
+ * Deliberately does **not** touch the held framing. Clearing the transform is a
+ * DOM operation and releasing the camera is a state change, and an open needs
+ * the first without the second — it has to measure at identity while still
+ * knowing where it is travelling from.
+ *
+ * The transition is suppressed across the change, and the change is flushed
+ * before it is restored. Under `prefers-reduced-motion` the site's global
+ * override gives *every* element `transition-duration: 0.01ms` — non-zero — so
+ * clearing the transform starts a real transition, and a transition reports its
+ * start value for the rest of the tick. Everything measured next then comes
+ * back through a camera that is supposedly no longer there: an artefact
+ * travelled to under reduced motion read its spine clearance through the
+ * previous artefact's 2x framing and framed itself at 1.4x instead of 2x.
+ */
+function clearPlaneTransform(plane: HTMLElement): void {
   cancel(plane);
+  const previous = plane.style.transitionProperty;
+  plane.style.transitionProperty = "none";
   plane.style.transform = "";
-  activePlaneTransform = null;
+  void plane.offsetWidth;
+  plane.style.transitionProperty = previous;
+}
+
+/** The point a framed artefact is held at. */
+function viewportCentre() {
+  return { x: window.innerWidth / 2, y: window.innerHeight / 2 };
 }
 
 /**
@@ -81,6 +119,11 @@ function resetPlane(plane: HTMLElement): void {
  * Because the artefact stays small in plane space and the camera is doing the
  * magnifying, its content has to be authored at screen size and counter-scaled
  * by 1/zoom. That is what keeps body copy at 1x however far the camera pushes.
+ *
+ * **Reads rects, so the plane must be at identity.** The spine clearance is a
+ * distance, and a distance measured through a 2x camera comes back twice as
+ * generous — which would let the artefact grow across the spine on a travel.
+ * `layoutExpanded` clears the transform before calling this.
  */
 function frame(slot: HTMLElement, desktop: boolean) {
   const restWidth = slot.offsetWidth;
@@ -121,17 +164,32 @@ function frame(slot: HTMLElement, desktop: boolean) {
   return { width, height, zoom, restWidth, restHeight };
 }
 
+/** What the collapsed state looks like, in the artefact's own coordinates. */
+interface RestGeometry {
+  /** Clip window at rest: the artefact's resting rect inside the opened box. */
+  inset: { top: number; right: number; bottom: number; left: number };
+  /** Transform that puts the expanded hero back over the resting one. */
+  heroFrom: string | null;
+}
+
 /**
  * Writes the expanded geometry onto the artefact and works out where the camera
- * has to sit. Shared by the opening transition and the resize handler, so the
- * framing can never drift out of step with the viewport.
+ * has to sit. Shared by the opening transition, the resize handler and the
+ * travel, so the framing can never drift out of step with the viewport.
+ *
+ * **Clears the plane transform first.** Everything measured here is either a
+ * layout value or a rect that must be read in plane coordinates. The caller
+ * applies the returned frame afterwards.
  */
 function layoutExpanded(
   slot: HTMLElement,
   box: HTMLElement,
+  hero: HTMLElement | null,
   plane: HTMLElement | null,
   desktop: boolean,
-) {
+): { rest: RestGeometry; frame: Frame | null } {
+  if (plane) clearPlaneTransform(plane);
+
   const target = frame(slot, desktop);
 
   if (desktop) {
@@ -183,28 +241,51 @@ function layoutExpanded(
     close.style.transform = `scale(${1 / target.zoom})`;
   }
 
-  let planeTransform: string | null = null;
-  if (desktop && plane) {
-    // Measure with the plane at rest, or the centre is read through the very
-    // transform being replaced and drifts further out each time.
-    plane.style.transform = "";
-    const planeRect = plane.getBoundingClientRect();
-    const boxRect = box.getBoundingClientRect();
-    const centreX = boxRect.left - planeRect.left + boxRect.width / 2;
-    const centreY = boxRect.top - planeRect.top + boxRect.height / 2;
-    const tx = window.innerWidth / 2 - planeRect.left - target.zoom * centreX;
-    const ty = window.innerHeight / 2 - planeRect.top - target.zoom * centreY;
-    planeTransform = `translate(${tx}px, ${ty}px) scale(${target.zoom})`;
+  /* The hero is the one thing that scales, because it is an image and survives
+     it. Captured here rather than measured again at close time: the open and
+     the close are geometric mirrors, so this is the same value in both
+     directions, and re-reading it later is the project's oldest hazard. */
+  let heroFrom: string | null = null;
+  if (hero) {
+    hero.style.transform = "";
+    const heroFinal = hero.getBoundingClientRect();
+    if (heroFinal.width > 0) {
+      // The hero's aspect ratio is identical in both states, so this scale is
+      // always uniform and the screenshot never stretches.
+      const scale = target.restWidth / heroFinal.width;
+      heroFrom = `translate(${slotRect.left - heroFinal.left}px, ${slotRect.top - heroFinal.top}px) scale(${scale})`;
+    }
   }
 
-  return { inset, planeTransform, target };
+  /* Where the camera has to sit to hold this artefact in the middle of the
+     screen. The centre is in plane-local coordinates and the scale is applied
+     about the plane's own origin, so where that origin already sits on screen
+     has to come back out of the translation. */
+  let cameraFrame: Frame | null = null;
+  if (desktop && plane) {
+    const planeRect = plane.getBoundingClientRect();
+    const centre = {
+      x: boxRect.left - planeRect.left + boxRect.width / 2,
+      y: boxRect.top - planeRect.top + boxRect.height / 2,
+    };
+    const viewport = viewportCentre();
+    cameraFrame = frameOn(centre, viewport, target.zoom);
+    cameraFrame.tx -= planeRect.left;
+    cameraFrame.ty -= planeRect.top;
+  }
+
+  return { rest: { inset, heroFrom }, frame: cameraFrame };
 }
 
-export function useBoxExpand(focused: boolean, slug: string) {
+export function useBoxExpand(focusedSlug: string | null, slug: string) {
   const slotRef = useRef<HTMLDivElement>(null);
   const boxRef = useRef<HTMLDivElement>(null);
   const heroRef = useRef<HTMLDivElement>(null);
   const isExpanded = useRef(false);
+  /** Captured while the plane is at identity; replayed in reverse on close. */
+  const restGeometry = useRef<RestGeometry | null>(null);
+
+  const focused = focusedSlug === slug;
 
   useEffect(() => {
     const slot = slotRef.current;
@@ -220,7 +301,14 @@ export function useBoxExpand(focused: boolean, slug: string) {
       isExpanded.current = true;
       cancel(box);
       cancel(hero);
-      if (plane) resetPlane(plane);
+
+      /* Another artefact still holds the camera: this is a travel, not an open
+         from the resting field. Captured before the transform is cleared, which
+         is what makes the measurements below honest — and read before anything
+         writes it back, which is what keeps it true under the React Compiler.
+         See `heldFrame` for the bug that rule exists to prevent. */
+      const travelFrom = heldFrame();
+      if (plane) clearPlaneTransform(plane);
 
       box.dataset.expanded = "true";
       box.style.position = "absolute";
@@ -229,59 +317,117 @@ export function useBoxExpand(focused: boolean, slug: string) {
       // Counter-scale lives in here: content is laid out at the size it will
       // occupy on screen, then shrunk by 1/zoom to fit the artefact's small
       // plane footprint. The camera scales it back up, landing type at 1x.
-      const { inset, planeTransform, target } = layoutExpanded(
+      const { rest, frame: cameraFrame } = layoutExpanded(
         slot,
         box,
+        hero,
         plane,
         desktop,
       );
-      const { restWidth } = target;
+      restGeometry.current = rest;
+
+      /* Everything derived from the framing being left is resolved here, while
+         `travelFrom` is still the value that was read above. Only then is the
+         new framing recorded. Reads first, write last — the whole rule. */
+      const travelling = travelFrom !== null && cameraFrame !== null && desktop;
+      const travelKeyframes =
+        travelling && travelFrom && cameraFrame
+          ? [
+              { transform: toTransform(travelFrom) },
+              /* Rises, crosses, descends. A straight interpolation between two
+                 framings at ~2x is a lateral drag across the plane; pulling
+                 back through the midpoint shows both the artefact being left
+                 and the one being approached, which is what makes it read as
+                 one space rather than two destinations. */
+              {
+                transform: toTransform(
+                  midFrame(travelFrom, cameraFrame, viewportCentre()),
+                ),
+                offset: 0.5,
+              },
+              { transform: toTransform(cameraFrame) },
+            ]
+          : null;
+
+      holdFrame(cameraFrame);
       setFocusState("opening", slug);
 
+      /* Closes over the local framing rather than reading the held one back —
+         it runs a second later, by which time the camera may belong to someone
+         else, and this must settle where *this* artefact was framed. */
+      const settleFrame = () => {
+        if (!plane) return;
+        if (cameraFrame) {
+          cancel(plane);
+          plane.style.transform = toTransform(cameraFrame);
+        } else {
+          clearPlaneTransform(plane);
+        }
+      };
+
       if (reduced) {
-        if (plane) resetPlane(plane);
+        // No travel and no push — the camera simply is where it needs to be.
+        settleFrame();
         setFocusState("focused", slug);
         return;
       }
 
-      // Forced layout: both the hero and the plane framing depend on the
-      // artefact's post-growth geometry.
-      const heroFinal = hero.getBoundingClientRect();
+      /* On a travel the artefact stays shut until the camera has landed, then
+         opens exactly as it would from the field.
+
+         Not a stylistic choice. Content inside an artefact is authored at
+         screen size and counter-scaled by `1/zoom` so the camera lands it at
+         1x — which means while the camera is at any other zoom, that content is
+         at the wrong size. Opening during the crossing revealed the case study
+         at about 62% and grew it into place, which is the scaling transition
+         this mechanism exists to avoid. Held shut, every glyph is at final size
+         from the first frame it is visible, exactly as on a normal open. */
+      const openDelay = travelling ? TRAVEL_MS : 0;
+
+      /* The reveal inside the artefact is CSS, keyed off `data-expanded`, which
+         flips at the start of the crossing. Left alone it would play out behind
+         a shut clip and be finished before the artefact was visible, so the
+         arrival would have no sequence at all. Push it by the same delay. */
+      box.style.setProperty("--reveal-lead", `${openDelay + 160}ms`);
 
       const opening = box.animate(
         [
           {
-            clipPath: `inset(${inset.top}px ${inset.right}px ${inset.bottom}px ${inset.left}px round ${RADIUS}px)`,
+            clipPath: `inset(${rest.inset.top}px ${rest.inset.right}px ${rest.inset.bottom}px ${rest.inset.left}px round ${RADIUS}px)`,
           },
           { clipPath: `inset(0px 0px 0px 0px round ${RADIUS}px)` },
         ],
-        { duration: OPEN_MS, easing: OPEN_EASE, fill: "both" },
+        {
+          duration: OPEN_MS,
+          delay: openDelay,
+          easing: OPEN_EASE,
+          fill: "both",
+        },
       );
 
-      if (heroFinal.width > 0) {
-        // The hero's aspect ratio is identical in both states, so this scale is
-        // always uniform and the screenshot never stretches.
-        const scale = restWidth / heroFinal.width;
-        const restRect = slot.getBoundingClientRect();
+      if (rest.heroFrom) {
         hero.style.transformOrigin = "0 0";
-        hero.animate(
-          [
-            {
-              transform: `translate(${restRect.left - heroFinal.left}px, ${restRect.top - heroFinal.top}px) scale(${scale})`,
-            },
-            { transform: "none" },
-          ],
-          { duration: OPEN_MS, easing: OPEN_EASE, fill: "both" },
-        );
+        hero.animate([{ transform: rest.heroFrom }, { transform: "none" }], {
+          duration: OPEN_MS,
+          delay: openDelay,
+          easing: OPEN_EASE,
+          fill: "both",
+        });
       }
 
-      if (plane && planeTransform) {
-        activePlaneTransform = planeTransform;
-        plane.animate([{ transform: "none" }, { transform: planeTransform }], {
-          duration: OPEN_MS,
-          easing: OPEN_EASE,
-          fill: "forwards",
-        });
+      if (plane && cameraFrame) {
+        if (travelKeyframes) {
+          plane.animate(travelKeyframes, {
+            duration: TRAVEL_MS,
+            easing: CLOSE_EASE,
+            fill: "forwards",
+          });
+        } else {
+          plane.animate(
+            [{ transform: "none" }, { transform: toTransform(cameraFrame) }],
+            { duration: OPEN_MS, easing: OPEN_EASE, fill: "forwards" },
+          );
+        }
       }
 
       let openSettled = false;
@@ -295,15 +441,12 @@ export function useBoxExpand(focused: boolean, slug: string) {
         hero.style.transform = "";
         // The plane keeps its transform via an inline style rather than a
         // filling animation, so nothing is left holding a frame.
-        if (desktop && plane && activePlaneTransform) {
-          cancel(plane);
-          plane.style.transform = activePlaneTransform;
-        }
+        settleFrame();
         setFocusState("focused", slug);
       };
       // A frozen document timeline (backgrounded tab) never settles `finished`
       // and would strand the artefact mid-open with the page scroll locked.
-      const openGuard = setTimeout(settleOpen, OPEN_MS + 80);
+      const openGuard = setTimeout(settleOpen, openDelay + OPEN_MS + 80);
       void opening.finished.then(settleOpen).catch(settleOpen);
       return;
     }
@@ -314,6 +457,16 @@ export function useBoxExpand(focused: boolean, slug: string) {
       cancel(hero);
       setFocusState("closing", slug);
 
+      /* Another artefact is taking the camera. This one collapses its own box
+         and leaves the plane entirely alone — including in `restore`, whose
+         timer would otherwise land in the middle of the arriving artefact's
+         travel and cancel it. */
+      const handingOver = focusedSlug !== null;
+      const rest = restGeometry.current;
+      /* Read once, before `restore` or the plane animation below can write it,
+         for the same reason the open captures its travel framing up front. */
+      const leaving = handingOver ? null : heldFrame();
+
       const restore = () => {
         box.dataset.expanded = "false";
         box.style.position = "";
@@ -323,6 +476,7 @@ export function useBoxExpand(focused: boolean, slug: string) {
         box.style.height = "";
         box.style.zIndex = "";
         box.style.clipPath = "";
+        box.style.removeProperty("--reveal-lead");
         hero.style.transform = "";
         const scroll = box.querySelector<HTMLElement>(".expand-scroll");
         if (scroll) {
@@ -336,7 +490,10 @@ export function useBoxExpand(focused: boolean, slug: string) {
           close.style.transform = "";
           close.style.transformOrigin = "";
         }
-        if (plane) resetPlane(plane);
+        restGeometry.current = null;
+        if (handingOver) return;
+        if (plane) clearPlaneTransform(plane);
+        holdFrame(null);
         setFocusState("idle");
       };
 
@@ -345,56 +502,35 @@ export function useBoxExpand(focused: boolean, slug: string) {
         return;
       }
 
-      /* Measure with the plane at identity, exactly as the open does.
-         Reading these rects while the camera transform is still applied is the
-         hazard this project already had written down — never re-measure through
-         a live transform — and it made the close the mirror of nothing: the
-         hero scaled 1 -> 1.14 over the whole animation and then snapped to its
-         resting size when the styles were cleared. The transform goes straight
-         back so the plane's own animation still starts from where it was. */
-      const planeFrom = activePlaneTransform;
-      if (plane && planeFrom) plane.style.transform = "";
-
-      const restWidth = slot.offsetWidth;
-      const heroFinal = hero.getBoundingClientRect();
-      const restRect = slot.getBoundingClientRect();
-
-      // Collapses back into wherever the artefact actually rests, which is not
-      // the centre of the open box on a phone. Mirrors the opening inset.
-      const boxRect = box.getBoundingClientRect();
-      if (plane && planeFrom) plane.style.transform = planeFrom;
-      const inset = {
-        top: Math.max(0, restRect.top - boxRect.top),
-        right: Math.max(0, boxRect.right - restRect.right),
-        bottom: Math.max(0, boxRect.bottom - restRect.bottom),
-        left: Math.max(0, restRect.left - boxRect.left),
-      };
+      /* Replayed from what was captured at open time, with the plane at
+         identity. The close used to measure these again through the live camera
+         transform and undo it by hand; on a travel there is no way to undo it,
+         because the arriving artefact's animation is already driving the plane.
+         Capturing once is also what the project's own hazard table says to do. */
+      const closedInset = rest
+        ? `inset(${rest.inset.top}px ${rest.inset.right}px ${rest.inset.bottom}px ${rest.inset.left}px round ${RADIUS}px)`
+        : `inset(0px 0px 0px 0px round ${RADIUS}px)`;
 
       const closing = box.animate(
         [
           { clipPath: `inset(0px 0px 0px 0px round ${RADIUS}px)` },
-          {
-            clipPath: `inset(${inset.top}px ${inset.right}px ${inset.bottom}px ${inset.left}px round ${RADIUS}px)`,
-          },
+          { clipPath: closedInset },
         ],
         { duration: CLOSE_MS, easing: CLOSE_EASE, fill: "both" },
       );
 
-      if (heroFinal.width > 0) {
-        const scale = restWidth / heroFinal.width;
-        hero.animate(
-          [
-            { transform: "none" },
-            {
-              transform: `translate(${restRect.left - heroFinal.left}px, ${restRect.top - heroFinal.top}px) scale(${scale})`,
-            },
-          ],
-          { duration: CLOSE_MS, easing: CLOSE_EASE, fill: "both" },
-        );
+      if (rest?.heroFrom) {
+        hero.style.transformOrigin = "0 0";
+        hero.animate([{ transform: "none" }, { transform: rest.heroFrom }], {
+          duration: CLOSE_MS,
+          easing: CLOSE_EASE,
+          fill: "both",
+        });
       }
 
-      if (plane && planeFrom) {
-        const from = planeFrom;
+      if (plane && leaving) {
+        const from = toTransform(leaving);
+        holdFrame(null);
         plane.style.transform = "";
         plane.animate([{ transform: from }, { transform: "none" }], {
           duration: CLOSE_MS,
@@ -415,7 +551,7 @@ export function useBoxExpand(focused: boolean, slug: string) {
       const guard = setTimeout(settle, CLOSE_MS + 140);
       void closing.finished.then(settle).catch(settle);
     }
-  }, [focused, slug]);
+  }, [focused, focusedSlug, slug]);
 
   /**
    * Reframe on resize.
@@ -429,6 +565,7 @@ export function useBoxExpand(focused: boolean, slug: string) {
     if (!focused) return;
     const slot = slotRef.current;
     const box = boxRef.current;
+    const hero = heroRef.current;
     if (!slot || !box) return;
 
     let frameId = 0;
@@ -438,11 +575,22 @@ export function useBoxExpand(focused: boolean, slug: string) {
         const plane = getPlane();
         const desktop = window.innerWidth >= DESKTOP_MIN;
         if (plane) cancel(plane);
-        const { planeTransform } = layoutExpanded(slot, box, plane, desktop);
+        const { rest, frame: cameraFrame } = layoutExpanded(
+          slot,
+          box,
+          hero,
+          plane,
+          desktop,
+        );
+        // Refreshed, not just recomputed: the close replays these, and a stale
+        // capture would collapse the artefact into where it used to be.
+        restGeometry.current = rest;
+        holdFrame(cameraFrame);
         // Applied directly rather than animated: this tracks a drag-resize, so
         // it has to land on the same frame as the new viewport size.
-        if (plane) plane.style.transform = planeTransform ?? "";
-        activePlaneTransform = planeTransform;
+        if (plane) {
+          plane.style.transform = cameraFrame ? toTransform(cameraFrame) : "";
+        }
       });
     };
 

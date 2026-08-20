@@ -1,42 +1,75 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { PreviewSurface } from "./PreviewSurface";
+import { ProjectSteps } from "./ProjectMap";
 import { useBoxExpand } from "./useBoxExpand";
 import type { ProjectSummary } from "@/lib/content";
 
 /**
  * An artefact in the field, and its expanded state — the same box in both.
  *
- * Focus is derived from the route, not from local state, so the browser back
- * button and the close control take exactly the same path: the URL changes, the
- * box collapses. Nothing mounts or unmounts.
+ * Focus is derived from the route, not from local state, so every way out is
+ * the same mechanism: the URL changes, the box collapses. Nothing mounts or
+ * unmounts.
+ *
+ * **Closing and going back are no longer the same path.** They were identical
+ * while history could only be home → project, so back and close both meant
+ * home. Travelling between artefacts made history home → A → B, and `back()`
+ * then reopened A from a control labelled "Close" — which is not what the word
+ * means. Close leaves focused mode; Back stays historical and walks the
+ * artefacts you actually visited.
  */
 export function ProjectCard({
   project,
   body,
   index,
+  previous,
+  next,
 }: {
   project: ProjectSummary;
   /** Position in the field, for the printed index. */
   index: number;
   /** Server-rendered case study. Present at rest, clipped out of view. */
   body: React.ReactNode;
+  /** Neighbours in the field, for the layouts that have no camera. */
+  previous: ProjectSummary | null;
+  next: ProjectSummary | null;
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const focused = pathname === `/projects/${project.slug}`;
+  /* The whole field reads focus from the one route, so the camera knows not
+     only that this artefact is closing but whether another is opening — which
+     is the difference between going home and travelling across. */
+  const match = /^\/projects\/([^/]+)$/.exec(pathname);
+  const focusedSlug = match?.[1] ?? null;
+  const focused = focusedSlug === project.slug;
+  /* Some other artefact holds the camera, so this one is off the edge of the
+     frame. It used to stay in the tab order out there: with Proof-Lens open,
+     twenty of the twenty-three reachable controls were off screen, including
+     every other project's caption — a second, invisible copy of exactly the
+     navigation the map now does visibly. */
+  const elsewhere = focusedSlug !== null && !focused;
   const [hovered, setHovered] = useState(false);
-  const { slotRef, boxRef, heroRef } = useBoxExpand(focused, project.slug);
+  const { slotRef, boxRef, heroRef } = useBoxExpand(focusedSlug, project.slug);
+
+  /* Leaves focused mode outright, whatever route the visitor arrived by.
+     `scroll: false` because the camera is already collapsing back to where this
+     artefact rests in the field, and jumping the page to the top would land it
+     somewhere else entirely. */
+  const close = useCallback(
+    () => router.push("/", { scroll: false }),
+    [router],
+  );
 
   useEffect(() => {
     if (!focused) return;
 
     const onKey = (event: KeyboardEvent) => {
-      if (event.key === "Escape") router.back();
+      if (event.key === "Escape") close();
     };
     document.addEventListener("keydown", onKey);
 
@@ -47,7 +80,7 @@ export function ProjectCard({
       document.removeEventListener("keydown", onKey);
       document.body.style.overflow = previous;
     };
-  }, [focused, router]);
+  }, [focused, close]);
 
   return (
     <article
@@ -55,6 +88,11 @@ export function ProjectCard({
       /* Read by `npm run shoot --w 390`, which asserts the strongest work still
          comes first in the one DOM stream. */
       data-flagship={project.flagship}
+      /* Not a reordering: the DOM stream is untouched and this artefact returns
+         to the tab order the moment the camera does. It only stops keyboard
+         focus travelling to a card that is currently off the edge of the
+         frame, with the page scroll locked and no way to bring it into view. */
+      inert={elsewhere}
       onPointerEnter={() => setHovered(true)}
       onPointerLeave={() => setHovered(false)}
     >
@@ -181,6 +219,11 @@ export function ProjectCard({
                   style={{ "--reveal-index": 2 } as React.CSSProperties}
                 >
                   {body}
+                  {/* Only while this artefact is the one being read. At rest
+                      these would put a second link to every neighbour inside
+                      every case study — six copies of the field's own
+                      navigation, hidden but present. */}
+                  {focused && <ProjectSteps previous={previous} next={next} />}
                 </div>
               </div>
             </div>
@@ -204,7 +247,7 @@ export function ProjectCard({
           {focused && (
             <button
               data-close
-              onClick={() => router.back()}
+              onClick={close}
               aria-label="Close project"
               className="border-line bg-bg/90 text-muted hover:text-ink absolute top-3 right-3 z-10 rounded-full border px-3 py-1.5 text-xs backdrop-blur transition-colors"
             >

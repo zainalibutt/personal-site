@@ -87,6 +87,10 @@ export function ProjectField({
   const cards = items.map((item, i) => (
     <div
       key={item.project.slug}
+      /* Read by `ProjectMap`, which measures these to plot the field in
+         miniature. On the cell rather than the card because the cell is what
+         the grid places, and its layout position is what the map is a map of. */
+      data-artefact={item.project.slug}
       style={
         {
           "--col": i % 2 === 0 ? 1 : 3,
@@ -101,7 +105,16 @@ export function ProjectField({
          inline `grid-column: 3` would land in a column that does not exist. */
       className="artefact-cell lg:[grid-column-start:var(--col)] lg:[grid-row-start:var(--row)] lg:mt-[var(--drift)]"
     >
-      <ProjectCard project={item.project} body={item.body} index={i} />
+      <ProjectCard
+        project={item.project}
+        body={item.body}
+        index={i}
+        /* The layouts with no camera get a plain previous/next instead of the
+           map. Derived from the one ordered list, so a seventh artefact joins
+           the chain by existing — there is nothing here to extend. */
+        previous={items[i - 1]?.project ?? null}
+        next={items[i + 1]?.project ?? null}
+      />
     </div>
   ));
 
