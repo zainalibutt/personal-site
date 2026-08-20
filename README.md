@@ -8,9 +8,19 @@ Personal site of Zain Butt — full-stack product engineer, London.
 
 ## The idea
 
-"Depth, not distance." The site never navigates away — it zooms in. Clicking a
-project card morphs it in place into the full case study while the page beneath
-stays mounted, and the URL still changes so every project is deep-linkable.
+"Depth, not distance." The site never navigates away — it zooms in.
+
+`<main>` is a plane. Focusing a project grows that artefact **in plane
+coordinates** via an expanding `clip-path`, and at the same time translates and
+scales the plane so the camera frames it. It is a camera move, not a panel: the
+other artefacts and the About column keep their real spatial relationship rather
+than being covered over, and there is deliberately no backdrop. The URL still
+changes, so every project is deep-linkable and a cold visit renders the full
+case study as an ordinary page.
+
+It is explicitly **not** a shared-element morph. That was built first and
+scrapped — a morph is two elements pretending to be one, and it reads as a swap.
+See decision 3.
 
 Full rationale in [`docs/BRIEF.md`](docs/BRIEF.md). Directions considered and
 rejected are in [`docs/DIRECTIONS.md`](docs/DIRECTIONS.md).
@@ -31,13 +41,14 @@ npm install
 npm run dev
 ```
 
-| Script           | Does                           |
-| ---------------- | ------------------------------ |
-| `npm run dev`    | Dev server on :3000            |
-| `npm run build`  | Production build               |
-| `npm run check`  | Typecheck, lint and unit tests |
-| `npm run test`   | Vitest                         |
-| `npm run format` | Prettier                       |
+| Script           | Does                                                    |
+| ---------------- | ------------------------------------------------------- |
+| `npm run dev`    | Dev server on **:3100**                                 |
+| `npm run build`  | Production build                                        |
+| `npm run check`  | Typecheck, lint and unit tests                          |
+| `npm run test`   | Vitest                                                  |
+| `npm run format` | Prettier                                                |
+| `npm run shoot`  | Real headless Chromium screenshots + interaction checks |
 
 ## Adding a project
 
@@ -78,9 +89,14 @@ vanishing from the grid.
 | ----------------------------------- | --------------------------------------------------------------- |
 | `src/app/page.tsx`                  | Entry and project field                                         |
 | `src/app/projects/[slug]/page.tsx`  | Full case study — what a **cold visit** renders                 |
-| `src/app/@modal/(.)projects/[slug]` | Intercepted focused view — what an **in-session** click renders |
-| `src/components/ProjectCard.tsx`    | Card, holds the source `layoutId`s                              |
-| `src/components/FocusShell.tsx`     | Focused state, holds the matching `layoutId`s                   |
+| `src/app/@modal/(.)projects/[slug]` | Interception that keeps home mounted while the URL changes      |
+| `src/components/ProjectCard.tsx`    | One artefact — the same box at rest and expanded                |
+| `src/components/useBoxExpand.ts`    | The expansion and the camera                                    |
+| `src/lib/camera.ts`                 | Camera framing as a value, and the travel between two artefacts |
+| `src/components/ProjectMap.tsx`     | The field in miniature, while an artefact is open               |
+| `src/components/SpacetimeField.tsx` | The signature — lattice, starfield, nebulae, wanderer           |
 
-The shared `layoutId` values across the last two files are what make the morph
-work. Keep them in sync.
+Three rules that each took more than one attempt, all in
+[`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md): an artefact may never grow
+across the centre spine; never re-measure through a live transform; the
+intercepted route must not render `null`.
