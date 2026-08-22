@@ -654,9 +654,9 @@ instance.
 
 Opening an artefact frames it and pushes everything else off the edge. Until
 now the only way to reach a second project was to close back to the field and
-start again — and §12 of the handoff had already flagged the question this
-raises: whether "depth, not distance" survives a visitor who wants to compare
-two projects.
+start again — which raises the question this site has to answer honestly:
+whether "depth, not distance" survives a visitor who wants to compare two
+projects.
 
 **Artefact-to-artefact navigation already existed, and was already broken.** A
 keyboard user could tab from an open Proof-Lens to Melody's caption — off
