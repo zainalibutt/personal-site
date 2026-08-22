@@ -228,16 +228,16 @@ async function main() {
         await trigger.click();
         await page.waitForTimeout(500);
         const shown = await page.evaluate(() => {
-          const dialog = document.querySelector<HTMLDialogElement>(
-            ".portrait-modal",
-          );
+          const dialog =
+            document.querySelector<HTMLDialogElement>(".portrait-modal");
           if (!dialog) return null;
           const box = dialog.getBoundingClientRect();
           return {
             open: dialog.open,
             w: Math.round(box.width),
             h: Math.round(box.height),
-            centred: Math.abs(box.x + box.width / 2 - window.innerWidth / 2) < 4,
+            centred:
+              Math.abs(box.x + box.width / 2 - window.innerWidth / 2) < 4,
           };
         });
         if (shown) {

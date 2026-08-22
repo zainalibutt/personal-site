@@ -60,8 +60,11 @@ describe("project content", () => {
   // Prettier's markdown formatter has previously rewritten JSX expression
   // comments in MDX into `{/_ … _/}`, which is not parseable — hence
   // .prettierignore covering content/, and hence this test.
-  it.each(projects.map((p) => p.slug))("compiles %s as valid MDX", async (slug) => {
-    const project = getProject(slug)!;
-    await expect(compile(project.body)).resolves.toBeDefined();
-  });
+  it.each(projects.map((p) => p.slug))(
+    "compiles %s as valid MDX",
+    async (slug) => {
+      const project = getProject(slug)!;
+      await expect(compile(project.body)).resolves.toBeDefined();
+    },
+  );
 });

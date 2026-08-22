@@ -308,7 +308,10 @@ export async function film(spec: Film): Promise<void> {
          under the pointer rather than the page. */
       const steps = Math.max(10, Math.round(ms / 30));
       for (let i = 0; i < steps; i++) {
-        await page.evaluate((d: number) => window.scrollBy(0, d), delta / steps);
+        await page.evaluate(
+          (d: number) => window.scrollBy(0, d),
+          delta / steps,
+        );
         await page.waitForTimeout(ms / steps);
       }
     },

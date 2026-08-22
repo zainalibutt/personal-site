@@ -40,7 +40,7 @@ export default function Home() {
            160px of scroll for no reason. */
         className="mx-auto w-[min(96rem,calc(100%-3rem))] origin-top-left pb-10 will-change-transform md:pb-40"
       >
-        {/* the entry. Name and links centred, per the wireframe. */}
+        {/* The entry. Name and links on one baseline. */}
         {/* Tighter on a phone: the springboard below is sized to clear the fold
             on a 667px viewport, and every pixel this header spends is one the
             icons do not have. */}

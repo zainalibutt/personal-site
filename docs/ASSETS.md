@@ -91,7 +91,7 @@ than a CV.
 | ----------- | ------------------------------------ | ----------------------------------------------------------------------------------------- |
 | Photos      | JPEG or HEIC, straight off the phone | ≥3000px long edge. **Do not crop or filter** — full frame gives room to art-direct later. |
 | Screenshots | PNG                                  | 2× / retina, no browser chrome, real content                                              |
-| Video       | MP4 (h.264)                          | **Delivered** 1024px wide, 30fps, 10–20s, silent. Capture at 1920+; see below.             |
+| Video       | MP4 (h.264)                          | **Delivered** 1024px wide, 30fps, 10–20s, silent. Capture at 1920+; see below.            |
 | Documents   | PDF                                  | CV(s), whichever version should be public                                                 |
 
 ---

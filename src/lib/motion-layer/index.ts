@@ -17,11 +17,7 @@
 
 /** docs/ARCHITECTURE.md §2.4. */
 export type FocusState =
-  | "idle"
-  | "previewing"
-  | "opening"
-  | "focused"
-  | "closing";
+  "idle" | "previewing" | "opening" | "focused" | "closing";
 
 type StateListener = (state: FocusState, slug: string | null) => void;
 
@@ -30,7 +26,10 @@ let currentState: FocusState = "idle";
 let currentSlug: string | null = null;
 
 /** Called imperatively. Never from a React setState. */
-export function setFocusState(state: FocusState, slug: string | null = null): void {
+export function setFocusState(
+  state: FocusState,
+  slug: string | null = null,
+): void {
   if (state === currentState && slug === currentSlug) return;
   currentState = state;
   currentSlug = slug;

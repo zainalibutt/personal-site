@@ -121,7 +121,9 @@ export function ProjectMap({ projects }: { projects: ProjectSummary[] }) {
      half-truth about where things are. */
   const marks = projects.flatMap((project) => {
     const place = places.get(project.slug);
-    return place ? [{ ...place, slug: project.slug, title: project.title }] : [];
+    return place
+      ? [{ ...place, slug: project.slug, title: project.title }]
+      : [];
   });
 
   const index = marks.findIndex((m) => m.slug === focusedSlug);

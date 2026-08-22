@@ -130,7 +130,7 @@ export function PreviewSurface({
         </div>
       )}
 
-      {/* flagship miniatures mount here. Proof-Lens and Melody get
+      {/* Flagship miniatures mount here. Proof-Lens and Melody get
           bespoke interactive demos; the surface below them stays as the
           pre-enhancement state so the card is complete before they load. */}
     </div>
