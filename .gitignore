@@ -49,5 +49,3 @@ assets/raw/
 .vercel
 .env*
 
-# Editing checklist naming which copy has not yet had Zain's own pass.
-# Useful locally, actively harmful in a public repo.

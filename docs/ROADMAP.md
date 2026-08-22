@@ -130,13 +130,13 @@ opens here should do the left column first and then ask, rather than stalling.
   content stream, not covered over, and verified absent from the raw bytes, the
   page stream and the extracted text.
 
-### Still needs Zain
+### Still open
 
-- **His own pass over the remaining draft copy** — age-group-detection, Revenue
-  OS, and About's closing line. Four of six retrospectives now come from his own
-  material: Proof-Lens from the dissertation, and Melody, IOU and Replay from his
-  project notes. A technical reader can tell a retrospective that was lived from
-  one that was composed, which is why the rest matter.
+- **A closer pass over the remaining copy** — age-group-detection, Revenue OS,
+  and About's closing line. Four of six retrospectives are drawn straight from
+  source material: Proof-Lens from the dissertation, and Melody, IOU and Replay
+  from project notes. A technical reader can tell a retrospective that was lived
+  from one that was reconstructed, which is why the rest matter.
 - Whether a writing section exists.
 
 **Exit condition:** no placeholder text, and no artefact without a real image.
