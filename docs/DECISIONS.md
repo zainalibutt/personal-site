@@ -779,6 +779,59 @@ nothing is not a navigation instrument.
 
 ---
 
+## 28 · A card per project, photographed at rest
+
+**Decided:** 2026-08-23
+
+Every project link shared anywhere — a recruiter's inbox, a LinkedIn message, a
+Slack — rendered with **no preview image at all**. Not the site card: nothing.
+`generateMetadata` declared an `openGraph` block for the title and description,
+and declaring one in a child route replaces the parent's wholesale, the
+file-based image included. The site's one appearance outside a browser was blank.
+
+**The obvious shot was the wrong one, and had to be taken to see it.** The
+focused state is the signature — the artefact open, the field bent around it —
+so the first version photographed that. But a focused artefact _is_ a case
+study, and every card came back as four paragraphs of body copy at thumbnail
+size with the project's own image reduced to a corner.
+
+The resting artefact was already the answer. It is designed to represent one
+project at a glance and it contains exactly what a link preview wants: the
+image, the rank, the title, the tagline, the stack.
+
+**Neighbours are hidden before the shutter, and that is the interesting part.**
+A card is 1.9:1; an artefact is roughly square once its caption is counted. So
+any crop containing one whole artefact also contains most of two others — and
+About, sitting in the centre spine, came out larger and more legible than the
+project the card was about. Two attempts to keep them failed: cropping tighter
+severed the tagline off the bottom of all six, and fading the edges with the
+site's own `.edge-fade` cleaned the margins while leaving About untouched in the
+middle.
+
+So they are hidden — **omission, not rewriting**, the same line decision 23 drew
+photographing Revenue OS. Nothing is moved, resized or invented: the layout is
+untouched, so the lattice still dents where the hidden artefacts sit and the
+field keeps its real shape.
+
+**A missing card falls back to the site's, and that needed a second file.** One
+`.mdx` file must remain the only step to add a project, and the photograph
+cannot be part of that step because taking it needs the site running. Next
+serves the app-directory `opengraph-image.png` from a content-hashed URL nothing
+in `src/` can name, so `npm run og` writes the same photograph to
+`public/og/site.png` as well — an address the metadata can reference. A project
+added and not yet photographed gets a generic card rather than a 404.
+
+**They are JPEG, measured rather than assumed.** These are photographs of a
+starfield over a gradient, which is the two things PNG is worst at: the set came
+to 6.3MB, for images whose only job is to be fetched by a scraper on somebody
+else's timeout. At quality 92 with no chroma subsampling a card is 88kb — a
+tenth — and a 1:1 comparison of the lattice, the stars and the gradient shows no
+visible difference. WebP is smaller again and was rejected: X and LinkedIn are
+both unreliable with it, and a card that sometimes fails to render is worth less
+than one that is 30kb larger.
+
+---
+
 ## Recurring hazards
 
 Not decisions, but they have each bitten more than once and are cheap to
@@ -797,3 +850,4 @@ forget.
 | `prefers-reduced-motion` makes every element transition for 0.01ms       | The global override sets `transition-duration: 0.01ms !important` on `*` — non-zero. Clearing a transform therefore starts a real transition, and a transition reports its start value for the rest of the tick, so anything measured next is measured through the transform that was supposedly just removed. Suppress the transition and flush the change before restoring it. |
 | Unlayered CSS outranks every Tailwind utility                            | Tailwind v4 puts its utilities in `@layer utilities`, and an unlayered rule beats every layer regardless of specificity. A `display: flex` appended to `globals.css` silently defeated the `lg:hidden` sitting next to it in the markup, and the phone-only nav rendered on desktop as well. Put component CSS in `@layer components`.                                           |
 | Replacing a file in `public/` keeps serving the old bytes                | Next 16 dev caches optimised images in `.next/dev/cache/images`, keyed by URL and width only — and per format, so `curl` returns the new PNG while the browser gets a stale WebP. Clear it after any asset swap.                                                                                                                                                                 |
+| A child route's `openGraph` replaces the parent's, image included        | Declaring `openGraph` in `generateMetadata` discards the file-based `opengraph-image` it would otherwise inherit, so the route ships with **no** card rather than a generic one. It fails silently in the worst place — the page is perfect and the link preview is blank. Name the image again in every route that declares the block.                                          |
