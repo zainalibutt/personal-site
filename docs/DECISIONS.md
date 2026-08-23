@@ -873,6 +873,35 @@ is one of Zain's own links, and the route it was clicked from.
 
 ---
 
+## 30 · The site says who he is in a form nothing has to infer
+
+**Decided:** 2026-08-23
+
+A `Person` and `WebSite` graph in the root layout, and a `SoftwareSourceCode`
+node on each project page pointing back at the person by `@id`.
+
+It matters for one scenario, which happens to be the likeliest one on a job
+hunt: somebody is handed his name, searches it, and gets a result assembled by
+something that never rendered the lattice. `sameAs` is the load-bearing part —
+it is what ties this domain, the GitHub account and the LinkedIn profile
+together as one person rather than three strangers sharing a name.
+
+**Nothing is authored twice.** Every value is read from `site.ts` or from the
+same MDX frontmatter the cards are built from, so a claim cannot drift out of
+agreement with the page making it. `knowsAbout` is the union of every project's
+stack, derived rather than listed: a hand-kept skills array is a second source
+of truth that goes stale the first time a project is added.
+
+**The stack goes in `keywords`, not `programmingLanguage`.** Half of it is not a
+language — Supabase, RFC 3161, ResNet18 — and a structured claim that is nearly
+right is worse than a looser one that is exactly right.
+
+`application/ld+json` is not an executable script type, so the CSP never
+evaluates it and this stays valid if the policy is ever tightened past the
+`'unsafe-inline'` decision 19 explains.
+
+---
+
 ## Recurring hazards
 
 Not decisions, but they have each bitten more than once and are cheap to

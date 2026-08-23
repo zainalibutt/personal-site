@@ -2,6 +2,10 @@ export const site = {
   name: "Zain Butt",
   role: "Full-stack product engineer",
   location: "London, UK",
+  /** The same fact as `location`, in the shape schema.org asks for. Two keys
+   *  rather than a parse of the sentence above: "UK" is not a country code and
+   *  guessing one from prose is how a machine-readable claim goes wrong. */
+  address: { locality: "London", countryCode: "GB" },
   url: "https://zain.org.uk",
   /** The one sentence a visitor should leave with — docs/BRIEF.md §1.
    *  Rendered as the opening claim of About. */

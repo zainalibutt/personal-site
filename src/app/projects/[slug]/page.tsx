@@ -4,6 +4,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getProject, getProjectSlugs } from "@/lib/content";
+import { jsonLd, projectGraph } from "@/lib/schema";
 import { site } from "@/lib/site";
 import { ProjectBody } from "@/components/ProjectBody";
 import { PreviewSurface } from "@/components/PreviewSurface";
@@ -74,6 +75,12 @@ function projectCard(slug: string): string | undefined {
   return fs.existsSync(file) ? `/og/${slug}.jpg` : undefined;
 }
 
+/** Absolute, for structured data — which has no `metadataBase` to resolve
+ *  against and is read by things that never fetch the page it came from. */
+function absolute(pathname: string | undefined): string | undefined {
+  return pathname ? `${site.url}${pathname}` : undefined;
+}
+
 export default async function ProjectPage({
   params,
 }: {
@@ -84,9 +91,20 @@ export default async function ProjectPage({
   if (!project || project.draft) notFound();
 
   const { body, ...summary } = project;
+  const card = projectCard(slug);
 
   return (
     <main id="main" className="mx-auto w-[min(64rem,calc(100%-3rem))] pb-32">
+      {/* The work itself, machine-readable, attributed to the same person node
+          the root layout declares. This route is what a crawler gets — the
+          in-session view is an interception the crawler never runs. */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: jsonLd(projectGraph(summary, absolute(card))),
+        }}
+      />
+
       <Link
         href="/"
         className="text-accent mt-12 inline-block text-sm underline underline-offset-4"

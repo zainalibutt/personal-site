@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import { Bodoni_Moda, IBM_Plex_Mono, Inter } from "next/font/google";
 import { site } from "@/lib/site";
+import { identityGraph, jsonLd } from "@/lib/schema";
 import { Telemetry } from "@/components/Telemetry";
 import "./globals.css";
 
@@ -77,6 +78,19 @@ export default function RootLayout({
         </a>
         {children}
         {modal}
+
+        {/* Who this is, for a reader that never renders the page. Not visible,
+            not styled, and deliberately in the layout rather than the home page
+            so a shared project link carries the identity too — that is the URL
+            most likely to be the first one anybody sees.
+
+            `application/ld+json` is not executable, so `script-src` never
+            evaluates it; this stays valid if the policy is ever tightened past
+            the `'unsafe-inline'` that decision 19 explains. */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: jsonLd(identityGraph()) }}
+        />
 
         {/* Vercel Web Analytics. Chosen over Plausible, which the roadmap had
             assumed: this is free, needs no cookie banner because it sets no
