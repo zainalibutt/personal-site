@@ -832,6 +832,47 @@ than one that is 30kb larger.
 
 ---
 
+## 29 · Telemetry records leaving, not arriving
+
+**Decided:** 2026-08-23
+
+Web Analytics counted page views and nothing else, which on this site answers
+the uninteresting half. Every route it owns is already a page view, including
+which artefact was opened — the URL changes for each. What it could not see was
+the moment a visitor **left**: the CV downloaded, the email started, the
+repository read, the deployed app tried. On a site whose job is to end in one of
+those four, that is the whole question.
+
+An event for opening a project was considered and dropped: it would be a second,
+worse copy of a number the dashboard already holds.
+
+**One delegated listener, not handlers on the links.** The outbound links are
+not in one place — four in the page header, one or two per case study rendered
+from MDX. Instrumenting them individually needs either custom MDX components or
+an edit to every content file whenever a project is added, and adding a project
+stays one file. A listener on the document classifies whatever is actually there.
+
+**The classification is pure and tested**, in `src/lib/telemetry.ts` rather than
+in the component. It is the part with judgement in it and the part that fails
+quietly: a rule that mistakes an in-site link for an outbound one does not
+throw, it files a number under the wrong name for months. The test that earned
+its place asserts that `javascript:` and `tel:` are not departures — `new URL`
+parses both perfectly well and gives each an origin of `"null"`, which does not
+match this site's, so the naive rule recorded every one of them as somebody
+visiting a live app.
+
+**It needs a Vercel Pro plan, and it is silent until it has one.** Custom events
+are not collected on Hobby. `track()` is inert there and outside a Vercel
+deployment, so nothing breaks — but nothing is recorded either. Pro also caps
+custom data at **two properties per event**, and a third drops the event rather
+than truncating it, which is why the classifier returns at most two and a test
+holds it there.
+
+No cookie, no identifier, no personal data: an event carries a destination that
+is one of Zain's own links, and the route it was clicked from.
+
+---
+
 ## Recurring hazards
 
 Not decisions, but they have each bitten more than once and are cheap to
@@ -851,3 +892,4 @@ forget.
 | Unlayered CSS outranks every Tailwind utility                            | Tailwind v4 puts its utilities in `@layer utilities`, and an unlayered rule beats every layer regardless of specificity. A `display: flex` appended to `globals.css` silently defeated the `lg:hidden` sitting next to it in the markup, and the phone-only nav rendered on desktop as well. Put component CSS in `@layer components`.                                           |
 | Replacing a file in `public/` keeps serving the old bytes                | Next 16 dev caches optimised images in `.next/dev/cache/images`, keyed by URL and width only — and per format, so `curl` returns the new PNG while the browser gets a stale WebP. Clear it after any asset swap.                                                                                                                                                                 |
 | A child route's `openGraph` replaces the parent's, image included        | Declaring `openGraph` in `generateMetadata` discards the file-based `opengraph-image` it would otherwise inherit, so the route ships with **no** card rather than a generic one. It fails silently in the worst place — the page is perfect and the link preview is blank. Name the image again in every route that declares the block.                                          |
+| `new URL` parses `javascript:` and `tel:`, with origin `"null"`          | An origin comparison alone does not identify an outbound link: every non-web scheme fails to match this site's origin and is classified as leaving it. Check the protocol is `http:` or `https:` first.                                                                                                                                                                          |

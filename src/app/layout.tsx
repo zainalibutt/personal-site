@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import { Bodoni_Moda, IBM_Plex_Mono, Inter } from "next/font/google";
 import { site } from "@/lib/site";
+import { Telemetry } from "@/components/Telemetry";
 import "./globals.css";
 
 /* Display: a high-contrast face drawn with rule and compass, which is the same
@@ -82,6 +83,10 @@ export default function RootLayout({
             cookies, and inlines nothing at build. It is inert outside a Vercel
             deployment, so local runs stay clean. */}
         <Analytics />
+        {/* Page views cover every route this site owns. This covers leaving it
+            — the CV, the email, the repositories, the deployed apps — which is
+            the half a portfolio actually needs to know about. */}
+        <Telemetry />
       </body>
     </html>
   );
