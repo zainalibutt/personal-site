@@ -27,14 +27,14 @@ import { getProjectSlugs } from "@/lib/content";
 
 const BASE = process.env.OG_URL ?? "http://localhost:3100";
 
-const SITE_CARD = path.join(process.cwd(), "src", "app", "opengraph-image.jpg");
 const PROJECT_CARD_DIR = path.join(process.cwd(), "public", "og");
 
-/* The same photograph as `SITE_CARD`, at an address code can name.
-   Next serves the app-directory file from a content-hashed URL it computes at
-   build, which nothing in `src/` can reference — so a project added but not yet
-   photographed has no card to fall back to. This copy is that fallback. */
-const SITE_CARD_ALIAS = path.join(PROJECT_CARD_DIR, "site.jpg");
+/* Beside the project cards rather than in `src/app` as an `opengraph-image`
+   file. The file convention serves the image from a content-hashed URL nothing
+   in `src/` can name, and drops the alt text beside it once the route declares
+   its own `openGraph` block — so the site card described itself to nobody, and
+   a project added but not yet photographed had nothing to fall back to. */
+const SITE_CARD = path.join(PROJECT_CARD_DIR, "site.jpg");
 
 /** Facebook and LinkedIn both crop toward this; 1200x630 is the safe shape. */
 const OG_WIDTH = 1200;
@@ -183,9 +183,7 @@ async function main() {
   await settle(page);
 
   if (!only) {
-    const home = await page.screenshot();
-    await writeCard(home, SITE_CARD);
-    await writeCard(home, SITE_CARD_ALIAS);
+    await writeCard(await page.screenshot(), SITE_CARD);
   }
 
   for (const slug of slugs) {

@@ -51,6 +51,23 @@ export const metadata: Metadata = {
     siteName: site.name,
     title: `${site.name} — ${site.role}`,
     description: site.description,
+    /* Named here rather than left to the `opengraph-image` file convention.
+       That convention serves the image from a content-hashed URL and, in this
+       version, silently drops the `opengraph-image.alt.txt` beside it whenever
+       the route also declares an `openGraph` block — which this one must, for
+       the title and description. The card shipped with no alt text at all.
+
+       Naming it costs the hash and buys one mechanism instead of two: the site
+       card and every project card are now declared the same way, with the same
+       dimensions and the same requirement to describe themselves. */
+    images: [
+      {
+        url: "/og/site.jpg",
+        width: 1200,
+        height: 630,
+        alt: `${site.name} — ${site.role.toLowerCase()}, ${site.address.locality}. The site rendered as a coordinate lattice with project artefacts set into it.`,
+      },
+    ],
   },
   twitter: { card: "summary_large_image" },
   robots: { index: true, follow: true },
