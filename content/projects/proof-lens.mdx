@@ -1,9 +1,10 @@
 ---
 title: Proof-Lens
 tagline: Media provenance you can verify without trusting the person who sent it.
+evidence: 124/124 anchored
 year: 2026
 role: Design and engineering
-stack: [TypeScript, WebCrypto, RFC 3161, Node]
+stack: [TypeScript, React Native, Ed25519, RFC 3161, Express]
 flagship: true
 order: 1
 repo: https://github.com/zainalibutt/Proof-Lens
@@ -34,12 +35,50 @@ moves the question rather than answering it.
 Proof-Lens binds a capture to the device that made it and to the moment it
 happened, then packages both into evidence that survives leaving the app.
 
-- **Device signatures.** The capture is signed at source using hardware-backed
-  keys, so the signature attests to the device rather than to a server.
+- **Device-linked signatures.** The capture is hashed and signed on the phone at
+  the moment it is taken, with an Ed25519 keypair generated per installation, so
+  the signature attests to a registered device rather than to a server — and it
+  does that on an ordinary handset, without asking the manufacturer for
+  attestation. That last clause is the contribution. The systems that solve this
+  well mostly solve it by having the vendor cooperate.
 - **RFC 3161 timestamping.** An independent timestamping authority countersigns
   the hash, establishing that the content existed no later than a given moment.
 - **Offline-verifiable bundles.** Everything needed to check the claim travels
-  with the file. Verification needs no network call and no account.
+  with the file — a ten-file archive that verifies with nothing but OpenSSL. No
+  network call, no account, and it still checks out if this service disappears.
+
+## The result
+
+{/* Read off the dissertation (§1, §4.2, §5.3, §5.5) rather than reasoned from
+    the repository. Every figure here is one the report states. */}
+
+Evaluated over 36 named checks and seven architectural investigations against
+the deployed stack, not a local prototype.
+
+| Measure | Result |
+| --- | --- |
+| Credentials anchored after TSA integration | **124 of 124** |
+| Functional security failures under the protocol | **none** |
+| Mean capture-to-anchor latency | 9.6 s |
+| API surface | 35 endpoints, schema-validated at middleware |
+| Mobile client | ~4,498 lines across 21 files |
+
+An anchored credential was then verified offline using only OpenSSL and the
+bundled artefacts, with no contact with the live service at all — which is the
+only test of that claim worth running, because a verification that phones home
+is not the thing being claimed.
+
+Four capabilities landed beyond the original scope: signed audio at full parity
+with images, burst-mode signing where each of up to ten frames gets its own
+hash, signature and anchor, the offline bundles themselves, and time-limited
+share links whose bearer tokens are never stored.
+
+Deletion is refused by the database rather than by the application — a
+`BEFORE DELETE` trigger on credentials, audio records, device keys and the audit
+tables, with the service role deliberately not exempt. Revenue OS reaches for
+the same mechanism for the same reason, which is the argument both projects are
+really making: a rule that lives in application code is a rule until someone
+writes a new code path.
 
 ## What was hard
 
@@ -57,12 +96,15 @@ Ed25519 private key lives in Expo SecureStore, which is not Secure
 Enclave-backed attestation. If that key is extracted, the server cannot
 distinguish legitimate credentials from forged ones — and revocation limits
 future damage without invalidating anything already signed. Native
-hardware-backed key storage is the first thing I would change, because it is the
-only item that moves the root of trust rather than the reporting around it.
+hardware-backed key storage is the only item on my list that moves the root of
+trust rather than the reporting around it. It was scoped and then dropped: the
+Secure Enclave path needs a custom build, and I would rather ship the honest
+boundary than a claim the build could not support.
 
 **All temporal assurance depends on a single authority.** Every bundle inherits
-FreeTSA's lifespan, and during the project its leaf certificate expired and the
-service kept operating anyway. That is the clearest possible argument for
+FreeTSA's lifespan, and during the project its leaf certificate passed its
+`notAfter` date while the tokens already anchored under it carried on verifying
+`OK` regardless. That is the clearest possible argument for
 multi-TSA redundancy: the failure mode is not the authority disappearing, it is
 the authority continuing to look fine.
 
@@ -74,6 +116,12 @@ it" is a limitation of the evidence, not a property of the system.
 I ordered the remaining work by how much it would strengthen the truth of the
 security claims rather than by how appealing the feature was — external
 adversarial review first, hardware-backed keys second, a retention and erasure
-policy for the GDPR Article 17 tension third. Interoperability and packaging
-come last, because they make the thing easier to ship without making any of its
-claims more true.
+policy for the GDPR Article 17 tension third. Broader device coverage and
+packaging come fourth, and multi-TSA redundancy last.
+
+Last is uncomfortable, given the paragraph above, and it is still the order I
+would defend. The certificate expired and the archived tokens verified anyway,
+so of everything on the list the single-authority dependency is the one that has
+cost least so far. Ranking by how much each item would strengthen the truth of
+the claims means occasionally ranking the problem you find most interesting
+below the one that actually changes what the report is allowed to say.
