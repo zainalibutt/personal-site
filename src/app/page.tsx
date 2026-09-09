@@ -78,7 +78,16 @@ export default function Home() {
             <a className="link-chip" href={site.links.linkedin}>
               LinkedIn
             </a>
-            <a className="link-chip" href="/ZainButt-CV.pdf">
+            {/* The one chip that is a file rather than a place. Opening it in
+                the same tab replaces the site with a PDF viewer, and the way
+                back is the browser's — which is a worse experience than the
+                site it just left. */}
+            <a
+              className="link-chip"
+              href="/ZainButt-CV.pdf"
+              target="_blank"
+              rel="noopener"
+            >
               CV
             </a>
             {/* Carries the accent at rest. Four equal chips is a list; one of

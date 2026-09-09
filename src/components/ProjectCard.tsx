@@ -172,6 +172,10 @@ export function ProjectCard({
                       alt=""
                       width={512}
                       height={512}
+                      /* The tile is at most 84px and the icon was being fetched
+                         at up to 1080w for it, because without this next/image
+                         assumes the image may fill the viewport. */
+                      sizes="96px"
                       priority={project.flagship}
                       className="h-full w-full object-cover"
                     />
@@ -275,7 +279,10 @@ export function ProjectCard({
             <Link
               href={`/projects/${project.slug}`}
               scroll={false}
-              prefetch
+              /* No `prefetch`. The caption below points at the same href and
+                 already declares it, so both together asked the router for
+                 every route twice — six artefacts, twelve prefetches, and on a
+                 phone all of them enter the fold at once. */
               aria-hidden
               tabIndex={-1}
               className="absolute inset-0 z-[5]"
