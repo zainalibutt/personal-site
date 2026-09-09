@@ -40,7 +40,15 @@ export async function generateMetadata({
       description: project.tagline,
       /* Declaring `openGraph` here replaces the root layout's wholesale, image
          included — which is why these routes shipped with no card at all
-         rather than with a generic one. The image has to be named again. */
+         rather than with a generic one. The image has to be named again.
+
+         And not only the image: `type`, `locale`, `siteName` and `url` are
+         replaced too, so every project page was shipping a card with no site
+         name and no canonical URL on it. Restated here for the same reason. */
+      type: "website",
+      locale: "en_GB",
+      siteName: site.name,
+      url: `${site.url}/projects/${slug}`,
       images: [
         {
           url: card ?? SITE_CARD,
@@ -112,17 +120,31 @@ export default async function ProjectPage({
         ← All work
       </Link>
 
+      {/* Name the thing before showing it.
+          The preview used to open this header, which meant a cold visit — the
+          URL that gets pasted into an application — spent its entire first
+          viewport on a screenshot with the project's name below the fold. For
+          Proof-Lens that screenshot was the app's sign-in form, so the page a
+          recruiter landed on was a login box belonging to nothing they could
+          name. */}
       <header className="py-12">
-        <PreviewSurface
-          project={summary}
-          className="mb-10 w-full rounded-2xl"
-        />
         <h1 className="text-ink text-4xl text-balance sm:text-5xl">
           {project.title}
         </h1>
         <p className="text-muted mt-3 max-w-2xl text-lg text-pretty">
           {project.tagline}
         </p>
+
+        <PreviewSurface
+          project={summary}
+          /* This is the largest element on the page and the LCP candidate on
+             every cold visit, so it loads eagerly and is measured against the
+             column it actually occupies rather than against a card in the
+             field. */
+          priority
+          sizes="(min-width: 1088px) 64rem, calc(100vw - 3rem)"
+          className="mt-10 w-full rounded-2xl"
+        />
 
         <dl className="mt-8 flex flex-wrap gap-x-10 gap-y-4 text-sm">
           <div>

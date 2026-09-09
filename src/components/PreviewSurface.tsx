@@ -17,6 +17,7 @@ export function PreviewSurface({
   project,
   priority = false,
   active = false,
+  sizes = "(min-width: 1024px) 34vw, (min-width: 640px) 50vw, 100vw",
   className = "",
 }: {
   project: ProjectSummary;
@@ -24,6 +25,16 @@ export function PreviewSurface({
   priority?: boolean;
   /** Hovered or focused. A video preview plays only while this is true. */
   active?: boolean;
+  /**
+   * Layout hint for the image candidate.
+   *
+   * The default describes the *field* — a card is about a third of the
+   * viewport on a flank. The cold project route is a single 64rem column, so
+   * without an override the browser sizes for 34vw and fetches a 640w file for
+   * a box up to 1024px wide, which is the one place on the site where this
+   * image is the largest thing on screen.
+   */
+  sizes?: string;
   className?: string;
 }) {
   const { preview, title } = project;
@@ -88,7 +99,7 @@ export function PreviewSurface({
           className={
             preview.fit === "contain" ? "object-contain" : "object-cover"
           }
-          sizes="(min-width: 1024px) 34vw, (min-width: 640px) 50vw, 100vw"
+          sizes={sizes}
           priority={priority}
         />
       )}
