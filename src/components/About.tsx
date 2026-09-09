@@ -11,12 +11,19 @@ export function About() {
       aria-labelledby="about-heading"
       className="max-md:text-center md:space-y-6"
     >
+      {/* `data-tidal` marks a block the wanderer may lean while the page is
+          idle — see lib/tidal.ts. Each one is transformed separately and by its
+          own distance, which is what makes the column shear rather than slide.
+          The portrait takes a wrapper because the transform must not land on
+          the button itself, which carries its own hover and focus states. */}
       <div className="flex items-start justify-between gap-6 max-md:hidden">
-        <h2 id="about-heading" className="text-ink text-3xl">
+        <h2 data-tidal id="about-heading" className="text-ink text-3xl">
           About
         </h2>
 
-        <Portrait src="/portrait/zain.png" alt={site.name} size={96} />
+        <div data-tidal className="shrink-0">
+          <Portrait src="/portrait/zain.png" alt={site.name} size={96} />
+        </div>
       </div>
 
       {/* The phone gets two sentences and nothing else — no heading, no
@@ -52,7 +59,7 @@ export function About() {
             words the flagship already uses. It does the job the thesis was
             meant to do and, unlike the thesis, the six artefacts either side of
             this column are the evidence for it. */}
-        <p>
+        <p data-tidal>
           <span className="text-ink">
             Everything below asks the same question: how do you know a record is
             true?
@@ -69,14 +76,14 @@ export function About() {
 
             Swapping them puts the decisive four lines above the fold and moves
             the descriptive paragraph to where being cut costs nothing. */}
-        <p>
+        <p data-tidal>
           {site.education.degree}, {site.education.classification},{" "}
           {site.education.institution}. Final-year project{" "}
           {site.education.finalYearProject}%. {site.location}, with{" "}
           {site.rightToWork} — looking for {site.seeking}, and taking freelance
           work now.
         </p>
-        <p>
+        <p data-tidal>
           Recent work: a tool that proves a file has not been altered since it
           was captured, a keyboard-first terminal for reading company filings
           from primary sources, and a ledger that settles group expenses without

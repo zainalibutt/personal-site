@@ -1004,6 +1004,62 @@ it is only visible by pressing Tab after Escape.
 
 ---
 
+## 34 · The wanderer leans the text, but only when nobody is reading it
+
+**Decided:** 2026-09-09 · **Zain's idea**
+
+The lattice has always bent under the wanderer. The page's own text now bends
+with it — captions, and the About column — under a contract that is the whole
+reason it is allowed to exist at all.
+
+**It runs only after 25 seconds with no input**, ramps in over three, and dies
+in 300ms on the first pointer move, scroll, key or touch. A reader is idle by
+any definition a machine can check, so the interval is long and the onset is
+slow: somebody still reading gets a drift they will not notice before their next
+twitch of the mouse cancels it. Elapsed time was the alternative and it is
+worse — a sixty-second timer moves the page under whoever is reading slowly,
+which is exactly the wrong person to punish.
+
+**Never while an artefact is focused, and never on a project route.** Reading a
+case study is precisely when this must not happen.
+
+**About participates, and that was the point.** ARCHITECTURE §7 already
+separates the mass from its rendering, so the mesh keeps bending where the disc
+is hidden; this is the same rule applied to a second thing. It needed one
+change to be possible: `SPINE_PUSH`, the force that keeps the wanderer off the
+reading column, is eased off by `tidalProgress()` — the avoidance exists to
+protect words that are being read, and an idle page is the one state where they
+are not. It returns as the effect collapses.
+
+**Direction is inward, with the lattice, not outward with the starlight.**
+Light bends outward because it passes by a mass; glyphs sit _on_ the sheet, so
+they go the way the sheet goes. That is a new rule rather than a contradiction,
+and it is the difference between a tug and a lens.
+
+**Granularity is the effect.** Transforming a ten-line paragraph as one box
+reads as the paragraph sliding. Twenty-nine separate blocks — every About
+paragraph, the heading, the portrait, each part of every caption — lean by
+their own distance, and the column shears. A uniform slide is not worth looking
+at; the differential is.
+
+**Resting positions are measured once, at onset.** Re-measuring a transformed
+element is the project's oldest hazard and here it would compound every frame.
+Nothing scrolls or reflows during an idle, because a scroll ends the idle, so
+one measurement holds for the run.
+
+**Two implementation notes that cost real time.** `canvas.dataset.wander` is
+development-only, so it cannot be the channel a shipped feature reads —
+`publishWanderer()` exists for that. And the transform must never land on the
+About wrapper: it is `position: sticky`, and a transform on it creates a
+containing block that kills the stickiness, which would present as a camera bug
+rather than a text bug.
+
+Per-word displacement was considered and deliberately deferred. It is a
+granularity change on the same plumbing, and the whole-block lean should be
+lived with first.
+
+---
+
 ## Recurring hazards
 
 Not decisions, but they have each bitten more than once and are cheap to

@@ -204,6 +204,22 @@ async function main() {
       );
     }
 
+    /* The tidal lean must never be running while anybody is interacting. It
+       only starts after a long idle and dies on the first input, so by the time
+       this harness has moved a mouse and scrolled a page every marked block
+       should be at its resting position with no inline transform left on it.
+       A regression here would not be visible in a screenshot: the text would
+       simply be in slightly the wrong place, permanently. */
+    const leaning = await page.evaluate(
+      () =>
+        [...document.querySelectorAll<HTMLElement>("[data-tidal]")].filter(
+          (el) => el.style.transform !== "",
+        ).length,
+    );
+    console.log(
+      `  tidal text at rest after input: ${leaning === 0 ? "OK" : `${leaning} STILL LEANING`}`,
+    );
+
     await page.goto(BASE, { waitUntil: "networkidle" });
     const box2 = await artefact.boundingBox();
     if (box2) {

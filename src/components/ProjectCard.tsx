@@ -334,7 +334,15 @@ export function ProjectCard({
         aria-hidden={focused}
         tabIndex={focused ? -1 : undefined}
       >
-        <span className="caption-head flex items-baseline justify-between gap-4">
+        {/* Each part of the caption is its own `data-tidal` block rather than
+            the caption being one. They sit at different distances from the
+            wanderer, so they lean by different amounts and the caption shears —
+            which is the effect. Leaning the whole thing would just slide it.
+            See lib/tidal.ts. */}
+        <span
+          data-tidal
+          className="caption-head flex items-baseline justify-between gap-4"
+        >
           <span className="caption-title text-ink text-2xl">
             {/* Index, not decoration: five artefacts with no numbering read as
                 whatever happened to be lying around. `aria-hidden` because the
@@ -348,7 +356,10 @@ export function ProjectCard({
             {project.year}
           </span>
         </span>
-        <span className="caption-detail text-muted mt-1 block max-w-[42ch] text-pretty">
+        <span
+          data-tidal
+          className="caption-detail text-muted mt-1 block max-w-[42ch] text-pretty"
+        >
           {project.tagline}
         </span>
         {/* The one line of evidence that does not wait for a click. Unlike the
@@ -356,9 +367,11 @@ export function ProjectCard({
             springboard of six names was the one surface on this site that
             proved nothing at all. */}
         {project.evidence && (
-          <span className="caption-evidence">{project.evidence}</span>
+          <span data-tidal className="caption-evidence">
+            {project.evidence}
+          </span>
         )}
-        <span className="caption-detail mt-3 flex flex-wrap gap-1.5">
+        <span data-tidal className="caption-detail mt-3 flex flex-wrap gap-1.5">
           {project.stack.map((tech) => (
             <span key={tech} className="tag">
               {tech}

@@ -6,6 +6,7 @@ import { ProjectBody } from "@/components/ProjectBody";
 import { ProjectField, type FieldItem } from "@/components/ProjectField";
 import { ProjectMap } from "@/components/ProjectMap";
 import { SpacetimeField } from "@/components/SpacetimeField";
+import { TidalText } from "@/components/TidalText";
 import { WorkIndex } from "@/components/WorkIndex";
 import { getWorkIndex } from "@/lib/repos";
 
@@ -39,6 +40,11 @@ export default function Home() {
           inside a transformed ancestor resolves against that ancestor, so in
           the plane the camera would carry it off screen. */}
       <WorkIndex written={index.written} other={index.other} />
+
+      {/* Renders nothing. Mounts the idle detector that lets the wanderer lean
+          the page's text once nobody has touched anything for a while, and
+          switches it off the moment an artefact takes focus. */}
+      <TidalText />
 
       {/* `data-plane` marks the surface the camera moves. Focusing an artefact
           translates and scales this whole element, so every other item keeps its

@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { subscribeFocusState, prefersReducedMotion } from "@/lib/motion-layer";
 import { LERP } from "@/lib/motion";
+import { publishWanderer, tidalProgress } from "@/lib/tidal";
 
 /**
  * The field — a coordinate lattice the page's contents deform.
@@ -374,15 +375,22 @@ export function SpacetimeField() {
            than a boundary. Zero at the centre line and zero at the band edge, so
            it never reverses direction at a point — it just makes lingering over
            the words less likely than lingering anywhere else. */
+        /* Eased off while the tidal effect is running. The avoidance exists to
+           keep the wanderer off the words while they are being read, and an
+           idle page is the one state where nobody is reading them — so during
+           an idle it is allowed onto the column, disc faded, and the text
+           leans instead. It comes back the moment anything is touched, because
+           `tidalProgress` collapses to zero in 300ms. */
         const spine = document.querySelector<HTMLElement>("[data-spine]");
-        if (spine && wanderer.autonomy > 0.5) {
+        const avoidance = 1 - tidalProgress();
+        if (spine && wanderer.autonomy > 0.5 && avoidance > 0) {
           const r = spine.getBoundingClientRect();
           if (r.width > 0) {
             const half = r.width / 2 + WANDER_CLEAR_X;
             const dx = wanderer.x - (r.left + r.width / 2);
             if (Math.abs(dx) < half) {
               const t = dx / half;
-              wanderer.vx += t * (1 - Math.abs(t)) * SPINE_PUSH;
+              wanderer.vx += t * (1 - Math.abs(t)) * SPINE_PUSH * avoidance;
             }
           }
         }
@@ -448,6 +456,11 @@ export function SpacetimeField() {
       wanderer.autonomy +=
         ((wandering ? 1 : 0) - wanderer.autonomy) * AUTONOMY_LERP;
       wanderer.fade = 1 - wanderer.autonomy * (1 - smooth);
+
+      /* The position, for anything outside this canvas that needs it. The
+         `data-wander` attribute below carries the same numbers but only outside
+         production, so it cannot be the channel a shipped feature reads. */
+      publishWanderer(wanderer.x, wanderer.y);
 
       /* Development only. The wanderer is the one thing here that cannot be
          verified from a screenshot — a bright star and a photon ring are the
