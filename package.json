@@ -17,7 +17,8 @@
     "figures": "tsx scripts/figure-age-groups.ts && tsx scripts/figure-iou-device.ts && tsx scripts/figure-icons.ts && tsx scripts/figure-revenue-os.ts",
     "film:pl": "tsx scripts/film-proof-lens.ts",
     "film:melody": "tsx scripts/film-melody.ts",
-    "check": "npm run typecheck && npm run lint && npm run test"
+    "check": "npm run typecheck && npm run lint && npm run test",
+    "repos": "tsx scripts/repos.ts"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",

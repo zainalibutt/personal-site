@@ -8,6 +8,8 @@ import { jsonLd, projectGraph } from "@/lib/schema";
 import { site } from "@/lib/site";
 import { ProjectBody } from "@/components/ProjectBody";
 import { PreviewSurface } from "@/components/PreviewSurface";
+import { WorkIndex } from "@/components/WorkIndex";
+import { getWorkIndex } from "@/lib/repos";
 
 /**
  * The full page for a project — what a COLD visit renders.
@@ -100,6 +102,7 @@ export default async function ProjectPage({
 
   const { body, ...summary } = project;
   const card = projectCard(slug);
+  const index = getWorkIndex();
 
   return (
     <main id="main" className="mx-auto w-[min(64rem,calc(100%-3rem))] pb-32">
@@ -184,6 +187,28 @@ export default async function ProjectPage({
       </header>
 
       <ProjectBody source={body} />
+
+      {/* This page used to end here, and it was a dead end.
+          A cold visit to /projects/<slug> — the URL that gets pasted into an
+          application or a LinkedIn post — carried his name only in the JSON-LD,
+          had no email, no CV, and no route anywhere except back to the field.
+          A reader who arrived from outside could not tell whose work they were
+          reading or how to reach him. */}
+      <footer className="border-line text-muted mt-24 flex flex-wrap items-baseline justify-between gap-x-8 gap-y-3 border-t pt-8 font-mono text-[0.6875rem] tracking-[0.14em] uppercase">
+        <span>
+          {site.name} · {site.location}
+        </span>
+        <a
+          className="hover:text-ink transition-colors"
+          href={`mailto:${site.links.email}`}
+        >
+          {site.links.email}
+        </a>
+      </footer>
+
+      {/* Persistent here: there is no camera on this route and no map, so this
+          is the only way to the rest of the work without going home first. */}
+      <WorkIndex written={index.written} other={index.other} persistent />
     </main>
   );
 }

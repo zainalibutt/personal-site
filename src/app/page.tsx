@@ -6,8 +6,14 @@ import { ProjectBody } from "@/components/ProjectBody";
 import { ProjectField, type FieldItem } from "@/components/ProjectField";
 import { ProjectMap } from "@/components/ProjectMap";
 import { SpacetimeField } from "@/components/SpacetimeField";
+import { WorkIndex } from "@/components/WorkIndex";
+import { getWorkIndex } from "@/lib/repos";
 
 export default function Home() {
+  // Everything public, including the repositories that have no case study and
+  // therefore cannot appear in the field.
+  const index = getWorkIndex();
+
   // Case studies are rendered here, on the server, and handed to the cards.
   // They sit clipped inside each artefact so expanding one is instant and
   // needs no fetch — see docs/ARCHITECTURE.md.
@@ -28,6 +34,11 @@ export default function Home() {
           that tabbing while an artefact is open goes instrument first, then the
           artefact itself. It renders nothing until something is focused. */}
       <ProjectMap projects={items.map((item) => item.project)} />
+
+      {/* Outside the plane for the same reason as the map: a fixed element
+          inside a transformed ancestor resolves against that ancestor, so in
+          the plane the camera would carry it off screen. */}
+      <WorkIndex written={index.written} other={index.other} />
 
       {/* `data-plane` marks the surface the camera moves. Focusing an artefact
           translates and scales this whole element, so every other item keeps its
@@ -50,7 +61,8 @@ export default function Home() {
                 It is data about him, which is what the monospace is for, and it
                 gives the name something to sit against instead of floating. */}
             <p className="text-muted font-mono text-[0.625rem] tracking-[0.12em] text-balance uppercase md:text-xs md:tracking-[0.2em]">
-              {site.role} · {site.location}
+              {site.role} · {site.education.graduated} graduate ·{" "}
+              {site.location}
             </p>
             <h1 className="text-ink mt-3 text-5xl tracking-[-0.035em] text-balance md:mt-4 md:text-7xl lg:text-[6.5rem] lg:leading-[0.92]">
               {site.name}

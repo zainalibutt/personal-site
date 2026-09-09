@@ -1,0 +1,130 @@
+[
+  {
+    "name": "personal-site",
+    "description": "Personal site for zain.org.uk — depth, not distance.",
+    "url": "https://github.com/zainalibutt/personal-site",
+    "live": "https://zain.org.uk",
+    "language": "TypeScript",
+    "topics": [
+      "canvas",
+      "nextjs",
+      "portfolio",
+      "react",
+      "typescript"
+    ],
+    "stars": 0,
+    "pushed": "2026-09-09"
+  },
+  {
+    "name": "Proof-Lens",
+    "description": "Cryptographic media provenance with device signatures, RFC 3161 timestamping, and offline-verifiable evidence bundles",
+    "url": "https://github.com/zainalibutt/Proof-Lens",
+    "live": "https://proof-lens.vercel.app",
+    "language": "TypeScript",
+    "topics": [
+      "academic-project",
+      "cryptography",
+      "express",
+      "media-provenance",
+      "react-native",
+      "rfc3161",
+      "supabase",
+      "typescript"
+    ],
+    "stars": 0,
+    "pushed": "2026-09-09"
+  },
+  {
+    "name": "River",
+    "description": "Multiplayer Texas Hold'em for friend groups - PC browser + PS5 couch play.",
+    "url": "https://github.com/zainalibutt/River",
+    "language": "TypeScript",
+    "topics": [
+      "blender",
+      "game-development",
+      "multiplayer",
+      "nextjs",
+      "poker",
+      "react-three-fiber",
+      "texas-holdem",
+      "threejs",
+      "typescript",
+      "websockets"
+    ],
+    "stars": 0,
+    "pushed": "2026-09-02"
+  },
+  {
+    "name": "Replay",
+    "description": "Local-first Windows photo and video timeline organised into trips, days and moments.",
+    "url": "https://github.com/zainalibutt/Replay",
+    "language": "TypeScript",
+    "topics": [
+      "local-first",
+      "media-library",
+      "photo-management",
+      "privacy",
+      "timeline",
+      "typescript",
+      "windows"
+    ],
+    "stars": 0,
+    "pushed": "2026-08-17"
+  },
+  {
+    "name": "Melody",
+    "description": "Command-first public-company research terminal using SEC filings and delayed market data.",
+    "url": "https://github.com/zainalibutt/Melody",
+    "live": "https://melody-terminal.vercel.app",
+    "language": "TypeScript",
+    "topics": [
+      "command-interface",
+      "data-visualization",
+      "financial-data",
+      "playwright",
+      "postgresql",
+      "react",
+      "sec-edgar",
+      "typescript"
+    ],
+    "stars": 0,
+    "pushed": "2026-08-11"
+  },
+  {
+    "name": "IOU",
+    "description": "Full-stack group-trip expense and round ledger built with Expo, Express and Supabase.",
+    "url": "https://github.com/zainalibutt/IOU",
+    "live": "https://iou-lac.vercel.app",
+    "language": "TypeScript",
+    "topics": [
+      "expense-tracker",
+      "expo",
+      "express",
+      "mobile-app",
+      "postgresql",
+      "react-native",
+      "supabase",
+      "typescript"
+    ],
+    "stars": 0,
+    "pushed": "2026-08-07"
+  },
+  {
+    "name": "age-group-detection",
+    "description": "Four-class age-group classifier comparing HOG/SVM, MLP and ResNet18 pipelines.",
+    "url": "https://github.com/zainalibutt/age-group-detection",
+    "language": "Python",
+    "topics": [
+      "computer-vision",
+      "hog",
+      "image-classification",
+      "machine-learning",
+      "python",
+      "pytorch",
+      "resnet",
+      "svm"
+    ],
+    "stars": 0,
+    "pushed": "2026-08-07"
+  }
+]
