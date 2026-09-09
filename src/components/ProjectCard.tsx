@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
@@ -64,6 +64,40 @@ export function ProjectCard({
     () => router.push("/", { scroll: false }),
     [router],
   );
+
+  /**
+   * Focus follows the camera.
+   *
+   * Both ends of the move stranded it. Opening an artefact makes the caption
+   * that opened it `aria-hidden` and untabbable, so the element holding focus
+   * stops existing as far as the tab order is concerned; closing unmounts the
+   * Close button that was just activated. In both cases focus fell to `<body>`
+   * and the next Tab restarted from the skip link — the keyboard equivalent of
+   * being returned to the top of the page after every interaction.
+   *
+   * axe cannot see this: nothing is mislabelled and nothing is untabbable that
+   * should not be. It is only visible by pressing Tab after Escape.
+   */
+  const closeRef = useRef<HTMLButtonElement>(null);
+  const captionRef = useRef<HTMLAnchorElement>(null);
+  const wasFocused = useRef(false);
+
+  useEffect(() => {
+    if (focused && !wasFocused.current) {
+      closeRef.current?.focus({ preventScroll: true });
+    } else if (!focused && wasFocused.current) {
+      /* Only when it was actually stranded. Travelling from one artefact to
+         another closes this one and opens that one in the same commit, and the
+         arriving artefact has already taken focus — dragging it back here would
+         land the keyboard on the card the visitor just left. Checking for
+         `<body>` makes the two effects order-independent rather than relying on
+         which of them React happens to run first. */
+      if (document.activeElement === document.body) {
+        captionRef.current?.focus({ preventScroll: true });
+      }
+    }
+    wasFocused.current = focused;
+  }, [focused]);
 
   useEffect(() => {
     if (!focused) return;
@@ -250,6 +284,7 @@ export function ProjectCard({
 
           {focused && (
             <button
+              ref={closeRef}
               data-close
               onClick={close}
               aria-label="Close project"
@@ -264,6 +299,7 @@ export function ProjectCard({
       {/* Hidden while focused: the expanded artefact carries its own title, so
           leaving this visible renders the project twice. */}
       <Link
+        ref={captionRef}
         href={`/projects/${project.slug}`}
         scroll={false}
         prefetch
@@ -308,6 +344,13 @@ export function ProjectCard({
         <span className="caption-detail text-muted mt-1 block max-w-[42ch] text-pretty">
           {project.tagline}
         </span>
+        {/* The one line of evidence that does not wait for a click. Unlike the
+            tagline and the chips it survives into the phone layout, because a
+            springboard of six names was the one surface on this site that
+            proved nothing at all. */}
+        {project.evidence && (
+          <span className="caption-evidence">{project.evidence}</span>
+        )}
         <span className="caption-detail mt-3 flex flex-wrap gap-1.5">
           {project.stack.map((tech) => (
             <span key={tech} className="tag">

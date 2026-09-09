@@ -54,6 +54,22 @@ export const frontmatterSchema = z.object({
   repo: z.string().optional(),
   live: z.string().optional(),
   /**
+   * One measured, checkable fact about the project, shown on the card at rest.
+   *
+   * The site's strongest evidence — the numbers and the named failure modes —
+   * all lived at the bottom of a case study behind a click, so a reader doing a
+   * first pass saw six taglines and no proof of anything. This is the one line
+   * of that evidence that travels up onto the face of the card, and it is the
+   * only text the phone springboard carries besides the title.
+   *
+   * Keep it short — roughly 34 characters. It sits under an 84px icon in a
+   * two-column grid, and the fold guarantee is measured, not assumed.
+   *
+   * Optional on purpose: a project without an honest number should say nothing
+   * rather than reach for one.
+   */
+  evidence: z.string().optional(),
+  /**
    * Always present after parsing, so cards never lack loading primitives.
    * `prefault` (not `default`) so the inner field defaults are applied — zod
    * types `default` against the parsed output, which would demand every key.

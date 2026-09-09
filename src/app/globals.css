@@ -303,14 +303,20 @@
      lower bound stays well above the 44px minimum tap target — the layout is
      allowed to shrink, never to become hard to hit. `dvh` so an address bar
      appearing does not resize the icons. */
+  /* Retuned when the caption gained its evidence line. Six tiles each grew by
+     a line of text, which is 4/6 within the fold on a 390x844 phone — so the
+     icon, the row gap and the caption padding each give back a little. The
+     lower bounds are unchanged and still clear the 44px tap target; it is the
+     comfortable end that yields, which is the same trade this block already
+     makes for a 667px screen. */
   .artefact-slot {
     aspect-ratio: 1 / 1;
-    max-width: clamp(3.25rem, 9dvh, 5.25rem);
+    max-width: clamp(3rem, 7.8dvh, 5.25rem);
     margin-inline: auto;
   }
 
   .project-field {
-    row-gap: clamp(0.7rem, 2.3dvh, 1.75rem);
+    row-gap: clamp(0.55rem, 1.7dvh, 1.75rem);
   }
 
   /* The header and the trailing space compete with the icons for the same
@@ -321,14 +327,14 @@
   }
 
   [data-plane] > header {
-    padding-top: clamp(1rem, 3.2dvh, 2rem);
-    padding-bottom: clamp(1rem, 3.2dvh, 2rem);
+    padding-top: clamp(0.75rem, 3.2dvh, 2rem);
+    padding-bottom: clamp(0.75rem, 3.2dvh, 2rem);
   }
 
   /* The tile is the obvious target and is comfortably large. This is the
      labelled one, and 16px of text is not a tap target. */
   .artefact-cell > article > a {
-    padding-block: clamp(0.25rem, 1.2dvh, 0.625rem);
+    padding-block: clamp(0.2rem, 0.8dvh, 0.5rem);
   }
 
   /* The box is the tile: no page-coloured fill behind an icon that already has
@@ -376,6 +382,13 @@
     line-height: 1.25;
     text-wrap: balance;
   }
+
+  /* The phone override for `.caption-evidence` is NOT here. It is a plain class
+     like `.section-label`, so it has to be declared after the base rule it
+     overrides — see the note beside that one. Putting it in this block, which
+     comes earlier in the file, silently lost to the base rule: the line stayed
+     at 11px, wrapped to two lines on the narrowest tile, and took the
+     springboard 43px past the fold. */
 
   .artefact-cell > article > a {
     margin-top: 0.625rem;
@@ -497,6 +510,41 @@ body::after {
   letter-spacing: 0.1em;
   color: var(--muted);
   opacity: 0.7;
+}
+
+/* One measured fact, on the face of the card.
+
+   Monospace because it is data — a number, a ratio, a mechanism — and the type
+   rule reserves that face for exactly this. Carrying a little of the accent so
+   it separates from the tagline above it without becoming a second heading:
+   the tagline is the claim, this is the receipt. */
+.caption-evidence {
+  display: block;
+  margin-top: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.6875rem;
+  line-height: 1.4;
+  letter-spacing: 0.04em;
+  color: color-mix(in oklab, var(--accent) 72%, var(--muted));
+}
+
+/* The phone. Declared here rather than in the springboard block above, because
+   this is a plain class and source order decides it — the same trap documented
+   beside `.section-label`.
+
+   Sized against viewport height like everything else in that block, with an 8px
+   floor: below that it stops being readable and becomes texture, which would
+   defeat the point of carrying it onto the tile at all. One line is the budget
+   — the strings are written short enough to hold it at 360px. */
+@media (max-width: 767px) {
+  .caption-evidence {
+    margin-top: clamp(0.1rem, 0.3dvh, 0.2rem);
+    text-align: center;
+    font-size: clamp(0.5rem, 1.35dvh, 0.5625rem);
+    line-height: 1.25;
+    letter-spacing: 0.01em;
+    text-wrap: balance;
+  }
 }
 
 /* ---------------------------------------------------------------------------
