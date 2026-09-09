@@ -59,6 +59,23 @@ export function About() {
           </span>{" "}
           I build product end to end — mobile, web, and the backend underneath.
         </p>
+        {/* Second, not third. These four facts — level, classification, work
+            authorisation, and the role being asked for — are what a recruiter
+            screening a graduate pipeline actually acts on, and in the previous
+            order they fell below the fold at 1366 while the paragraph above
+            them was severed mid-phrase at the fold edge: "...reported roughly
+            60% higher operational". The noun never arrived, and the only client
+            number on the screen was the half of a sentence that got cut.
+
+            Swapping them puts the decisive four lines above the fold and moves
+            the descriptive paragraph to where being cut costs nothing. */}
+        <p>
+          {site.education.degree}, {site.education.classification},{" "}
+          {site.education.institution}. Final-year project{" "}
+          {site.education.finalYearProject}%. {site.location}, with{" "}
+          {site.rightToWork} — looking for {site.seeking}, and taking freelance
+          work now.
+        </p>
         <p>
           Recent work: a tool that proves a file has not been altered since it
           was captured, a keyboard-first terminal for reading company filings
@@ -68,13 +85,6 @@ export function About() {
           reported roughly 60% higher operational efficiency and kept me on for
           support, and a booking site for a private tutor who reported two- to
           threefold growth in enquiries.
-        </p>
-        <p>
-          {site.education.degree}, {site.education.classification},{" "}
-          {site.education.institution}. Final-year project{" "}
-          {site.education.finalYearProject}%. {site.location}, with{" "}
-          {site.rightToWork} — looking for {site.seeking}, and taking freelance
-          work now.
         </p>
       </div>
 

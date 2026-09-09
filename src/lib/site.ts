@@ -20,6 +20,11 @@ export const site = {
     classification: "Upper Second-Class Honours",
     institution: "City St George's, University of London",
     finalYearProject: 83,
+    /** Rendered in the header eyebrow. The level is the one fact a recruiter
+     *  screening a graduate pipeline needs in the first two seconds, and a job
+     *  title alone does not carry it — a cold reader took "full-stack product
+     *  engineer" for two years' experience. */
+    graduated: 2026,
   },
   /** A screening gate for every UK employer, and cheaper to answer than to be
    *  asked. Stated on the CV and the GitHub README already. */
