@@ -25,8 +25,8 @@ export function About() {
           otherwise link to is already in the page header. */}
       <p className="text-muted mx-auto max-w-[34ch] text-[0.9375rem] leading-relaxed text-pretty md:hidden">
         I build product end to end — mobile, web, and the backend underneath.
-        Computer Science graduate in {site.location}, freelancing now, looking
-        for a graduate or product engineering role.
+        Computer Science graduate, 2:1, {site.address.locality}. Unrestricted UK
+        right to work, looking for {site.seeking}.
       </p>
 
       {/* Draft A of docs/ABOUT_DRAFTS.md, which Zain picked: plain register,
@@ -39,26 +39,42 @@ export function About() {
           true — they are read off the CV — but the wording has not had a pass
           from Zain himself. */}
       <div className="text-muted space-y-4 text-pretty max-md:hidden">
-        {/* `site.thesis` finally has a home. It is Zain's own sentence and was
-            written as "the one sentence a visitor should leave with", then sat
-            unrendered for two days while the thesis moved into the case
-            studies. It belongs here: the claim first, its scope immediately
-            after, and the evidence for both in the paragraph below. */}
+        {/* The opening span used to be `site.thesis` — "I'm incredibly
+            adaptable, especially with today's tools." It was retired, and the
+            reasoning is worth keeping: it was the only unfalsifiable sentence
+            on a site whose whole argument is that a claim should be checkable,
+            the only intensifier in ~4,500 words, and in 2026 "today's tools"
+            reads to an engineer as "I use AI" — which is the suspicion the
+            retrospectives below exist to answer, handed to him for free in the
+            brightest ink on the page.
+
+            What replaces it is the through-line the work already has, in the
+            words the flagship already uses. It does the job the thesis was
+            meant to do and, unlike the thesis, the six artefacts either side of
+            this column are the evidence for it. */}
         <p>
-          <span className="text-ink">{site.thesis}</span> I build product end to
-          end — mobile, web, and the backend underneath.
+          <span className="text-ink">
+            Everything below asks the same question: how do you know a record is
+            true?
+          </span>{" "}
+          I build product end to end — mobile, web, and the backend underneath.
         </p>
         <p>
           Recent work: a tool that proves a file has not been altered since it
           was captured, a keyboard-first terminal for reading company filings
           from primary sources, and a ledger that settles group expenses without
           a spreadsheet. Alongside those, freelance builds for paying clients —
-          an operations platform for a cross-border logistics team, and a
-          booking site for a private tutor.
+          an operations platform for a cross-border logistics team, whose client
+          reported roughly 60% higher operational efficiency and kept me on for
+          support, and a booking site for a private tutor who reported two- to
+          threefold growth in enquiries.
         </p>
         <p>
-          Computer Science graduate, {site.location}. Open to roles and
-          freelance work.
+          {site.education.degree}, {site.education.classification},{" "}
+          {site.education.institution}. Final-year project{" "}
+          {site.education.finalYearProject}%. {site.location}, with{" "}
+          {site.rightToWork} — looking for {site.seeking}, and taking freelance
+          work now.
         </p>
       </div>
 

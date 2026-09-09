@@ -51,6 +51,13 @@ export function identityGraph() {
           addressCountry: site.address.countryCode,
         },
         sameAs: [site.links.github, site.links.linkedin],
+        /* The degree, in the form a machine can read. It is on the CV and the
+           GitHub profile and was on neither the page nor this graph, so the one
+           surface a search result is assembled from could not state it. */
+        alumniOf: {
+          "@type": "CollegeOrUniversity",
+          name: site.education.institution,
+        },
         knowsAbout: knowsAbout(),
       },
       {

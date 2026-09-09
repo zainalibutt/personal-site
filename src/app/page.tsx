@@ -113,6 +113,16 @@ export default function Home() {
           <span>
             {site.name} · {site.location}
           </span>
+          {/* The one link here that is not already in the header, and the only
+              place the site points at its own source. A reader who has scrolled
+              the whole field is the reader for whom "you can read how this was
+              built" is worth anything. */}
+          <a
+            className="hover:text-ink transition-colors"
+            href={site.links.source}
+          >
+            This site&rsquo;s source
+          </a>
           {/* The address written out, not a third "GitHub · LinkedIn" pair.
               A sign-off, which is what a footer is for — the navigation is
               settled at the top of the page and does not need restating at the
