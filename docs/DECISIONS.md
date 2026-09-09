@@ -910,23 +910,118 @@ evaluates it and this stays valid if the policy is ever tightened past the
 
 ---
 
+## 31 · The entry screen stops withholding what the CV already publishes
+
+**Decided:** 2026-09-09
+
+`site.thesis` — "I'm incredibly adaptable, especially with today's tools" —
+opened About in the brightest ink on the page. It is retired, and the key is
+gone from `site.ts` rather than left unrendered.
+
+Three reasons, and the first is the one that settles it. **It was the only
+unfalsifiable sentence on a site whose entire argument is that a claim should be
+checkable.** Second, it is the only intensifier in roughly 4,500 words of
+otherwise intensifier-free copy, which is itself evidence it did not belong.
+Third, in 2026 "especially with today's tools" reads to an engineer as "I use
+AI" — the exact suspicion the retrospectives exist to answer, handed over for
+free, one scroll above six repositories with nine to thirty commits each.
+
+What replaces it is the through-line the work already has, in the words the
+flagship already uses: _how do you know a record is true?_ Unlike a thesis, the
+six artefacts either side of that column are its evidence.
+
+**The same pass added the facts the site was withholding from itself.** The
+degree and classification, the final-year mark, the right to work, the role
+being sought, and the outcomes the freelance clients reported were all published
+on the CV and the GitHub profile and appeared nowhere here — so the two surfaces
+this one links to both out-argued it. They now live in `site.education`,
+`site.rightToWork` and `site.seeking`, read once and rendered in About and in
+`alumniOf` on the `Person` node, so the claim cannot drift between them.
+
+**Do not reinstate a thesis on the entry screen.** Decision 16 settled that
+argument the first time, for the reason that still holds: a thesis there has to
+be taken on trust.
+
+---
+
+## 32 · One measured fact on the face of every card
+
+**Decided:** 2026-09-09
+
+An optional `evidence` string in frontmatter, rendered under the tagline at rest
+and carried onto the phone tile.
+
+The strongest thing on this site is the "What I'd change" writing, and none of
+it was reachable in a first pass: no retrospective content appears above the
+fold at any viewport, and the deepest any of them reaches is "The problem".
+Reaching Replay's 13.2s→27ms cost about six interactions. The springboard was
+worse — six names and six glyphs, proving nothing at all.
+
+So exactly one line of that evidence travels up onto the card: `124/124
+anchored`, `13.2s → 27ms`, `Row-locked writes`, `Rules in DB triggers`,
+`7 tags → 5 metrics`, `+8 pts, 1000× cost`.
+
+**Roughly twenty characters, and optional.** Twenty because it sits under an
+84px icon in a two-column grid and a second line breaks the fold — measured, not
+assumed. Optional because a project without an honest number should say nothing
+rather than reach for one.
+
+**Monospace, because it is data.** The type rule reserves that face for exactly
+this, and the tagline is the claim while this is the receipt.
+
+A test-count was considered for Melody and rejected: the repository's README
+presents a figure that excludes its end-to-end tests, and one workspace ships a
+test script that prints "No API tests yet". On this site a card that invites a
+check it cannot survive is worse than no card.
+
+---
+
+## 33 · A cold visit names the project before it shows it
+
+**Decided:** 2026-09-09
+
+`/projects/<slug>` opened with the preview filling the viewport and the `<h1>`
+below the fold. For Proof-Lens the preview's poster frame was the app's **sign-in
+screen**, so the URL most likely to be pasted into an application rendered as a
+login box belonging to nothing the reader could name — and the same frame was the
+card on the home page at every width above 768px, and the OpenGraph image that
+appears in LinkedIn and WhatsApp. One asset, wrong in three places.
+
+The title and tagline now come first, the preview follows, and the poster is the
+frame where the verification result is on screen. The alt text had described
+that frame all along.
+
+**The cold hero is also the LCP candidate**, so it loads eagerly and takes a
+`sizes` string for the 64rem column it actually occupies. The default describes
+a card on a flank, which had the browser fetching a 640w file for a box twice
+that wide.
+
+**Focus follows the camera, too.** Opening an artefact makes the caption that
+opened it `aria-hidden` and untabbable; closing unmounts the Close button that
+was just activated. Both ends dropped focus to `<body>`, so the next Tab
+restarted from the skip link. axe cannot see this — nothing is mislabelled — and
+it is only visible by pressing Tab after Escape.
+
+---
+
 ## Recurring hazards
 
 Not decisions, but they have each bitten more than once and are cheap to
 forget.
 
-| Hazard                                                                   | Rule                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| A frozen document timeline strands `fill` animations on frame 0          | Every animation gets a timer guard as well as its `finished` promise. Four separate animations so far.                                                                                                                                                                                                                                                                                                                                           |
-| Measuring through a live transform drifts further out each cycle         | Capture the resting rect once; never re-measure through the camera.                                                                                                                                                                                                                                                                                                                                                                              |
-| An intercepted route rendering `null` unmounts the whole field           | Render an inert marker instead.                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| `overflow: hidden` creates a scroll container that swallows wheel events | Use `overflow: clip` when only clipping is wanted.                                                                                                                                                                                                                                                                                                                                                                                               |
-| Displacement exceeding a vertex's distance to a mass folds the sheet     | Cap travel below half the distance.                                                                                                                                                                                                                                                                                                                                                                                                              |
-| An unquoted `: ` inside MDX frontmatter empties the whole site           | YAML reads it as a new key, zod rejects the project, and _every_ card disappears — the page renders with no `article` at all. `npm run check` catches it; a screenshot alone looks like a layout bug. Quote the value or reword.                                                                                                                                                                                                                 |
-| Two flank columns stack in flank order, not source order                 | On a phone the DOM was left-flank / spine / right-flank, which buried a flagship below About. The flanks are `display: contents` below `lg` so `order` can re-sequence them; `npm run shoot --w 390` asserts it.                                                                                                                                                                                                                                 |
-| A module-level `let` read twice in a compiled hook is **one** read       | The React Compiler is enabled. `const from = active; ...; active = next;` left `from` holding `next` — a `const` observably changing value between two statements. The camera thought every open was a travel starting from its own destination. Put mutable module state behind imported accessors, and order every read before any write.                                                                                                      |
-| `prefers-reduced-motion` makes every element transition for 0.01ms       | The global override sets `transition-duration: 0.01ms !important` on `*` — non-zero. Clearing a transform therefore starts a real transition, and a transition reports its start value for the rest of the tick, so anything measured next is measured through the transform that was supposedly just removed. Suppress the transition and flush the change before restoring it.                                                                 |
-| Unlayered CSS outranks every Tailwind utility                            | Tailwind v4 puts its utilities in `@layer utilities`, and an unlayered rule beats every layer regardless of specificity. A `display: flex` appended to `globals.css` silently defeated the `lg:hidden` sitting next to it in the markup, and the phone-only nav rendered on desktop as well. Put component CSS in `@layer components`.                                                                                                           |
-| Replacing a file in `public/` keeps serving the old bytes                | Next 16 dev caches optimised images in `.next/dev/cache/images`, keyed by URL and width only — and per format, so `curl` returns the new PNG while the browser gets a stale WebP. Clear it after any asset swap.                                                                                                                                                                                                                                 |
-| Declaring `openGraph` defeats the `opengraph-image` file conventions     | A child route's `openGraph` discards the file-based image it would otherwise inherit, so the route ships with **no** card rather than a generic one; and any route declaring the block loses the `opengraph-image.alt.txt` beside its own image, so the card ships with no alt text. Both fail in the worst place — the page is perfect and only the link preview is wrong. Name the image, and its alt, in every route that declares the block. |
-| `new URL` parses `javascript:` and `tel:`, with origin `"null"`          | An origin comparison alone does not identify an outbound link: every non-web scheme fails to match this site's origin and is classified as leaving it. Check the protocol is `http:` or `https:` first.                                                                                                                                                                                                                                          |
+| Hazard                                                                          | Rule                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
+| ------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A frozen document timeline strands `fill` animations on frame 0                 | Every animation gets a timer guard as well as its `finished` promise. Four separate animations so far.                                                                                                                                                                                                                                                                                                                                                                      |
+| Measuring through a live transform drifts further out each cycle                | Capture the resting rect once; never re-measure through the camera.                                                                                                                                                                                                                                                                                                                                                                                                         |
+| An intercepted route rendering `null` unmounts the whole field                  | Render an inert marker instead.                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `overflow: hidden` creates a scroll container that swallows wheel events        | Use `overflow: clip` when only clipping is wanted.                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| Displacement exceeding a vertex's distance to a mass folds the sheet            | Cap travel below half the distance.                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| An unquoted `: ` inside MDX frontmatter empties the whole site                  | YAML reads it as a new key, zod rejects the project, and _every_ card disappears — the page renders with no `article` at all. `npm run check` catches it; a screenshot alone looks like a layout bug. Quote the value or reword.                                                                                                                                                                                                                                            |
+| Two flank columns stack in flank order, not source order                        | On a phone the DOM was left-flank / spine / right-flank, which buried a flagship below About. The flanks are `display: contents` below `lg` so `order` can re-sequence them; `npm run shoot --w 390` asserts it.                                                                                                                                                                                                                                                            |
+| A module-level `let` read twice in a compiled hook is **one** read              | The React Compiler is enabled. `const from = active; ...; active = next;` left `from` holding `next` — a `const` observably changing value between two statements. The camera thought every open was a travel starting from its own destination. Put mutable module state behind imported accessors, and order every read before any write.                                                                                                                                 |
+| `prefers-reduced-motion` makes every element transition for 0.01ms              | The global override sets `transition-duration: 0.01ms !important` on `*` — non-zero. Clearing a transform therefore starts a real transition, and a transition reports its start value for the rest of the tick, so anything measured next is measured through the transform that was supposedly just removed. Suppress the transition and flush the change before restoring it.                                                                                            |
+| Unlayered CSS outranks every Tailwind utility                                   | Tailwind v4 puts its utilities in `@layer utilities`, and an unlayered rule beats every layer regardless of specificity. A `display: flex` appended to `globals.css` silently defeated the `lg:hidden` sitting next to it in the markup, and the phone-only nav rendered on desktop as well. Put component CSS in `@layer components`.                                                                                                                                      |
+| Replacing a file in `public/` keeps serving the old bytes                       | Next 16 dev caches optimised images in `.next/dev/cache/images`, keyed by URL and width only — and per format, so `curl` returns the new PNG while the browser gets a stale WebP. Clear it after any asset swap.                                                                                                                                                                                                                                                            |
+| Declaring `openGraph` defeats the `opengraph-image` file conventions            | A child route's `openGraph` discards the file-based image it would otherwise inherit, so the route ships with **no** card rather than a generic one; and any route declaring the block loses the `opengraph-image.alt.txt` beside its own image, so the card ships with no alt text. Both fail in the worst place — the page is perfect and only the link preview is wrong. Name the image, and its alt, in every route that declares the block.                            |
+| A plain class declared inside an earlier media block loses to its own base rule | Source order decides between equal specificities, and a `@media (max-width: 767px)` block sitting **above** the base rule does not win just because it is a media query. `.caption-evidence` was overridden this way: the phone kept the desktop 11px, the line wrapped to two, and the springboard went 43px past the fold while the CSS looked correct. `globals.css` already documents this for `.section-label` — the override must come _after_ the rule it overrides. |
+| `new URL` parses `javascript:` and `tel:`, with origin `"null"`                 | An origin comparison alone does not identify an outbound link: every non-web scheme fails to match this site's origin and is classified as leaving it. Check the protocol is `http:` or `https:` first.                                                                                                                                                                                                                                                                     |

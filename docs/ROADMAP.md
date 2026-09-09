@@ -109,7 +109,15 @@ opens here should do the left column first and then ask, rather than stalling.
   `npm run figures` from numbers read off the repository. A stock photograph of
   faces was the obvious fallback and the wrong one.
 - ✓ **About copy** is Draft A, the register he picked, with the freelance work
-  made specific from his CV, and `site.thesis` — his own sentence — opening it.
+  made specific from his CV — now including the outcomes the clients reported,
+  the degree and classification, the final-year mark and the right to work, all
+  of which the CV published and the site did not.
+- ✓ **The opening claim is the work's own question**, not a self-assessment.
+  `site.thesis` — "I'm incredibly adaptable, especially with today's tools" —
+  opened About for a while and has been retired: it was the only unfalsifiable
+  sentence on a site whose argument is that a claim should be checkable, and
+  "today's tools" reads to an engineer as "I use AI". The key is gone from
+  `site.ts` rather than left unrendered.
 - ✓ **Thesis in the case studies, not on the entry screen** — his call. Proof-Lens
   and Melody each open by naming the question; age-group-detection opens by
   saying plainly that it is a demonstration, not a product.
