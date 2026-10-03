@@ -1060,6 +1060,53 @@ lived with first.
 
 ---
 
+## 35 · River enters second, and says what it is not yet
+
+**Decided:** 2026-10-03 · **Zain's call on the order**
+
+The seventh artefact, and a flagship behind Proof-Lens and ahead of Melody. It is
+the largest and most current work on the page, and it is live at playriver.uk,
+but it is an early v1 and Proof-Lens is complete. **River moves to first when it
+is finished**, meaning when the 3D venues reach the live table.
+
+**The card shows a development render, and says so.** The poster is the Rooftop
+in River's visual-review harness, eight black-tie characters at dusk, and the
+live game does not yet look like that: what plays today is the 2D table. So the
+alt text names it a development render, the opening paragraph of the case study
+says the same thing, and the hover video is the real 2D table, cut from a
+recording of an actual hand. An image that passes for the live product is the
+thing this site argues against; one that is labelled as the work in progress is
+just the work in progress.
+
+**The poster keeps its harness label.** The "Visual Review" caption and the dev
+badges stay in the frame rather than being painted out, for the same reason the
+Revenue OS card was cropped and not edited.
+
+**The icon is River's own mark, re-rendered rather than redrawn.** The R only
+existed as a CSS card back. It was rendered in Chromium from River's own values
+(Fraunces italic, the wine ground and its engraved waves, the brass ring) at
+1254px, and enters `figure-icons.ts` as a supplied logo like the other four. The
+card's outer brass frame was dropped, because the springboard rounds every icon
+and would have clipped its corners.
+
+**The repository is private and the page says so.** The card carries a live
+link and no source link. The work index is a snapshot of public repositories,
+so River does not appear there. The snapshot had been taken while River was
+still public, so until it was refreshed every project page listed a GitHub link
+that now returns a 404.
+
+**A seventh artefact costs the phone a row.** Two columns of seven is four rows,
+and the fourth landed 12px past the fold on a 390x844 phone. The tile went from
+7.8dvh to 7.2dvh, 66px to 61px, which clears it. A 375x667 phone now scrolls
+about one row, and no tile size that is still comfortable to hit wins back a
+whole row, so that is left as a layout question rather than hidden by a smaller
+number.
+
+**No em dashes in anything River adds.** The rest of the site keeps them until a
+separate pass removes them everywhere at once.
+
+---
+
 ## Recurring hazards
 
 Not decisions, but they have each bitten more than once and are cheap to

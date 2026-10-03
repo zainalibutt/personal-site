@@ -1,0 +1,113 @@
+---
+title: River
+tagline: "Texas Hold'em for friends, where nobody has to trust the dealer."
+evidence: Commit-reveal shuffles
+year: 2026
+role: Design and engineering
+stack: [TypeScript, Next.js, WebSockets, Supabase, Python, Blender]
+flagship: true
+order: 2
+live: https://playriver.uk
+preview:
+  type: video
+  src: /projects/river/preview.mp4
+  poster: /projects/river/preview.webp
+  alt: "A development render of River's Rooftop venue at dusk, eight black-tie players around the table. On hover, a hand plays out on the live 2D table at playriver.uk: bets go in around a full table and a raise is set on the arc."
+  aspectRatio: 16 / 9
+  dominantColour: "#4a3840"
+draft: false
+---
+
+A question this site keeps returning to, this time at a card table: how do you
+know a record is true? Proof-Lens asks it of a file, Melody of a filing, Revenue
+OS of a sent email. River asks it of a shuffle, and of every chip that moves.
+
+**This is an early v1, live since late September.** What you can play today is
+the 2D table. The 3D venues, built in Blender, are in development, and the
+render above is one of them. The repository is private.
+
+## The problem
+
+Online poker is either a mobile casino engineered to sell chips, or a console
+title that wants a full evening, a headset and a lobby queue. Neither lets a
+group of friends open one link and be dealt into the same hand.
+
+And every online card game asks for the same leap of faith: that the server
+shuffled honestly. You never see the deck. You are told it was random.
+
+## The approach
+
+The server owns everything, and proves what it can.
+
+- **The rules are a pure engine.** Every rule of Texas Hold'em lives in one
+  package with no network, no database and no clock. It is the most heavily
+  tested code in the project, part of 909 tests that run on every push against
+  Node 22 and 24.
+- **The server owns every chip.** Clients send intentions and the server
+  decides. Chips move only through an append-only ledger, so a balance is the
+  sum of its history rather than a number someone can overwrite.
+- **Shuffles are committed before the deal.** Each hand starts from a fresh
+  32-byte server seed. Its hash is published before any player's seed is known,
+  the deck is drawn from all of them together, and the seed is revealed after
+  the hand settles. Any player can check that the deck they were dealt was the
+  one promised.
+- **No real money, by construction.** Chips cannot be bought or cashed out, and
+  no code path may create a purchase route. That keeps River out of a regulatory
+  category it has no business being in.
+
+## The bots
+
+Empty seats fill with bots, so a group can always get a game. They have
+ordinary names, and nothing at the table says which is strong.
+
+A bot sees only what its seat could legally know. It never sees another
+player's cards or the cards still to come, and the server turns every decision
+into a legal move. Those rules came first, before any attempt to make the bots
+good.
+
+The first bots were rule-based, and lost heads-up to every test style by 76 to
+101 big blinds per 100 hands. Each version since has been measured rather than
+judged by eye. The current champion solves every two-player river from both
+players' ranges, then bends that solution towards what each opponent tends to
+do. Across twelve fresh tables it beat the previous version by 24.5 big blinds
+per 100 hands. It is also measured against a worst-case opponent that knows
+exactly how it plays, and against Slumbot, a strong public heads-up bot, where
+it comes out close to even.
+
+## How it's built
+
+River is also an experiment in how far one developer gets by delegating hard.
+Four AI models work in one repository: Claude on design and review, Codex on
+integration, DeepSeek on bounded engine modules, Fable on visual judgement. I
+set the rules they work within, review what they produce, and make the calls.
+The record of that, including what went wrong, is kept beside the code.
+
+## What was hard
+
+Discovering that "provably fair" was a claim the first version could not back.
+
+The original shuffle drew every hand in a room from one seed, chosen when the
+room was created, using a generator with about four billion possible states. A
+deck of 52 cards has far more orderings than that, so most hands could never be
+dealt at all. The commitment proved the server had not changed its mind. It
+proved nothing about how the seed was chosen. The rule that came out of it is in
+the decision log as _provably fair, or do not claim it_.
+
+The other hard part was the characters. More than thirty delegated passes in
+Blender took the first one from a stock suit to a tailored black-tie figure, but
+none produced a seated poker pose that held up. So that work came back to my
+hands. The models still assist, but a character's pose and fit are now made by
+hand. The venues themselves stay as code: geometry, light, cameras and props all
+live in a Python pipeline, and building is the only way a venue comes into
+existence.
+
+## What I'd change
+
+The bots' next step is value networks. No bot can solve a whole hand while it is
+being played, so the champion solves the river exactly and plays the earlier
+streets on reads. A network trained in PyTorch on millions of solved spots would
+let it solve the flop and turn as well, which is where the worst-case opponent
+still wins most.
+
+And the 3D venues need to reach the live table. Until they do, the strongest
+visual work in River is something players cannot yet see.

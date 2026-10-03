@@ -309,9 +309,14 @@
      lower bounds are unchanged and still clear the 44px tap target; it is the
      comfortable end that yields, which is the same trade this block already
      makes for a 667px screen. */
+  /* Retuned again for the seventh artefact. River made a fourth row of tiles,
+     12px past the fold on a 390x844 phone; 7.2dvh takes the tile from 66px to
+     61px and clears it with 14px to spare. A 375x667 phone now scrolls about
+     one row: no tile size that stays a comfortable tap target recovers a whole
+     row, so that one needs a layout decision rather than a smaller number. */
   .artefact-slot {
     aspect-ratio: 1 / 1;
-    max-width: clamp(3rem, 7.8dvh, 5.25rem);
+    max-width: clamp(3rem, 7.2dvh, 5.25rem);
     margin-inline: auto;
   }
 

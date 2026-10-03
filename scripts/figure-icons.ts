@@ -40,6 +40,7 @@ const SUPPLIED: Record<string, string> = {
   melody: "melody.png",
   replay: "replay.png",
   iou: "iou.png",
+  river: "river.png",
 };
 
 /** What the springboard actually renders at, doubled for density. */
