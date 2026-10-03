@@ -11,7 +11,7 @@ repo: https://github.com/zainalibutt/Replay
 preview:
   type: image
   poster: /projects/replay/hero.png
-  alt: Replay — "The shape of your time.", with a year scrubber marking the months a trip falls in
+  alt: 'Replay: "The shape of your time.", with a year scrubber marking the months a trip falls in'
   aspectRatio: 16 / 10
   dominantColour: "#0d1018"
 draft: false
@@ -20,7 +20,7 @@ draft: false
 ## The problem
 
 A camera roll is chronological and nothing else. The structure you actually
-remember — the trip, the day, the afternoon something happened — exists in your
+remember (the trip, the day, the afternoon something happened) exists in your
 head and nowhere in the file system.
 
 ## The approach
@@ -29,7 +29,7 @@ Replay reads a photo and video library on Windows and reconstructs that
 structure locally. Nothing is uploaded; the library never leaves the machine.
 
 - Clusters captures into trips, days and moments from time and location.
-- Local-first by design — no account, no sync, no cloud dependency.
+- Local-first by design: no account, no sync, no cloud dependency.
 
 ## What was hard
 
@@ -45,7 +45,7 @@ fell apart on a sparse one.
 **The database call is synchronous, and that is not a theoretical problem.**
 `node:sqlite`'s `DatabaseSync` blocks the whole event loop for every other
 request while a query runs. Before I added the pairing index, the Live Photo
-subquery took **13.2 seconds** against 2,370 assets — while the client polled it
+subquery took **13.2 seconds** against 2,370 assets, while the client polled it
 every 2.5 seconds. Splitting the reads and adding that index took the library
 endpoint to about **27ms**, and a timeline page to **14–79ms**.
 
@@ -53,7 +53,7 @@ endpoint to about **27ms**, and a timeline page to **14–79ms**.
 read-then-write with no version check and no transaction, so two overlapping
 edits silently lose one. And the recursive file walk has no error handling and
 no depth limit, while the source-root check only requires a path of three
-characters — register something too broad and a single permission-denied
+characters. Register something too broad and a single permission-denied
 subdirectory throws away the entire scan with no partial progress kept.
 
 **The change that matters is neither of those.** It is the acceptance suite the
@@ -67,6 +67,6 @@ under 250ms has never been verified, and the README says so.
 
 **What I would reverse** is the first attempt at derivation: two environment
 flags gating eager thumbnailing, which the dev script never set. The indexer
-worked perfectly and the app showed almost nothing — 2,076 of 2,375 assets had no
-preview — for as long as that went unnoticed. Derivation is now a second job type
+worked perfectly and the app showed almost nothing (2,076 of 2,375 assets had no
+preview) for as long as that went unnoticed. Derivation is now a second job type
 competing in the same poll loop, prioritised over scans in SQL.

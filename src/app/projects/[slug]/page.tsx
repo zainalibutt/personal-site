@@ -57,8 +57,8 @@ export async function generateMetadata({
           width: 1200,
           height: 630,
           alt: card
-            ? `${project.title} — ${project.tagline}`
-            : `${site.name} — ${site.role}`,
+            ? `${project.title}: ${project.tagline}`
+            : `${site.name} | ${site.role}`,
         },
       ],
     },

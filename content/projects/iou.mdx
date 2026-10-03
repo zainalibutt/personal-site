@@ -12,7 +12,7 @@ live: https://iou-lac.vercel.app
 preview:
   type: image
   poster: /projects/iou/hero.png
-  alt: IOU review screen — a £66 food bill split four ways with service charge
+  alt: "IOU review screen: a £66 food bill split four ways with service charge"
   aspectRatio: 4 / 3
   dominantColour: "#0b1226"
 draft: false
@@ -29,7 +29,7 @@ to be the person chasing four friends for £11.
 A shared ledger for trips and rounds, with the settlement maths done
 continuously rather than at the end.
 
-- Full stack across mobile and backend — Expo client, Express API, Supabase.
+- Full stack across mobile and backend: Expo client, Express API, Supabase.
 - Rounds modelled as first-class objects, not just another expense category.
 
 ## What was hard
@@ -38,11 +38,11 @@ Bills and rounds are two different financial models, not two icons on one form.
 A bill settles real money and feeds the settlement maths; a round never touches
 that ledger and only ever produces a social nudge. Every other splitting app
 collapses the two. Doing that would mean either overstating what people owe or
-diluting what a bill means — a round is a social contract with fuzzy fairness,
+diluting what a bill means. A round is a social contract with fuzzy fairness,
 not a debt.
 
 The other half was currency. Every row stores its original amount, its
-base-currency amount, and the rate that converted them, locked at creation —
+base-currency amount, and the rate that converted them, locked at creation,
 because a trip runs for a week and rates move daily, and re-deriving on read
 would let a Lisbon bill from day one quietly reprice itself by day seven.
 
@@ -52,8 +52,8 @@ would let a Lisbon bill from day one quietly reprice itself by day seven.
     judgements, the identifiers and the numbers are his. */}
 
 **The blanket claim I nearly published here was wrong, so here is the narrow
-one.** Every mutation that changes shared state — claiming a profile, completing
-one, soft-deleting or restoring a bill — is a Postgres `SECURITY DEFINER`
+one.** Every mutation that changes shared state (claiming a profile, completing
+one, soft-deleting or restoring a bill) is a Postgres `SECURITY DEFINER`
 function that opens with `SELECT ... FOR UPDATE` on the target row. That is a
 deliberate lock, not the default; the usual shape is a client-side `update()`
 straight from the Supabase client. Two people tapping "claim" on the same
@@ -61,7 +61,7 @@ profile within a second is not hypothetical in a five-person group chat.
 
 **The gap is the one endpoint where it mattered most.** Trip finalisation reads
 the trip status, computes settlements, deletes and re-inserts them, then flips
-the trip to locked — none of it in a transaction or behind a row lock, and the
+the trip to locked. None of it is in a transaction or behind a row lock, and the
 settlements table has no unique constraint on the member pair. A double-tap on
 "End trip" passes the status check twice and writes duplicate settlement rows on
 the one screen where the numbers are meant to be final.
@@ -72,7 +72,7 @@ change rather than the easy one because it closes the distance between what this
 codebase's own pattern says finalisation should look like and what it actually
 does. The easy change would be pagination.
 
-**Then the unglamorous three.** Nothing paginates — every bill, round and message
+**Then the unglamorous three.** Nothing paginates: every bill, round and message
 for a trip loads in full on every open and after every mutation. FX conversion is
 a single uncached external call with no way to enter a rate by hand, so a cold
 start at the provider blocks every non-base-currency bill outright. And there

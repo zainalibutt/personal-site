@@ -37,8 +37,8 @@ const data = IBM_Plex_Mono({
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
-    default: `${site.name} — ${site.role}`,
-    template: `%s — ${site.name}`,
+    default: `${site.name} | ${site.role}`,
+    template: `%s | ${site.name}`,
   },
   description: site.description,
   // Resolved against `metadataBase` per route, so every page declares itself
@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     locale: "en_GB",
     url: site.url,
     siteName: site.name,
-    title: `${site.name} — ${site.role}`,
+    title: `${site.name} | ${site.role}`,
     description: site.description,
     /* Named here rather than left to the `opengraph-image` file convention.
        That convention serves the image from a content-hashed URL and, in this
@@ -65,7 +65,7 @@ export const metadata: Metadata = {
         url: "/og/site.jpg",
         width: 1200,
         height: 630,
-        alt: `${site.name} — ${site.role.toLowerCase()}, ${site.address.locality}. The site rendered as a coordinate lattice with project artefacts set into it.`,
+        alt: `${site.name}, ${site.role.toLowerCase()}, ${site.address.locality}. The site rendered as a coordinate lattice with project artefacts set into it.`,
       },
     ],
   },

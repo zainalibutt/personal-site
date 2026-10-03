@@ -1082,12 +1082,14 @@ just the work in progress.
 badges stay in the frame rather than being painted out, for the same reason the
 Revenue OS card was cropped and not edited.
 
-**The icon is River's own mark, re-rendered rather than redrawn.** The R only
-existed as a CSS card back. It was rendered in Chromium from River's own values
-(Fraunces italic, the wine ground and its engraved waves, the brass ring) at
-1254px, and enters `figure-icons.ts` as a supplied logo like the other four. The
-card's outer brass frame was dropped, because the springboard rounds every icon
-and would have clipped its corners.
+**The icon is a golden spade, supplied by Zain.** The first version was River's
+own R, rendered in Chromium from the card back's CSS; it was replaced the same
+day with an app-style spade he generated, which reads as poker at 61px where a
+letterform needs explaining. The source arrived as a rounded tile inside a dark
+margin, so it is cropped to an 880px square just inside the tile's rim: the
+springboard rounds every icon at 22%, which is a larger radius than the tile's
+own, so the original corners and rim are masked away rather than drawn twice.
+The R survives as `river-monogram.png` beside it in the gitignored logos folder.
 
 **The repository is private and the page says so.** The card carries a live
 link and no source link. The work index is a snapshot of public repositories,
@@ -1104,6 +1106,34 @@ number.
 
 **No em dashes in anything River adds.** The rest of the site keeps them until a
 separate pass removes them everywhere at once.
+
+---
+
+## 36 · No em dashes on the page
+
+**Decided:** 2026-10-03 · **Zain's call**
+
+Every em dash a visitor can see is gone: case-study prose, image alt text, the
+About section in both its phone and desktop forms, the 404 page, and the tab
+title and link-card alt, which used it as a separator. Forty-one sentences in
+the case studies were each repunctuated rather than find-and-replaced. The dash
+became a colon where it introduced a list or an example, a comma where it
+trailed a clause, a full stop where it began a new thought, and brackets where
+it enclosed an aside. The wording did not change.
+
+**Titles use a pipe.** `Zain Butt | Full-stack product engineer` and
+`River | Zain Butt`, matching the separator on the CV's contact line. Link-card
+alt text uses a colon between a project's name and its tagline.
+
+**Four alt texts gained quotes.** They lived unquoted in frontmatter, and a
+colon in an unquoted YAML value is the hazard that empties the whole site.
+
+**Comments and docs keep theirs.** Nothing a visitor reads is written there, and
+rewriting several hundred comments would bury the change in noise. The CV
+lost its one em dash too, on the education line, through the same Word and
+redaction pipeline as decision 35. One exception sits outside this repository:
+the personal-site repository's GitHub description, which the work index renders
+from a snapshot and would reintroduce on the next `npm run repos`.
 
 ---
 

@@ -27,7 +27,7 @@ answer has to hold up in front of someone who has no reason to trust you.
 
 A photograph proves nothing on its own. Any image can be edited, re-encoded, or
 generated outright, and the metadata that might tell you so is trivially
-rewritten. The usual answer is to trust the platform that hosts it — which just
+rewritten. The usual answer is to trust the platform that hosts it, which just
 moves the question rather than answering it.
 
 ## The approach
@@ -37,14 +37,14 @@ happened, then packages both into evidence that survives leaving the app.
 
 - **Device-linked signatures.** The capture is hashed and signed on the phone at
   the moment it is taken, with an Ed25519 keypair generated per installation, so
-  the signature attests to a registered device rather than to a server — and it
+  the signature attests to a registered device rather than to a server, and it
   does that on an ordinary handset, without asking the manufacturer for
   attestation. That last clause is the contribution. The systems that solve this
   well mostly solve it by having the vendor cooperate.
 - **RFC 3161 timestamping.** An independent timestamping authority countersigns
   the hash, establishing that the content existed no later than a given moment.
 - **Offline-verifiable bundles.** Everything needed to check the claim travels
-  with the file — a ten-file archive that verifies with nothing but OpenSSL. No
+  with the file: a ten-file archive that verifies with nothing but OpenSSL. No
   network call, no account, and it still checks out if this service disappears.
 
 ## The result
@@ -64,7 +64,7 @@ the deployed stack, not a local prototype.
 | Mobile client | ~4,498 lines across 21 files |
 
 An anchored credential was then verified offline using only OpenSSL and the
-bundled artefacts, with no contact with the live service at all — which is the
+bundled artefacts, with no contact with the live service at all, which is the
 only test of that claim worth running, because a verification that phones home
 is not the thing being claimed.
 
@@ -73,7 +73,7 @@ with images, burst-mode signing where each of up to ten frames gets its own
 hash, signature and anchor, the offline bundles themselves, and time-limited
 share links whose bearer tokens are never stored.
 
-Deletion is refused by the database rather than by the application — a
+Deletion is refused by the database rather than by the application: a
 `BEFORE DELETE` trigger on credentials, audio records, device keys and the audit
 tables, with the service role deliberately not exempt. Revenue OS reaches for
 the same mechanism for the same reason, which is the argument both projects are
@@ -94,7 +94,7 @@ design where the proof is a lookup against a service you control.
 **Device trust is an assumption, not a guarantee, and the report says so.** The
 Ed25519 private key lives in Expo SecureStore, which is not Secure
 Enclave-backed attestation. If that key is extracted, the server cannot
-distinguish legitimate credentials from forged ones — and revocation limits
+distinguish legitimate credentials from forged ones, and revocation limits
 future damage without invalidating anything already signed. Native
 hardware-backed key storage is the only item on my list that moves the root of
 trust rather than the reporting around it. It was scoped and then dropped: the
@@ -114,7 +114,7 @@ offline verification workflow are evidenced, but "no one else has tried to break
 it" is a limitation of the evidence, not a property of the system.
 
 I ordered the remaining work by how much it would strengthen the truth of the
-security claims rather than by how appealing the feature was — external
+security claims rather than by how appealing the feature was: external
 adversarial review first, hardware-backed keys second, a retention and erasure
 policy for the GDPR Article 17 tension third. Broader device coverage and
 packaging come fourth, and multi-TSA redundancy last.

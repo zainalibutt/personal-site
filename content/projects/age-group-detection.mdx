@@ -11,13 +11,13 @@ repo: https://github.com/zainalibutt/age-group-detection
 preview:
   type: image
   poster: /projects/age-group-detection/hero.png
-  alt: Accuracy for three models on the same four age classes — HOG+SVM 0.7106, HOG+MLP 0.7294, ResNet18 0.7871
+  alt: "Accuracy for three models on the same four age classes: HOG+SVM 0.7106, HOG+MLP 0.7294, ResNet18 0.7871"
   aspectRatio: 16 / 10
   dominantColour: "#0b1226"
 draft: false
 ---
 
-This one has no interface and was never meant to. It ran from a notebook — a
+This one has no interface and was never meant to. It ran from a notebook: a
 demonstration rather than a product, included because the method is the point.
 
 ## The problem
@@ -30,9 +30,9 @@ classical one, but by how much, at what cost, and on which failure cases.
 
 Three pipelines built to be compared like for like.
 
-- **HOG + SVM** — the classical baseline.
-- **MLP** — a shallow learned representation.
-- **ResNet18** — transfer learning from a pretrained backbone.
+- **HOG + SVM**: the classical baseline.
+- **MLP**: a shallow learned representation.
+- **ResNet18**: transfer learning from a pretrained backbone.
 
 Identical splits, identical preprocessing, identical metrics.
 
@@ -47,7 +47,7 @@ Identical splits, identical preprocessing, identical metrics.
 ResNet18 wins by roughly eight points over the classical baseline, and pays for
 it with a thousandfold increase in inference time and four hundred times the
 model size. Whether that trade is worth making depends entirely on where the
-thing has to run — which is the answer the comparison existed to produce.
+thing has to run, which is the answer the comparison existed to produce.
 
 ## What was hard
 
@@ -61,7 +61,7 @@ accuracy figure that flattered the model I'd spent the most time on.
     recollection. */}
 
 The comparison is sound and the reporting around it is thin. Accuracy and macro
-F1 across four classes hide the thing that matters most — which classes each
+F1 across four classes hide the thing that matters most: which classes each
 model confuses, and whether all three fail on the same faces. A confusion matrix
 per model would have said more than any of the headline figures, and it is the
 first thing I would add.
@@ -75,5 +75,5 @@ want the metric to be mistaken for a fix.
 The largest omission is bias. Age classification from faces is known to perform
 unevenly across skin tone and gender, and I did not measure it. Any conclusion
 here about which model is better is a conclusion about aggregate accuracy on one
-dataset, which is a much narrower claim than it looks — and on this particular
+dataset, which is a much narrower claim than it looks, and on this particular
 task, the narrower claim is the only one worth making.

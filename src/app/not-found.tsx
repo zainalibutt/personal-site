@@ -24,7 +24,7 @@ export default function NotFound() {
         </p>
         <h1 className="text-ink mt-4 text-5xl">Nothing here</h1>
         <p className="text-muted mt-4 max-w-[46ch] text-lg text-pretty">
-          That page does not exist — which is at least unambiguous. Everything
+          That page does not exist, which is at least unambiguous. Everything
           that does is one step back.
         </p>
         <Link

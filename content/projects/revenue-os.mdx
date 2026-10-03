@@ -10,7 +10,7 @@ order: 4
 preview:
   type: image
   poster: /projects/revenue-os/hero.png
-  alt: The Revenue OS command centre — the next action to approve as a batch, above the qualified pool and open exceptions
+  alt: "The Revenue OS command centre: the next action to approve as a batch, above the qualified pool and open exceptions"
   aspectRatio: 16 / 9
   dominantColour: "#0b1226"
 draft: false
@@ -18,7 +18,7 @@ draft: false
 
 The third time the same question turned up, pointed at my own income: how do you
 know a record is true? Proof-Lens asks it of a file and Melody of a filing.
-Revenue OS asks it of a claim my own system makes about itself — that an email
+Revenue OS asks it of a claim my own system makes about itself: that an email
 was sent, to someone who agreed to be contacted, after a human said yes.
 
 **This one is private and stays private.** It runs a real pipeline containing
@@ -50,7 +50,7 @@ The rules live in the database, not in the application.
   Gmail message ID and a sent timestamp, and rejects anything that did not use
   the approved sender alias.
 - **The ledger is immutable.** Once a message is verified sent,
-  `lock_verified_sent_ledger` makes those fields unchangeable — including the
+  `lock_verified_sent_ledger` makes those fields unchangeable, including the
   human approval timestamp and the verified thread ID.
 - **Identities cannot be edited away.** A do-not-contact entry cannot be
   altered; the only legal move is to add a separate suppression record, so the
@@ -60,7 +60,7 @@ The rules live in the database, not in the application.
 - **Audit payloads are redacted at write time**, so the change log cannot quietly
   become a second copy of the personal data it is auditing.
 
-![The outreach boundary — drafted, approved, verified sent, above the exceptions the database raises](/projects/revenue-os/boundary.webp)
+![The outreach boundary: drafted, approved, verified sent, above the exceptions the database raises](/projects/revenue-os/boundary.webp)
 
 A Vercel cron job is the only execution path. It runs once a day, sends only the
 current London date's approved group, records lineage before marking anything
@@ -69,7 +69,7 @@ a recipient.
 
 ## What was hard
 
-Deciding that the application layer could not be trusted — including the parts I
+Deciding that the application layer could not be trusted, including the parts I
 wrote.
 
 Every one of those guarantees started life as a check in TypeScript, which is
@@ -82,7 +82,7 @@ not have.
 
 The other hard part was accepting that an unprovable send is not a send. If the
 provider outcome cannot be recorded, the message is held for human review and
-never automatically retried — because the alternative is a system that resolves
+never automatically retried, because the alternative is a system that resolves
 its own uncertainty by guessing, which is the failure this whole site is about.
 
 ## What I'd change
@@ -92,7 +92,7 @@ its own uncertainty by guessing, which is the failure this whole site is about.
     */}
 
 The twenty-a-day cap is a number I chose rather than derived, and it is doing
-two jobs at once — protecting deliverability and protecting me from myself. Those
+two jobs at once: protecting deliverability and protecting me from myself. Those
 deserve separate controls, because the right answer to the first is a function of
 domain reputation and the right answer to the second is a matter of judgement.
 

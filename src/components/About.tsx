@@ -31,7 +31,7 @@ export function About() {
           is where it can be read without being in the way. Everything it would
           otherwise link to is already in the page header. */}
       <p className="text-muted mx-auto max-w-[34ch] text-[0.9375rem] leading-relaxed text-pretty md:hidden">
-        I build product end to end — mobile, web, and the backend underneath.
+        I build product end to end: mobile, web, and the backend underneath.
         Computer Science graduate, 2:1, {site.address.locality}. Unrestricted UK
         right to work, looking for {site.seeking}.
       </p>
@@ -64,7 +64,7 @@ export function About() {
             Everything below asks the same question: how do you know a record is
             true?
           </span>{" "}
-          I build product end to end — mobile, web, and the backend underneath.
+          I build product end to end: mobile, web, and the backend underneath.
         </p>
         {/* Second, not third. These four facts — level, classification, work
             authorisation, and the role being asked for — are what a recruiter
@@ -80,15 +80,16 @@ export function About() {
           {site.education.degree}, {site.education.classification},{" "}
           {site.education.institution}. Final-year project{" "}
           {site.education.finalYearProject}%. {site.location}, with{" "}
-          {site.rightToWork} — looking for {site.seeking}, and taking freelance
+          {site.rightToWork}, looking for {site.seeking}, and taking freelance
           work now.
         </p>
         <p data-tidal>
           Recent work: a tool that proves a file has not been altered since it
-          was captured, a keyboard-first terminal for reading company filings
-          from primary sources, and a ledger that settles group expenses without
-          a spreadsheet. Alongside those, freelance builds for paying clients —
-          an operations platform for a cross-border logistics team, whose client
+          was captured, a multiplayer poker game where nobody has to trust the
+          dealer, a keyboard-first terminal for reading company filings from
+          primary sources, and a ledger that settles group expenses without a
+          spreadsheet. Alongside those, freelance builds for paying clients: an
+          operations platform for a cross-border logistics team, whose client
           reported roughly 60% higher operational efficiency and kept me on for
           support, and a booking site for a private tutor who reported two- to
           threefold growth in enquiries.

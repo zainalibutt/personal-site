@@ -35,14 +35,14 @@ dashboard is in your way.
 Melody inverts it. You type what you want and the answer streams back.
 
 - **Primary sources.** SEC filings direct from EDGAR, not a summarised feed.
-- **Delayed market data**, clearly labelled as delayed — the honest presentation
+- **Delayed market data**, clearly labelled as delayed. The honest presentation
   matters more than the freshness.
 - **Command-first.** Keyboard is the primary interface; the UI exists to display
   results, not to be navigated.
 
 ## What was hard
 
-Filing data is messy in ways that resist generic parsing — the same concept is
+Filing data is messy in ways that resist generic parsing: the same concept is
 tagged differently across filers and across years. Most of the work is in the
 normalisation layer that sits between EDGAR and anything a user sees.
 
@@ -56,7 +56,7 @@ breaks under success.** The limiter defaults to an in-process store, and the
 provider cache falls back to a module-scope `Map` when Supabase is not
 configured. At one instance this is fine. At two, each replica keeps its own
 counters, so "120 requests per five minutes" silently becomes 120 per replica
-with no coordination — and no test would catch it, because the whole suite runs
+with no coordination, and no test would catch it, because the whole suite runs
 in a single process.
 
 Moving both onto shared state is the single highest-leverage change rather than
@@ -65,7 +65,7 @@ gets worse precisely as the product succeeds.
 
 **The XBRL normalisation drops metrics silently, which is a gap against the
 product's own premise.** It walks a preference-ordered list of concepts per
-metric, because companies tag the same line item differently — Apple files
+metric, because companies tag the same line item differently: Apple files
 revenue under one concept where others use plain `Revenues`. If every candidate
 misses, that metric is simply omitted from the response; only when all five fail
 does it raise anything. A foreign private issuer filing 20-F instead of 10-K
@@ -74,7 +74,7 @@ For a tool whose entire pitch is never hiding where a number came from, that is
 the wrong failure mode.
 
 **One thing I got wrong and fixed.** The provider chain falls back per
-*capability*, not per provider — one source structurally declines historical
+*capability*, not per provider: one source structurally declines historical
 bars, which is a "will not" rather than a "cannot". The first version marked
 every bars response degraded, so every chart carried the badge, which teaches
 people to ignore it on the one occasion it means something.
