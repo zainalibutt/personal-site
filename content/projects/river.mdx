@@ -4,7 +4,7 @@ tagline: "Texas Hold'em for friends, where nobody has to trust the dealer."
 evidence: Commit-reveal shuffles
 year: 2026
 role: Design and engineering
-stack: [TypeScript, Next.js, WebSockets, Supabase, Python, Blender]
+stack: [TypeScript, Next.js, WebSockets, Supabase, PyTorch, Blender]
 flagship: true
 order: 2
 live: https://playriver.uk
@@ -41,8 +41,8 @@ The server owns everything, and proves what it can.
 
 - **The rules are a pure engine.** Every rule of Texas Hold'em lives in one
   package with no network, no database and no clock. It is the most heavily
-  tested code in the project, part of 909 tests that run on every push against
-  Node 22 and 24.
+  tested code in the project, part of more than 1,500 tests that run on every
+  push against Node 22 and 24.
 - **The server owns every chip.** Clients send intentions and the server
   decides. Chips move only through an append-only ledger, so a balance is the
   sum of its history rather than a number someone can overwrite.
@@ -67,20 +67,42 @@ good.
 
 The first bots were rule-based, and lost heads-up to every test style by 76 to
 101 big blinds per 100 hands. Each version since has been measured rather than
-judged by eye. The current champion solves every two-player river from both
-players' ranges, then bends that solution towards what each opponent tends to
-do. Across twelve fresh tables it beat the previous version by 24.5 big blinds
-per 100 hands. It is also measured against a worst-case opponent that knows
-exactly how it plays, and against Slumbot, a strong public heads-up bot, where
-it comes out close to even.
+judged by eye. The live champion, Nell, runs a CFR+ solver on every two-player
+river, solving from both players' ranges, then bends the solution towards what
+each opponent tends to do, trusting a read only as far as the evidence for it
+goes. Across twelve fresh tables that beat the previous version by 24.5 big
+blinds per 100 hands. Against Slumbot, a competition-grade heads-up bot, she
+comes out about break-even over 7,231 hands: 4.5 big blinds per 100 behind, with
+all-ins valued at their odds. The interval runs from 45 behind to 36 ahead, so
+she may still be losing, and the claim is break-even, not better.
 
-## How it's built
+## Learning the turn
 
-River is also an experiment in how far one developer gets by delegating hard.
-Four AI models work in one repository: Claude on design and review, Codex on
-integration, DeepSeek on bounded engine modules, Fable on visual judgement. I
-set the rules they work within, review what they produce, and make the calls.
-The record of that, including what went wrong, is kept beside the code.
+Nell solves only the river exactly, because nothing can solve a whole hand of
+poker while it is being played. DeepStack, one of the research bots that beat
+professional players, got around that with neural networks that estimate what
+the rest of a hand is worth, so the solver can stop early and ask. That is the
+research half of River.
+
+I trained value networks in PyTorch on solver output, starting from 200,600
+river spots solved overnight, and built a depth-limited turn solver that uses a
+network to value everything after the turn. The turn network's error fell from
+5.7% to 3.3% of the pot, measured against turns solved exactly over every river
+card, once it learned what the betting adds rather than only what the cards are
+worth.
+
+The turn solver made the bot harder to exploit: a best-response opponent that
+knows its strategy won 42% less from it. It still lost chips to Nell at the
+tables. So I instrumented every hand and built an explainer for each turn
+decision. One fault fell out quickly, a broken handover of ranges from the turn
+to the river. The rest traced to one hand: the bot folding jacks full. Re-solved
+with exact values it still folded, because a subgame solved on its own, against
+an opponent assumed to play perfectly, is unsafe. That is a known failure in the
+research literature, and naming it decided the next step instead of another
+round of tuning.
+
+**This part is research.** The bot at the live tables does not use a network
+yet.
 
 ## What was hard
 
@@ -93,21 +115,25 @@ dealt at all. The commitment proved the server had not changed its mind. It
 proved nothing about how the seed was chosen. The rule that came out of it is in
 the decision log as _provably fair, or do not claim it_.
 
-The other hard part was the characters. More than thirty delegated passes in
-Blender took the first one from a stock suit to a tailored black-tie figure, but
-none produced a seated poker pose that held up. So that work came back to my
-hands. The models still assist, but a character's pose and fit are now made by
-hand. The venues themselves stay as code: geometry, light, cameras and props all
-live in a Python pipeline, and building is the only way a venue comes into
-existence.
+The other hard part was the characters. More than thirty passes in Blender took
+the first one from a stock suit to a tailored black-tie figure, but none
+produced a seated poker pose that held up, so a character's pose and fit are now
+made by hand. The venues themselves stay as code: geometry, light, cameras and
+props all live in a Python pipeline, and building is the only way a venue comes
+into existence.
 
 ## What I'd change
 
-The bots' next step is value networks. No bot can solve a whole hand while it is
-being played, so the champion solves the river exactly and plays the earlier
-streets on reads. A network trained in PyTorch on millions of solved spots would
-let it solve the flop and turn as well, which is where the worst-case opponent
-still wins most.
+Next is safe continual re-solving: solving each street again from where the
+hand actually stands, in a way that cannot be exploited the way the turn solver
+was, from the flop down, with networks for the flop and before it. It goes live
+only when it beats Nell head-to-head on the same deals.
 
 And the 3D venues need to reach the live table. Until they do, the strongest
 visual work in River is something players cannot yet see.
+
+## Method
+
+I design River, set the rules its work is held to, and verify what ships. AI
+coding agents do much of the implementation under that review, and the record of
+it, including what went wrong, is kept beside the code.

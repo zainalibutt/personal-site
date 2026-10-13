@@ -1,6 +1,6 @@
 export const site = {
   name: "Zain Butt",
-  role: "Full-stack product engineer",
+  role: "Full-stack product engineer, applied AI",
   location: "London, UK",
   /** The same fact as `location`, in the shape schema.org asks for. Two keys
    *  rather than a parse of the sentence above: "UK" is not a country code and

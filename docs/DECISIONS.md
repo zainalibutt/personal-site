@@ -1137,6 +1137,36 @@ from a snapshot and would reintroduce on the next `npm run repos`.
 
 ---
 
+## 37 · Applied AI, and only what River can show
+
+**Decided:** 2026-10-13 · **Zain's call, from a brief his River ML session wrote**
+
+The role becomes "Full-stack product engineer, applied AI" on the site and
+"Full-Stack Software Developer | Applied AI" on the CV.
+
+**Why not "AI Engineer" or "ML Engineer".** What runs live in River is game AI:
+a CFR+ river solver and per-opponent modelling. The trained networks are
+research and play no live hand yet. "ML Engineer" reads as models in production,
+which overclaims until they do; "AI Engineer" in 2026 reads as LLM product work,
+which would screen him for the wrong thing. The full-stack headline is what the
+commercial work and most of the projects support, and the qualifier is true of
+everything on the page. An ML-titled variant is fair for ML applications, and
+the headline can change when a network plays live.
+
+**Every number was traced before it was used.** The brief carried two figures
+that did not match River's records at first: a turn network "at 3.3% error"
+and a Slumbot result over 7,231 hands. Both were sourced before going in: the
+error is turnend-4rr against exactly solved turns, in % of the pot, and the
+Slumbot run is the 13 October B0 baseline, whose raw files sum to 7,231 hands.
+The case study says break-even with the interval beside it, and says plainly
+that the network work is research.
+
+**AI assistance is a closing method note on the page**, not a list of models.
+The CV's skills name the agents he works with, because that is a skill;
+"data structures and algorithms" left the Foundational line to make room.
+
+---
+
 ## Recurring hazards
 
 Not decisions, but they have each bitten more than once and are cheap to
