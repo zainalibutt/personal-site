@@ -27,6 +27,11 @@ const previewSchema = z.object({
    */
   fit: z.enum(["cover", "contain"]).default("cover"),
   /**
+   * The video carries music meant to be heard. When the visitor has sound on,
+   * opening the artefact unmutes it and the ambient bed steps aside.
+   */
+  sound: z.boolean().default(false),
+  /**
    * Reserved before any media loads. The requirement is absolute: no layout
    * shift, no blank interval, no grey rectangles. See docs/ARCHITECTURE.md §2.7.
    */

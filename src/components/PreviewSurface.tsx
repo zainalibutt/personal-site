@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import type { ProjectSummary } from "@/lib/content";
+import { DURATION } from "@/lib/motion";
+import { duckBed, useSound } from "@/lib/sound";
 
 /**
  * The artefact's visible surface, in both the resting and expanded states.
@@ -17,6 +19,7 @@ export function PreviewSurface({
   project,
   priority = false,
   active = false,
+  focused = false,
   sizes = "(min-width: 1024px) 34vw, (min-width: 640px) 50vw, 100vw",
   className = "",
 }: {
@@ -25,6 +28,11 @@ export function PreviewSurface({
   priority?: boolean;
   /** Hovered or focused. A video preview plays only while this is true. */
   active?: boolean;
+  /**
+   * Opened, not just hovered. A focused video plays on touch too, since the
+   * tap was a request for it, and is the only state in which it may be heard.
+   */
+  focused?: boolean;
   /**
    * Layout hint for the image candidate.
    *
@@ -43,6 +51,10 @@ export function PreviewSurface({
      decoded frame to cross to. Switching on `active` alone shows a black gap
      for however long the first fetch takes. */
   const [playing, setPlaying] = useState(false);
+  const soundOn = useSound();
+  /* Heard only when opened, only when the visitor turned sound on, and only
+     for a video that has music worth hearing. */
+  const audible = focused && soundOn && preview.sound;
 
   useEffect(() => {
     const video = videoRef.current;
@@ -50,13 +62,19 @@ export function PreviewSurface({
 
     /* Touch has no hover, and a card that autoplays on scroll-past is four
        videos fighting for a phone's bandwidth. `hover` is the honest signal
-       here — a narrow desktop window still has a pointer. */
+       here — a narrow desktop window still has a pointer. An opened artefact
+       is the exception: the tap asked for it. */
     const canHover = window.matchMedia("(hover: hover) and (pointer: fine)");
     const stilled = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (!canHover.matches || stilled.matches) return;
+    if ((!canHover.matches && !focused) || stilled.matches) return;
 
     if (!active) {
       video.pause();
+      return;
+    }
+
+    if (focused) {
+      void video.play().catch(() => undefined);
       return;
     }
 
@@ -67,7 +85,44 @@ export function PreviewSurface({
     }, 120);
 
     return () => window.clearTimeout(intent);
-  }, [active]);
+  }, [active, focused]);
+
+  /* The video's music takes the bed's place: the bed ducks out, the film goes
+     back to its first frame so the music starts where it was written to, and
+     its volume rises over the same span the bed takes to leave. Closing, or
+     turning sound off, releases the bed to fade back in. */
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !audible) return;
+    /* Stilled previews never play, so there is nothing to hear and no reason
+       to take the bed away. */
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const release = duckBed();
+    video.currentTime = 0;
+    video.volume = 0;
+    video.muted = false;
+    void video.play().catch(() => undefined);
+
+    const start = performance.now();
+    let frame = requestAnimationFrame(function rise(now) {
+      const t = Math.min(1, (now - start) / DURATION.soundOut);
+      video.volume = t;
+      if (t < 1) frame = requestAnimationFrame(rise);
+    });
+    /* Timer guard: a frozen or hidden document stops raf, and a video left at
+       volume 0 is silent with no visible reason. */
+    const guard = window.setTimeout(() => {
+      video.volume = 1;
+    }, DURATION.soundOut + 100);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      window.clearTimeout(guard);
+      video.muted = true;
+      release();
+    };
+  }, [audible]);
 
   /* The card opens by expanding this same box, so the element is never
      unmounted and playback simply continues — no handing `currentTime` over. */

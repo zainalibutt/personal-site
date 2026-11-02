@@ -5,6 +5,7 @@ import { EdgeFade } from "@/components/EdgeFade";
 import { ProjectBody } from "@/components/ProjectBody";
 import { ProjectField, type FieldItem } from "@/components/ProjectField";
 import { ProjectMap } from "@/components/ProjectMap";
+import { SoundToggle } from "@/components/SoundToggle";
 import { SpacetimeField } from "@/components/SpacetimeField";
 import { TidalText } from "@/components/TidalText";
 import { WorkIndex } from "@/components/WorkIndex";
@@ -42,6 +43,10 @@ export default function Home() {
           inside a transformed ancestor resolves against that ancestor, so in
           the plane the camera would carry it off screen. */}
       <WorkIndex written={index.written} other={index.other} />
+
+      {/* Fixed, so outside the plane like the index it mirrors. Sound is off
+          until this is pressed. */}
+      <SoundToggle />
 
       {/* Renders nothing. Mounts the idle detector that lets the wanderer lean
           the page's text once nobody has touched anything for a while, and

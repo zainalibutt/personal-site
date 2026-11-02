@@ -38,6 +38,15 @@ export const DURATION = {
   micro: 260,
   /** The lattice settling on first load. */
   entrance: 1100,
+  /**
+   * The ambient bed coming in, and coming back after a video. Slow on purpose:
+   * sound arriving should never be noticed as an event. Not mirrored in
+   * `globals.css`; nothing in CSS drives audio.
+   */
+  soundIn: 1800,
+  /** The bed ducking out for a video's own music. Quick enough that the two
+   *  never audibly overlap, slower than a cut. */
+  soundOut: 600,
 } as const;
 
 export const EASE = {
@@ -56,5 +65,8 @@ export const LERP = {
   cursor: 0.14,
   cursorWeight: 0.09,
   focus: 0.075,
+  /** An artefact's well deepening under the pointer. Quicker than focus: it
+   *  answers a hover, which is a lighter commitment than an open. */
+  hover: 0.12,
   entrance: 0.045,
 } as const;

@@ -49,3 +49,6 @@ assets/raw/
 .vercel
 .env*
 
+
+# Raw source exports; the encoded previews live under public/projects/
+public/*-brag.mp4
