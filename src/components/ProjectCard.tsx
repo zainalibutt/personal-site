@@ -188,6 +188,7 @@ export function ProjectCard({
                        artefact moves the pointer off it, and a preview that
                        stops the moment you commit to reading it is backwards. */
                     active={hovered || focused}
+                    focused={focused}
                     className="artefact-preview w-full"
                   />
                 </div>
@@ -286,7 +287,19 @@ export function ProjectCard({
               aria-hidden
               tabIndex={-1}
               className="absolute inset-0 z-[5]"
-            />
+            >
+              {/* Visitors could not tell the artefacts open: a rounded
+                  screenshot reads as an illustration. This says so at rest,
+                  on the thing itself, and answers the hover. Inside the
+                  aria-hidden overlay, so the caption's accessible name is
+                  untouched. */}
+              <span className="artefact-cue">
+                View project
+                <span aria-hidden className="artefact-cue-arrow">
+                  →
+                </span>
+              </span>
+            </Link>
           )}
 
           {focused && (

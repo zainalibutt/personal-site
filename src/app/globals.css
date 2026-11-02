@@ -478,6 +478,81 @@ body::after {
     0 0 0 1px rgb(134 181 255 / 0.14);
 }
 
+/* "View project", on the artefact's face.
+
+   Visitors read the rounded screenshots as illustrations and never clicked
+   them. The cue is present at rest, so the affordance does not depend on
+   hovering first, and it brightens with the card's own lift. Dressed like the
+   page's other pills: mono, uppercase, a hairline. */
+.artefact-cue {
+  position: absolute;
+  right: 0.75rem;
+  bottom: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid color-mix(in oklab, var(--accent) 30%, transparent);
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--bg) 72%, transparent);
+  backdrop-filter: blur(8px);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.82;
+  transition:
+    opacity var(--dur-micro) var(--ease-out-soft),
+    border-color var(--dur-micro) var(--ease-out-soft),
+    background-color var(--dur-micro) var(--ease-out-soft);
+}
+
+.artefact-cue-arrow {
+  color: var(--accent);
+  transition: transform var(--dur-micro) var(--ease-out-soft);
+}
+
+.group:hover .artefact-cue,
+.group:focus-within .artefact-cue {
+  opacity: 1;
+  border-color: color-mix(in oklab, var(--accent) 70%, transparent);
+  background: color-mix(in oklab, var(--bg) 55%, transparent);
+}
+
+.group:hover .artefact-cue-arrow,
+.group:focus-within .artefact-cue-arrow {
+  transform: translateX(3px);
+}
+
+/* The caption answers too, so hovering the words and hovering the picture
+   read as the same target. */
+.caption-title {
+  transition: color var(--dur-micro) var(--ease-out-soft);
+}
+
+.group:hover .caption-title {
+  color: color-mix(in oklab, var(--accent) 45%, var(--ink));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .artefact-cue-arrow {
+    transition: none;
+  }
+
+  .group:hover .artefact-cue-arrow,
+  .group:focus-within .artefact-cue-arrow {
+    transform: none;
+  }
+}
+
+/* The phone shows an app icon, which already reads as something to tap. */
+@media (max-width: 767px) {
+  .artefact-cue {
+    display: none;
+  }
+}
+
 /* ---------------------------------------------------------------------------
    Editorial furniture.
 
@@ -1084,6 +1159,82 @@ body::after {
   .work-index-count {
     color: var(--accent);
     opacity: 0.85;
+  }
+
+  /* The sound toggle: the work index's twin in the opposite corner. It does
+     not hide while an artefact is focused, since that is when it matters. */
+  .sound-toggle {
+    position: fixed;
+    right: 1.5rem;
+    bottom: 1.5rem;
+    z-index: 40;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.55rem;
+    padding: 0.5rem 0.9rem;
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--bg) 78%, transparent);
+    backdrop-filter: blur(8px);
+    color: var(--muted);
+    font-family: var(--font-mono);
+    font-size: 0.625rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition:
+      color var(--dur-micro) var(--ease-out-soft),
+      border-color var(--dur-micro) var(--ease-out-soft);
+  }
+
+  .sound-toggle:hover,
+  .sound-toggle[aria-pressed="true"] {
+    color: var(--ink);
+    border-color: color-mix(in oklab, var(--accent) 55%, transparent);
+  }
+
+  .sound-toggle-bars {
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 2px;
+    height: 0.6rem;
+  }
+
+  .sound-toggle-bars span {
+    width: 2px;
+    height: 2px;
+    background: currentColor;
+    opacity: 0.7;
+  }
+
+  .sound-toggle-bars[data-on="true"] span {
+    background: var(--accent);
+    opacity: 1;
+    animation: sound-bar 1.4s var(--ease-in-out-soft) infinite alternate;
+  }
+
+  .sound-toggle-bars[data-on="true"] span:nth-child(2) {
+    animation-delay: -0.5s;
+  }
+
+  .sound-toggle-bars[data-on="true"] span:nth-child(3) {
+    animation-delay: -0.9s;
+  }
+
+  @keyframes sound-bar {
+    from {
+      height: 2px;
+    }
+    to {
+      height: 0.6rem;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sound-toggle-bars[data-on="true"] span {
+      animation: none;
+      height: 0.45rem;
+    }
   }
 
   /* No `display` here, deliberately.

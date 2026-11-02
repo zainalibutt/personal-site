@@ -83,16 +83,15 @@ export function About() {
           {site.rightToWork}, looking for {site.seeking}, and taking freelance
           work now.
         </p>
+        {/* It used to open by re-listing four projects whose cards sit either
+            side of this column, which spent the reader's attention on what
+            they could already see. Zain chose to keep only what the field
+            cannot show: paid work and what it did for the client. */}
         <p data-tidal>
-          Recent work: a tool that proves a file has not been altered since it
-          was captured, a multiplayer poker game where nobody has to trust the
-          dealer, a keyboard-first terminal for reading company filings from
-          primary sources, and a ledger that settles group expenses without a
-          spreadsheet. Alongside those, freelance builds for paying clients: an
-          operations platform for a cross-border logistics team, whose client
-          reported roughly 60% higher operational efficiency and kept me on for
-          support, and a booking site for a private tutor who reported two- to
-          threefold growth in enquiries.
+          I also build for paying clients: an operations platform for a
+          cross-border logistics team, whose client reported roughly 60% higher
+          operational efficiency and kept me on for support, and a booking site
+          for a private tutor whose enquiries grew two- to threefold.
         </p>
       </div>
 

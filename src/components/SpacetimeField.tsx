@@ -198,8 +198,10 @@ function makeNoise(seed: number): (t: number) => number {
 const REST_RADIUS = 260;
 const REST_PULL = 14;
 /** Hovering an artefact deepens its own well — the field previews the open. */
-const HOVER_RADIUS = 340;
-const HOVER_PULL = 34;
+const HOVER_RADIUS = 420;
+// Was 34, a step that never read as the field answering the card. Deep enough
+// now to see from across the page, still well short of the focused well.
+const HOVER_PULL = 62;
 const FOCUS_RADIUS = 520;
 const FOCUS_PULL = 118;
 const MAX_DPR = 2;
@@ -268,6 +270,40 @@ function makeStars(count: number): Star[] {
   });
 }
 
+/**
+ * Shooting stars.
+ *
+ * Zain asked for them noticeable rather than rare: a streak every eight to
+ * fifteen seconds, now and then a pair. They are light, so they belong to the
+ * starfield: every point of the trail goes through the same displacement and
+ * the same lens as the stars, and a streak passing the wanderer bends round
+ * it. They are not masses and never dent the lattice.
+ *
+ * The hard rule is that a streak never crosses the work or the words. Each one
+ * is routed through empty ground at spawn, against the live rectangles of
+ * everything readable or clickable, and skipped if no clear path exists.
+ * Desktop-only and off under reduced motion, with the wanderer.
+ */
+const METEOR_GAP_MIN = 8000;
+const METEOR_GAP_MAX = 15000;
+const METEOR_PAIR_CHANCE = 0.25;
+const METEOR_SAMPLES = 18;
+/** Breathing room kept between a streak and anything it must avoid. */
+const METEOR_CLEARANCE = 32;
+const METEOR_AVOID = "[data-well], [data-tidal], h1, p, a, button, img";
+
+interface Meteor {
+  x: number;
+  y: number;
+  ux: number;
+  uy: number;
+  /** Distance the head travels, and the trail behind it, in pixels. */
+  travel: number;
+  trail: number;
+  born: number;
+  life: number;
+}
+
 export function SpacetimeField() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -306,6 +342,8 @@ export function SpacetimeField() {
     let entrance = reduced ? 1 : 0;
 
     const stars = makeStars(STAR_COUNT);
+    const meteors: Meteor[] = [];
+    let nextMeteorAt = performance.now() + METEOR_GAP_MIN;
 
     /* Two octaves per axis: one slow sweep plus a smaller, faster wobble, so the
        path is not a single smooth arc. Weighted to sum to 1. */
@@ -538,9 +576,17 @@ export function SpacetimeField() {
       wake();
     };
 
+    /** Per-artefact hover depth, eased toward 0 or 1 each frame. */
+    const hoverWeights = new WeakMap<HTMLElement, number>();
+    /** Deepest hover this frame, and whether any well is still easing. */
+    let hoverPeak = 0;
+    let hoverSettling = false;
+
     /** Artefact centres, read live so they track the camera as it moves. */
     const readMasses = (): Mass[] => {
       const masses: Mass[] = [];
+      hoverPeak = 0;
+      hoverSettling = false;
       const wells = document.querySelectorAll<HTMLElement>("[data-well]");
       for (const well of wells) {
         const r = well.getBoundingClientRect();
@@ -555,9 +601,17 @@ export function SpacetimeField() {
         if (state === "focused") {
           radius = FOCUS_RADIUS;
           pull = REST_PULL + FOCUS_PULL * focusWeight;
-        } else if (state === "hover") {
-          radius = HOVER_RADIUS;
-          pull = HOVER_PULL;
+        } else {
+          /* Hover eases in and out rather than switching: at this depth a
+             step reads as the lattice twitching, not deepening. */
+          const target = state === "hover" ? 1 : 0;
+          const h = hoverWeights.get(well) ?? 0;
+          const next = h + (target - h) * LERP.hover;
+          hoverWeights.set(well, next);
+          hoverPeak = Math.max(hoverPeak, next);
+          if (Math.abs(target - next) > 0.002) hoverSettling = true;
+          radius = REST_RADIUS + (HOVER_RADIUS - REST_RADIUS) * next;
+          pull = REST_PULL + (HOVER_PULL - REST_PULL) * next;
         }
 
         masses.push({
@@ -656,6 +710,144 @@ export function SpacetimeField() {
       ctx.stroke();
     };
 
+    /**
+     * Picks a clear path, or none. Rectangles are read once per spawn, not per
+     * frame: a streak lasts under a second, and nothing it avoids moves that
+     * fast unless the camera is travelling, when no streak is allowed anyway.
+     */
+    const spawnMeteor = (now: number, pair: boolean) => {
+      const blocked = [...document.querySelectorAll(METEOR_AVOID)]
+        .map((el) => el.getBoundingClientRect())
+        .filter((r) => r.width > 0 && r.bottom > 0 && r.top < height);
+      const clear = (x: number, y: number) =>
+        x > 0 &&
+        x < width &&
+        y > 0 &&
+        y < height &&
+        !blocked.some(
+          (r) =>
+            x > r.left - METEOR_CLEARANCE &&
+            x < r.right + METEOR_CLEARANCE &&
+            y > r.top - METEOR_CLEARANCE &&
+            y < r.bottom + METEOR_CLEARANCE,
+        );
+
+      for (let attempt = 0; attempt < 24; attempt++) {
+        const leftward = Math.random() < 0.5;
+        // Falling, never climbing: 14 to 34 degrees below the horizontal.
+        const angle = ((14 + Math.random() * 20) * Math.PI) / 180;
+        const ux = Math.cos(angle) * (leftward ? -1 : 1);
+        const uy = Math.sin(angle);
+        const travel = 300 + Math.random() * 260;
+        const x = Math.random() * width;
+        const y = Math.random() * height * 0.75;
+
+        let ok = true;
+        for (let d = 0; d <= travel && ok; d += 18) {
+          ok = clear(x + ux * d, y + uy * d);
+        }
+        if (!ok) continue;
+
+        const life = 750 + Math.random() * 400;
+        const trail = 150 + Math.random() * 90;
+        meteors.push({ x, y, ux, uy, travel, trail, born: now, life });
+
+        // A companion on a parallel line, a beat behind. Only kept if its own
+        // line is clear too.
+        if (pair) {
+          const off = 36 + Math.random() * 30;
+          const px = x - uy * off;
+          const py = y + ux * off;
+          let pairOk = true;
+          for (let d = 0; d <= travel * 0.8 && pairOk; d += 18) {
+            pairOk = clear(px + ux * d, py + uy * d);
+          }
+          if (pairOk) {
+            meteors.push({
+              x: px,
+              y: py,
+              ux,
+              uy,
+              travel: travel * 0.8,
+              trail: trail * 0.75,
+              born: now + 220,
+              life: life * 0.85,
+            });
+          }
+        }
+        return;
+      }
+    };
+
+    const drawMeteors = (now: number, starMasses: Mass[]) => {
+      if (now >= nextMeteorAt) {
+        const allowed =
+          wanders &&
+          entrance > 0.98 &&
+          focusTarget === 0 &&
+          focusWeight < 0.02 &&
+          !grab.held;
+        if (allowed) spawnMeteor(now, Math.random() < METEOR_PAIR_CHANCE);
+        nextMeteorAt =
+          now +
+          (allowed
+            ? METEOR_GAP_MIN + Math.random() * (METEOR_GAP_MAX - METEOR_GAP_MIN)
+            : 2000);
+      }
+
+      for (let m = meteors.length - 1; m >= 0; m--) {
+        const meteor = meteors[m];
+        const t = (now - meteor.born) / meteor.life;
+        if (t > 1) {
+          meteors.splice(m, 1);
+          continue;
+        }
+        if (t < 0) continue;
+
+        // Decelerating head; a quick arrival and a longer fade.
+        const head = meteor.travel * (1 - (1 - t) ** 2);
+        const envelope = Math.min(1, t / 0.12) * Math.min(1, (1 - t) / 0.35);
+
+        let prev: [number, number] | null = null;
+        for (let i = 0; i <= METEOR_SAMPLES; i++) {
+          const k = i / METEOR_SAMPLES;
+          const along = head - meteor.trail * k;
+          if (along < 0) break;
+          const x = meteor.x + meteor.ux * along;
+          const y = meteor.y + meteor.uy * along;
+          const [dx, dy] = displace(x, y, starMasses);
+          const point = lens(x + dx, y + dy);
+          if (!point) break;
+          if (prev) {
+            const fade = (1 - k) ** 1.6;
+            ctx.strokeStyle = `rgba(226, 238, 255, ${0.9 * envelope * fade})`;
+            ctx.lineWidth = 0.4 + 1.6 * (1 - k);
+            ctx.beginPath();
+            ctx.moveTo(prev[0], prev[1]);
+            ctx.lineTo(point[0], point[1]);
+            ctx.stroke();
+          } else {
+            // The head: a small glow, so the streak has a point it is moving from.
+            const glow = ctx.createRadialGradient(
+              point[0],
+              point[1],
+              0,
+              point[0],
+              point[1],
+              6,
+            );
+            glow.addColorStop(0, `rgba(240, 246, 255, ${0.85 * envelope})`);
+            glow.addColorStop(1, "rgba(180, 210, 255, 0)");
+            ctx.fillStyle = glow;
+            ctx.beginPath();
+            ctx.arc(point[0], point[1], 6, 0, Math.PI * 2);
+            ctx.fill();
+          }
+          prev = point;
+        }
+      }
+    };
+
     const draw = () => {
       const masses = readMasses();
       const now = performance.now();
@@ -685,12 +877,19 @@ export function SpacetimeField() {
         ctx.fill();
       }
 
+      // With the stars, under the lattice: a streak is light behind the sheet,
+      // not something drawn across the page.
+      drawMeteors(now, starMasses);
+
       ctx.lineWidth = 1;
 
       // The lattice sits *under* the reading — body copy crosses these lines.
       // It earns weight only as a well deepens, so the bend reads as depth
       // rather than as noise.
-      const intensity = Math.min(1, focusWeight * 0.9 + cursor.weight * 0.1);
+      const intensity = Math.min(
+        1,
+        focusWeight * 0.9 + cursor.weight * 0.1 + hoverPeak * 0.3,
+      );
       const alpha = 0.13 + intensity * 0.24;
       ctx.strokeStyle = `rgba(129, 166, 235, ${alpha})`;
 
@@ -773,7 +972,7 @@ export function SpacetimeField() {
         wanderer.vy,
         wanderer.autonomy,
       ].join();
-      idleFrames = before === after ? idleFrames + 1 : 0;
+      idleFrames = before === after && !hoverSettling ? idleFrames + 1 : 0;
       if (idleFrames > 20) {
         raf = 0;
         return;
