@@ -75,6 +75,13 @@ export const frontmatterSchema = z.object({
    * types `default` against the parsed output, which would demand every key.
    */
   preview: previewSchema.prefault({}),
+  /**
+   * `false` keeps the project off the home page's field while it stays
+   * published: its route, sitemap entry and line in the work index all remain.
+   * For work that is still worth reading but no longer earns a place on the
+   * first screen.
+   */
+  onField: z.boolean().default(true),
   draft: z.boolean().default(false),
 });
 

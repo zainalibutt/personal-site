@@ -92,13 +92,9 @@ export function WorkIndex({
               Written up
             </h2>
             <ul className="work-index-list">
-              {written.map((project) => (
-                <li key={project.slug}>
-                  <Link
-                    href={`/projects/${project.slug}`}
-                    scroll={false}
-                    onClick={() => dialog.current?.close()}
-                  >
+              {written.map((project) => {
+                const body = (
+                  <>
                     <span className="work-index-name">{project.title}</span>
                     <span className="work-index-desc">{project.tagline}</span>
                     <span className="work-index-meta">
@@ -107,9 +103,28 @@ export function WorkIndex({
                       {project.repo && <span>source</span>}
                       {project.live && <span>live</span>}
                     </span>
-                  </Link>
-                </li>
-              ))}
+                  </>
+                );
+                return (
+                  <li key={project.slug}>
+                    {/* A soft navigation is intercepted and only expands the
+                        artefact already in the field. A project kept off the
+                        field has no artefact to expand, so it takes a full load
+                        of its case-study page instead. */}
+                    {project.onField ? (
+                      <Link
+                        href={`/projects/${project.slug}`}
+                        scroll={false}
+                        onClick={() => dialog.current?.close()}
+                      >
+                        {body}
+                      </Link>
+                    ) : (
+                      <a href={`/projects/${project.slug}`}>{body}</a>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
           </section>
 

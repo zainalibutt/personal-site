@@ -18,10 +18,12 @@ export default function Home() {
   // Case studies are rendered here, on the server, and handed to the cards.
   // They sit clipped inside each artefact so expanding one is instant and
   // needs no fetch — see docs/ARCHITECTURE.md.
-  const items: FieldItem[] = getAllProjects().map((project) => {
-    const { body, ...summary } = project;
-    return { project: summary, body: <ProjectBody source={body} /> };
-  });
+  const items: FieldItem[] = getAllProjects()
+    .filter((project) => project.onField)
+    .map((project) => {
+      const { body, ...summary } = project;
+      return { project: summary, body: <ProjectBody source={body} /> };
+    });
 
   return (
     <>
